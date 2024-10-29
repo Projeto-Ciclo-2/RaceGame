@@ -1,0 +1,8 @@
+.env
+node_modules
+.docker
+dist
+build
+mock
+cert/www
+cert/conf
