@@ -8,12 +8,13 @@ export interface IPlayer {
 	username: string;
 	ready: boolean;
 	position: IPosition;
+	done_laps: number;
 }
 
 export interface IMessage {
 	content: string;
-	creator: string;
-	creatorID: string;
+	username: string;
+	userID: string;
 }
 
 export interface IRoom {
