@@ -1,84 +1,84 @@
-import { IUserEntity } from "../entities/userEntity";
 import dbConnection from "../database/dbConnection";
+import { IUser } from "../interfaces/IUser";
 
 export default class UserRepository {
-	public async createUser(user: Partial<IUserEntity>) {
+	public async createUser(user: Partial<IUser>) {
 		const [createdUser] = (await dbConnection("users")
 			.insert(user)
 			.returning([
-				"name",
+				"username",
 				"created_at",
 				"wins",
-				"points",
-				"medals",
-				"played_polls",
-			])) as IUserEntity[];
+				"messages_send",
+				"picked_items",
+				"played_games",
+			])) as IUser[];
 		return createdUser;
 	}
 
-	public async getUserById(id: string): Promise<IUserEntity | undefined> {
-		const user = await dbConnection<IUserEntity>("users")
+	public async getUserById(id: string): Promise<IUser | undefined> {
+		const user: IUser = await dbConnection<IUser>("users")
 			.where({ id })
 			.first([
 				"id",
-				"name",
+				"username",
 				"created_at",
 				"wins",
-				"points",
-				"medals",
-				"played_polls",
+				"messages_send",
+				"picked_items",
+				"played_games",
 			]);
 
 		return user;
 	}
 
 	public async getAllUsers() {
-		const users = await dbConnection<IUserEntity>("users").select([
-			"name",
+		const users = await dbConnection<IUser>("users").select([
+			"username",
 			"created_at",
 			"wins",
-			"points",
-			"medals",
-			"played_polls",
+			"messages_send",
+			"picked_items",
+			"played_games",
 		]);
 
 		return users;
 	}
 
-	public async getUserByName(name: string) {
-		const user = await dbConnection<IUserEntity>("users")
-			.where({ name })
+	public async getUserByUsername(username: string) {
+		const user = await dbConnection<IUser>("users")
+			.where({ username })
 			.first();
 		return user;
 	}
 
-	public async update(id: string, user: Partial<IUserEntity>) {
-		const [updatedUser] = await dbConnection<IUserEntity>("users")
+	public async update(id: string, user: Partial<IUser>) {
+		const [updatedUser] = await dbConnection<IUser>("users")
 			.where({ id })
 			.update(user)
 			.returning([
-				"name",
+				"username",
 				"created_at",
 				"wins",
-				"points",
-				"medals",
-				"played_polls",
+				"messages_send",
+				"picked_items",
+				"played_games",
 			]);
 		return updatedUser;
 	}
 
 	public async delete(id: string) {
-		const [deletedUser] = await dbConnection<IUserEntity>("users")
+		const [deletedUser] = await dbConnection<IUser>("users")
 			.where({ id })
 			.del()
 			.returning([
-				"name",
+				"username",
 				"created_at",
 				"wins",
-				"points",
-				"medals",
-				"played_polls",
+				"messages_send",
+				"picked_items",
+				"played_games",
 			]);
-		return `Usuario ${deletedUser.name} deletado com sucesso!`;
+		return `Usuario ${deletedUser.username} deletado com sucesso!`;
 	}
 }

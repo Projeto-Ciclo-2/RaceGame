@@ -1,15 +1,15 @@
 import type { Knex } from "knex";
 
 export async function up(knex: Knex): Promise<void> {
+	await knex.raw('CREATE EXTENSION IF NOT EXISTS "uuid-ossp"');
 	await knex.schema.createTable("users", (table) => {
-		table.uuid("id").primary();
-		table.string("name").notNullable().unique();
-		table.string("password").notNullable();
+		table.uuid("id").primary().defaultTo(knex.raw("uuid_generate_v4()"));
+		table.string("username").notNullable().unique();
 		table.timestamp("created_at").defaultTo(knex.fn.now());
 		table.integer("wins").defaultTo(0);
-		table.integer("points").defaultTo(0);
-		table.integer("medals").defaultTo(0);
-		table.integer("played_polls").defaultTo(0);
+		table.integer("messages_send").defaultTo(0);
+		table.integer("picked_items").defaultTo(0);
+		table.integer("played_games").defaultTo(0);
 	});
 }
 
