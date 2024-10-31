@@ -10,7 +10,9 @@ const dotenvIsConfig =
 	process.env.DB_DATABASE_NAME != null &&
 	process.env.DB_PASSWORD != null &&
 	process.env.DB_PORT != null &&
-	process.env.JWT != null;
+	process.env.JWT != null &&
+	process.env.REDIS_PORT != null &&
+	process.env.REDIS_HOST != null;
 
 if (!dotenvIsConfig)
 	console.error(
@@ -31,4 +33,6 @@ export const config = {
 	DB_PORT: process.env.DB_PORT || "5432",
 
 	JWT: process.env.JWT || "1234",
+	REDIS_PORT: process.env.REDIS_PORT || "6379",
+	REDIS_HOST: process.env.REDIS_HOST || "localhost",
 };
