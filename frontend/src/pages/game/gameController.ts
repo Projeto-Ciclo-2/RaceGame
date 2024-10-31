@@ -16,6 +16,36 @@ export class GameController {
 	private debug = true || config.DEBUG_MODE;
 	private gridPad = 20;
 
+	private hitBox = [
+		{ x: 0, y: 0, width: 60, height: 600 },
+		{ x: 60, y: 0, width: 20, height: 40 },
+		{ x: 80, y: 0, width: 760, height: 20 },
+		{ x: 180, y: 20, width: 140, height: 20 },
+		{ x: 200, y: 40, width: 100, height: 20 },
+		{ x: 200, y: 60, width: 80, height: 80 },
+		{ x: 200, y: 140, width: 100, height: 120 },
+		{ x: 300, y: 160, width: 20, height: 100 },
+		{ x: 320, y: 180, width: 220, height: 80 },
+		{ x: 500, y: 260, width: 40, height: 20 },
+		{ x: 520, y: 280, width: 20, height: 140 },
+		{ x: 680, y: 20, width: 80, height: 20 },
+		{ x: 700, y: 40, width: 60, height: 560 },
+		{ x: 680, y: 560, width: 20, height: 20 },
+		{ x: 60, y: 560, width: 20, height: 20 },
+		{ x: 60, y: 580, width: 640, height: 20 },
+		{ x: 120, y: 80, width: 20, height: 440 },
+		{ x: 140, y: 280, width: 20, height: 240 },
+		{ x: 160, y: 300, width: 20, height: 220 },
+		{ x: 180, y: 320, width: 280, height: 200 },
+		{ x: 460, y: 440, width: 20, height: 80 },
+		{ x: 480, y: 460, width: 20, height: 60 },
+		{ x: 500, y: 480, width: 80, height: 40 },
+		{ x: 580, y: 460, width: 20, height: 60 },
+		{ x: 600, y: 90, width: 50, height: 430 },
+		{ x: 350, y: 90, width: 250, height: 20 },
+		{ x: 580, y: 110, width: 20, height: 20 },
+	];
+
 	private width = 30;
 	private height = 15;
 	private velocity = 5;
@@ -113,30 +143,51 @@ export class GameController {
 	private updatePlayers() {
 		this.players = this.players.map((p) => {
 			if (p.canControl) {
-				this.updatePosition(p);
+				if (this.validateMove(p)) return this.updatePosition(p);
 			}
 			return p;
 		});
 	}
 
-	private updatePosition(player: IPlayer) {
+	private updatePosition(player: IPlayer): IPlayer {
+		const tempPlayer = Object.assign({}, player);
+
 		if (this.keys.ArrowUp) {
-			player.y += this.velocity * -1;
+			tempPlayer.y += this.velocity * -1;
 		}
 		if (this.keys.ArrowDown) {
-			player.y += this.velocity;
+			tempPlayer.y += this.velocity;
 		}
 		if (this.keys.ArrowLeft) {
-			player.x += this.velocity * -1;
+			tempPlayer.x += this.velocity * -1;
 		}
 		if (this.keys.ArrowRight) {
-			player.x += this.velocity;
+			tempPlayer.x += this.velocity;
 		}
+		return tempPlayer;
+	}
+
+	private validateMove(player: IPlayer): boolean {
+		const tempPlayer = this.updatePosition(player);
+		const valid = this.hitBox.every((box) => {
+			const playerLeftMerge = tempPlayer.x + this.width > box.x;
+			const playerRightMerge = tempPlayer.x < box.x + box.width;
+			const horizontalMerge = playerLeftMerge && playerRightMerge;
+
+			const playerTopMerge = tempPlayer.y + this.height > box.y;
+			const playerBottomMerge = tempPlayer.y < box.y + box.height;
+			const verticalMerge = playerTopMerge && playerBottomMerge;
+
+			return !horizontalMerge || !verticalMerge;
+		});
+		return valid;
 	}
 
 	private makeHitBox() {
-		this.ctx.fillStyle = "peru";
-		this.ctx.fillRect(0, 0, 60, this.canvas.height);
+		this.ctx.fillStyle = "#cd853f99";
+		for (const x of this.hitBox) {
+			this.ctx.fillRect(x.x, x.y, x.width, x.height);
+		}
 	}
 
 	private makeGrid() {
