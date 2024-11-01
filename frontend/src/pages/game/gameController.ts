@@ -1,25 +1,21 @@
 import { config } from "../../config/config";
-
-type typeOptions = "ArrowRight" | "ArrowLeft" | "ArrowUp" | "ArrowDown";
-type rotation = 0 | 45 | 90 | 135 | 180 | 235 | 270 | 315;
-interface IPlayer {
-	canControl: boolean;
-	rotation: rotation;
-	x: number;
-	y: number;
-}
+import { CarController } from "./controller/carController";
+import { GameDebug } from "./debug/gameDebug";
+import { IBox, IPlayer } from "./interfaces/gameInterfaces";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
 	private ctx: CanvasRenderingContext2D;
 
+	private gameDebug: GameDebug;
+	private carController = new CarController();
+
 	private bkg: CanvasImageSource;
 	private userCar: CanvasImageSource;
 
 	private debug = true || config.DEBUG_MODE;
-	private gridPad = 20;
 
-	private hitBox = [
+	private hitBox: Array<IBox> = [
 		{ x: 0, y: 0, width: 60, height: 600 },
 		{ x: 60, y: 0, width: 20, height: 40 },
 		{ x: 80, y: 0, width: 760, height: 20 },
@@ -48,6 +44,7 @@ export class GameController {
 		{ x: 350, y: 90, width: 250, height: 20 },
 		{ x: 580, y: 110, width: 20, height: 20 },
 	];
+	private boxCollided: Array<IBox> = [];
 	private collisions = {
 		up: false,
 		down: false,
@@ -55,30 +52,28 @@ export class GameController {
 		right: false,
 	};
 
-	private width = 35;
-	private height = 25;
-
-	private maxVelocity = 5.5;
-	private acceleration = 0.03;
-	private decelerationRate = 0.01;
-	private maxDecelerationRate = 0.05;
-	private velocities = {
-		up: 0,
-		down: 0,
-		left: 0,
-		right: 0,
-	};
-
-	private options = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
-	private keys = {
-		ArrowLeft: false,
-		ArrowRight: false,
-		ArrowUp: false,
-		ArrowDown: false,
+	private spawn = {
+		x: 380,
+		y: 540,
 	};
 
 	private players: Array<IPlayer> = [
-		{ canControl: true, rotation: 0, x: 380, y: 540 },
+		{
+			canControl: true,
+			rotation: 0,
+			x: this.spawn.x,
+			y: this.spawn.y,
+			height: 25,
+			width: 35,
+			defaultHeight: 25,
+			defaultWidth: 35,
+			velocities: {
+				up: 0,
+				down: 0,
+				left: 0,
+				right: 0,
+			},
+		},
 	];
 
 	constructor(
@@ -92,22 +87,18 @@ export class GameController {
 		const ctx = this.canvas.getContext("2d");
 		if (ctx) {
 			this.ctx = ctx;
+			this.gameDebug = new GameDebug(this.ctx);
 			return;
 		}
 		throw new Error("Canvas has no correct context.");
 	}
 
 	public listen() {
-		document.addEventListener("keydown", (e) =>
-			this.handleKeyPress(e, true)
-		);
-		document.addEventListener("keyup", (e) =>
-			this.handleKeyPress(e, false)
-		);
+		this.carController.listen();
 	}
 
 	public start() {
-		// window.requestAnimationFrame(() => this.animate);
+		// this.hitBox = [];
 		this.animate();
 	}
 
@@ -121,9 +112,13 @@ export class GameController {
 			this.canvas.height
 		);
 		if (this.debug) {
-			this.makeHitBox();
-			// this.makeGrid();
-			this.renderDebugInfo();
+			// this.gameDebug.makeHitBox(this.hitBox);
+			// this.gameDebug.makeGrid();
+			for (const p of this.players) {
+				this.gameDebug.renderDebugInfo(p);
+			}
+			this.gameDebug.renderCollidedBoxes(this.boxCollided);
+			this.gameDebug.renderPlayerInfo(this.players);
 		}
 		this.updatePlayers();
 		this.renderPlayers();
@@ -134,15 +129,15 @@ export class GameController {
 		this.ctx.fillStyle = "red";
 		for (const p of this.players) {
 			this.ctx.save();
-			this.ctx.translate(p.x + this.width / 2, p.y + this.height / 2);
+			this.ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
 			this.ctx.rotate((p.rotation * Math.PI) / 180);
 
 			this.ctx.drawImage(
 				this.userCar,
-				-this.width / 2,
-				-this.height / 2,
-				this.width,
-				this.height
+				-p.defaultWidth / 2,
+				-p.defaultHeight / 2,
+				p.defaultWidth,
+				p.defaultHeight
 			);
 
 			this.ctx.restore();
@@ -152,98 +147,53 @@ export class GameController {
 	private updatePlayers() {
 		this.players = this.players.map((p) => {
 			if (p.canControl) {
-				this.defineRotation(p);
-				this.decreaseVelocityOverTime();
+				const futurePlayer = this.carController.getFutureCarPosition(p);
 
-				let valid = this.validateMove(p);
+				let result = this.validateMove(futurePlayer);
 				let ttl = 30;
-				while (!valid && ttl > 0) {
-					this.reduceVelocity(p);
-					valid = this.validateMove(p);
+				while (typeof result !== "boolean" && ttl > 0) {
+					this.breakVelocity(p, futurePlayer);
+					this.correctMerge(futurePlayer, result);
+					result = this.validateMove(futurePlayer);
 					ttl--;
 				}
+				this.collisions = {
+					up: false,
+					down: false,
+					left: false,
+					right: false,
+				};
 
-				return this.updatePosition(p);
+				this.checkPlayerInsideMap(p);
+				return futurePlayer;
 			}
 			return p;
 		});
 	}
 
-	private updatePosition(player: IPlayer): IPlayer {
-		const tempPlayer = Object.assign({}, player);
+	private validateMove(player: IPlayer): true | IBox {
+		const futurePlayer = Object.assign({}, player);
 
-		this.correctVelocities();
+		let boxMerge: undefined | IBox;
 
-		const upVelocity = this.velocities.up + this.acceleration * -1;
-		const downVelocity = this.velocities.down + this.acceleration;
-		const leftVelocity = this.velocities.left + this.acceleration * -1;
-		const rightVelocity = this.velocities.right + this.acceleration;
-
-		const upCanIncrease =
-			upVelocity <= 0 && upVelocity > this.maxVelocity * -1;
-		const downCanIncrease =
-			downVelocity >= 0 && downVelocity < this.maxVelocity;
-		const leftCanIncrease =
-			leftVelocity <= 0 && leftVelocity > this.maxVelocity * -1;
-		const rightCanIncrease =
-			rightVelocity >= 0 && rightVelocity < this.maxVelocity;
-
-		if (this.keys.ArrowUp && upCanIncrease) {
-			this.velocities.up = upVelocity;
-			if (this.velocities.down > 0) {
-				this.velocities.down -= this.acceleration;
-			}
-		}
-		if (this.keys.ArrowDown && downCanIncrease) {
-			this.velocities.down = downVelocity;
-			if (this.velocities.up < 0) {
-				this.velocities.up += this.acceleration;
-			}
-		}
-		if (this.keys.ArrowLeft && leftCanIncrease) {
-			this.velocities.left = leftVelocity;
-			if (this.velocities.right > 0) {
-				this.velocities.right -= this.acceleration;
-			}
-		}
-		if (this.keys.ArrowRight && rightCanIncrease) {
-			this.velocities.right = rightVelocity;
-			if (this.velocities.left < 0) {
-				this.velocities.left += this.acceleration;
-			}
+		if (this.debug) {
+			this.gameDebug.renderPlayerHitBox(
+				futurePlayer.x,
+				futurePlayer.y,
+				futurePlayer.width,
+				futurePlayer.height
+			);
 		}
 
-		const horizontalMove = this.velocities.left + this.velocities.right;
-		const verticalMove = this.velocities.up + this.velocities.down;
-		tempPlayer.x += horizontalMove;
-		tempPlayer.y += verticalMove;
-
-		return tempPlayer;
-	}
-
-	private validateMove(player: IPlayer): boolean {
-		const futurePlayer = this.updatePosition(player);
-		const sizes = { width: this.width, height: this.height };
-
-		let boxMerge;
-
-		const verticalRotations = [90, 270];
-		// const leftDiagonalRotations = [45, 235];
-		// const rightDiagonalRotations = [135, 315];
-
-		if (verticalRotations.includes(futurePlayer.rotation)) {
-			sizes.width = this.height;
-			sizes.height = this.width;
-		}
 		const valid = this.hitBox.every((box) => {
 			const playerRightBiggerThanBox =
-				futurePlayer.x + sizes.width > box.x;
+				futurePlayer.x + futurePlayer.width > box.x;
 			const playerLeftShorterThanBox = futurePlayer.x < box.x + box.width;
 			const horizontalMerge =
 				playerRightBiggerThanBox && playerLeftShorterThanBox;
 
 			const playerBottomBiggerThanBox =
-				futurePlayer.y + sizes.height > box.y;
+				futurePlayer.y + futurePlayer.height > box.y;
 			const playerTopShortenThanBox = futurePlayer.y < box.y + box.height;
 			const verticalMerge =
 				playerBottomBiggerThanBox && playerTopShortenThanBox;
@@ -254,175 +204,94 @@ export class GameController {
 
 			return !horizontalMerge || !verticalMerge;
 		});
-		if (boxMerge) console.log(boxMerge);
-		return valid;
-	}
-
-	private reduceVelocity(currentPlayer: IPlayer): IPlayer {
-		const futurePos = this.updatePosition(currentPlayer);
-
-		if (futurePos.x > currentPlayer.x) {
-			this.velocities.left = Math.floor((this.velocities.right * -1) / 2);
-			this.velocities.right = 0;
-		}
-		if (futurePos.x < currentPlayer.x) {
-			this.velocities.right = Math.ceil((this.velocities.left * -1) / 2);
-			this.velocities.left = 0;
-		}
-		if (futurePos.y > currentPlayer.y) {
-			this.velocities.up = Math.floor((this.velocities.down * -1) / 2);
-			this.velocities.down = 0;
-		}
-		if (futurePos.y < currentPlayer.y) {
-			this.velocities.down = Math.ceil((this.velocities.up * -1) / 2);
-			this.velocities.up = 0;
-		}
-		return this.updatePosition(currentPlayer);
-	}
-
-	private decreaseVelocityOverTime() {
-		const { up, down, left, right } = this.velocities;
-		const negativeMaxVelocity = this.maxVelocity * -1;
-
-		this.defineDecelerationRate();
-
-		if (up < 0 && up > negativeMaxVelocity) {
-			this.velocities.up += this.decelerationRate;
-		}
-		if (down > 0 && down < this.maxVelocity) {
-			this.velocities.down -= this.decelerationRate;
-		}
-		if (left < 0 && left > negativeMaxVelocity) {
-			this.velocities.left += this.decelerationRate;
-		}
-		if (right > 0 && right < this.maxVelocity) {
-			this.velocities.right -= this.decelerationRate;
-		}
-	}
-
-	private correctVelocities() {
-		const up = this.velocities.up;
-		const down = this.velocities.down;
-		const left = this.velocities.left;
-		const right = this.velocities.right;
-		const negativeMaxVelocity = this.maxVelocity * -1;
-
-		if (up > 0 || up < negativeMaxVelocity) {
-			this.velocities.up = 0;
-		}
-		if (down < 0 || down > this.maxVelocity) {
-			this.velocities.down = 0;
-		}
-		if (left > 0 || left < negativeMaxVelocity) {
-			this.velocities.left = 0;
-		}
-		if (right < 0 || right > this.maxVelocity) {
-			this.velocities.right = 0;
-		}
-	}
-
-	private defineRotation(player: IPlayer) {
-		const up = this.keys.ArrowUp;
-		const down = this.keys.ArrowDown;
-		const left = this.keys.ArrowLeft;
-		const right = this.keys.ArrowRight;
-
-		if (!up && !down && !right && left) {
-			player.rotation = 0;
-		}
-
-		if (up && left && !right && !down) {
-			player.rotation = 45;
-		}
-
-		if (up && !left && !right && !down) {
-			player.rotation = 90;
-		}
-
-		if (up && right && !left && !down) {
-			player.rotation = 135;
-		}
-
-		if (!up && !down && !left && right) {
-			player.rotation = 180;
-		}
-
-		if (right && down && !left && !up) {
-			player.rotation = 235;
-		}
-
-		if (down && !right && !left && !up) {
-			player.rotation = 270;
-		}
-
-		if (left && down && !right && !up) {
-			player.rotation = 315;
-		}
-	}
-
-	private defineDecelerationRate() {
-		if (
-			!this.keys.ArrowDown &&
-			!this.keys.ArrowUp &&
-			!this.keys.ArrowLeft &&
-			!this.keys.ArrowRight
-		) {
-			if (this.decelerationRate < this.maxDecelerationRate) {
-				this.decelerationRate += this.decelerationRate;
+		if (!valid && boxMerge) {
+			this.boxCollided.push(boxMerge);
+			if (this.boxCollided.length >= 3) {
+				this.boxCollided.shift();
 			}
-		} else {
-			this.decelerationRate = 0.01;
+			return boxMerge;
+		}
+		return valid as true;
+	}
+
+	private checkPlayerInsideMap(player: IPlayer): void {
+		if (player.x < 0 || player.x + player.width > this.canvas.width) {
+			player.x = this.spawn.x;
+			player.y = this.spawn.y;
+			player.velocities = {
+				up: 0,
+				down: 0,
+				left: 0,
+				right: 0,
+			};
+		}
+		if (player.y < 0 || player.y + player.height > this.canvas.height) {
+			player.x = this.spawn.x;
+			player.y = this.spawn.y;
+			player.velocities = {
+				up: 0,
+				down: 0,
+				left: 0,
+				right: 0,
+			};
 		}
 	}
 
-	private makeHitBox() {
-		this.ctx.fillStyle = "#cd853f99";
-		for (const x of this.hitBox) {
-			this.ctx.fillRect(x.x, x.y, x.width, x.height);
+	private breakVelocity(oldPlayer: IPlayer, futurePlayer: IPlayer) {
+		if (futurePlayer.x > oldPlayer.x) {
+			const newVelocity = Math.floor(
+				futurePlayer.velocities.right * -1 * 0.3
+			);
+			futurePlayer.velocities.left =
+				newVelocity === -1 ? -0.5 : newVelocity;
+			futurePlayer.velocities.right = 0;
+			this.collisions.right = true;
+		}
+		if (futurePlayer.x < oldPlayer.x) {
+			const newVelocity = Math.ceil(
+				futurePlayer.velocities.left * -1 * 0.3
+			);
+			futurePlayer.velocities.right =
+				newVelocity === 1 ? 0.5 : newVelocity;
+			futurePlayer.velocities.left = 0;
+			this.collisions.left = true;
+		}
+		if (futurePlayer.y > oldPlayer.y) {
+			const newVelocity = Math.floor(
+				futurePlayer.velocities.down * -1 * 0.3
+			);
+			futurePlayer.velocities.up =
+				newVelocity === -1 ? -0.5 : newVelocity;
+			futurePlayer.velocities.down = 0;
+			this.collisions.down = true;
+		}
+		if (futurePlayer.y < oldPlayer.y) {
+			const newVelocity = Math.ceil(
+				futurePlayer.velocities.up * -1 * 0.3
+			);
+			futurePlayer.velocities.down =
+				newVelocity === 1 ? 0.5 : newVelocity;
+			futurePlayer.velocities.up = 0;
+			this.collisions.up = true;
 		}
 	}
 
-	private makeGrid() {
-		this.ctx.fillStyle = "black";
-		for (let index = 0; index <= this.canvas.width; index += this.gridPad) {
-			if (index === this.canvas.width) index--;
-			this.ctx.fillRect(index, 0, 1, this.canvas.height);
+	private correctMerge(player: IPlayer, mergedBox: IBox) {
+		if (this.collisions.up) {
+			const diference = mergedBox.y + mergedBox.height - player.y;
+			player.y += diference;
 		}
-		for (
-			let index = 0;
-			index <= this.canvas.height;
-			index += this.gridPad
-		) {
-			if (index === this.canvas.height) index--;
-			this.ctx.fillRect(0, index, this.canvas.width, 1);
+		if (this.collisions.down) {
+			const diference = player.y + player.height - mergedBox.y;
+			player.y -= diference;
 		}
-	}
-
-	private renderDebugInfo() {
-		this.ctx.font = "16px Arial";
-		this.ctx.fillStyle = "white";
-		this.ctx.strokeStyle = "black";
-		this.ctx.lineWidth = 2;
-
-		const debugText = [
-			`Velocities:`,
-			`Up: ${this.velocities.up}`,
-			`Down: ${this.velocities.down}`,
-			`Left: ${this.velocities.left}`,
-			`Right: ${this.velocities.right}`,
-		];
-
-		debugText.forEach((text, index) => {
-			const yPosition = 20 + index * 20;
-			this.ctx.strokeText(text, 10, yPosition);
-			this.ctx.fillText(text, 10, yPosition);
-		});
-	}
-
-	private handleKeyPress(e: KeyboardEvent, alive: boolean) {
-		if (this.options.includes(e.key)) {
-			const key = e.key as any as typeOptions;
-			this.keys[key] = alive;
+		if (this.collisions.left) {
+			const diference = mergedBox.x + mergedBox.width - player.x;
+			player.x += diference;
+		}
+		if (this.collisions.right) {
+			const diference = player.x + player.width - mergedBox.x;
+			player.x -= diference;
 		}
 	}
 }
