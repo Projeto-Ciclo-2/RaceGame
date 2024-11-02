@@ -1,4 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Finlandica:ital,wght@0,400..700;1,400..700&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Press+Start+2P&display=swap"); /* Inter e Press Start */
 
 :root {
 	--title: Finlandica;
@@ -15,15 +16,24 @@
 	--red-hover: #ed5853;
 	--gray: #5f5e5f;
 	--gradient: radial-gradient(100% 100% at 100% 0%, #f756ff 0%, #b644c1 100%);
+
+	--font-title: "Press Start 2P", system-ui;
+	--font-text: "Inter", serif;
+	--color-1: #1a2447;
+	--color-1-hover: #1a2447ee;
+	--color-2: #ecf4ff;
+	--color-3: #2b3bf3;
+	--color-4: #b1cdff;
+	--color-5: #b1ceff84;
 }
 * {
 	padding: 0;
 	margin: 0;
 	box-sizing: border-box;
-	font-family: var(--text);
+	font-family: var(--font-text);
 }
 #root {
-	width: 100vw;	
+	width: 100vw;
 }
 
 html {
