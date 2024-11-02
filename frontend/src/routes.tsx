@@ -4,6 +4,7 @@ import { WebSocketProvider } from "./context/WebSocketContext";
 import UserProvider from "./context/UserContext";
 import Game from "./pages/game/Game";
 import { Login } from "./pages/login";
+import LandingPage from "./pages/landingpage/landingpage";
 
 const AppRouter = () => {
 	return (
@@ -13,6 +14,7 @@ const AppRouter = () => {
 					<BrowserRouter>
 						<Switch>
 							<Route element={<Login />} path="/login" />
+							<Route element={<LandingPage />} path="/" />
 							<Route element={<Game />} path="/game" />
 						</Switch>
 					</BrowserRouter>
