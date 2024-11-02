@@ -5,8 +5,22 @@ import { router } from "./routes/router";
 import cors from "cors";
 import http from "http";
 import { wss } from "./websocket";
+import GoogleAuth from "./services/GoogleAuthService";
+import session from "express-session";
+import passport from "passport";
 
 const app: Express = express();
+new GoogleAuth();
+app.use(
+	session({
+		secret: process.env.GOOGLE_CLIENT_SECRET!,
+		resave: false,
+		saveUninitialized: true,
+	})
+);
+app.use(passport.initialize());
+app.use(passport.session());
+
 app.use(
 	cors({
 		origin: config.CLIENT_URL,
@@ -16,6 +30,19 @@ app.use(
 app.use(cookieParser());
 app.use(express.json());
 app.use("/api", router);
+app.get(
+	"/auth/google",
+	passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+app.get(
+	"/auth/google/callback",
+	passport.authenticate("google", { failureRedirect: "/" }),
+	(req, res) => {
+		// Autenticação bem-sucedida, redirecione para a página principal.
+		res.redirect("/");
+	}
+);
 
 const server = http.createServer(app);
 server.listen(config.BACKEND_PORT, () => {

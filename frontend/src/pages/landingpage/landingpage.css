@@ -1,0 +1,321 @@
+#landing-page {
+	display: flex;
+	background-color: var(--bkg_1);
+	flex-direction: column;
+	width: 95%;
+}
+nav {
+	width: 100%;
+	display: flex;
+	text-align: center;
+	justify-content: space-between;
+	padding: 1rem 2rem;
+	align-items: center;
+	& svg {
+		width: 2rem;
+		margin-right: 0.5rem;
+	}
+}
+#nav-links {
+	display: flex;
+	align-items: center;
+	color: var(--text-color);
+	cursor: pointer;
+	& #nav-logo {
+		padding-right: 2rem;
+		transition: transform 0.3 ease;
+		&:hover {
+			transform: scale(1.2);
+		}
+	}
+}
+nav a {
+	text-decoration: none;
+	font-weight: 500;
+	color: var(--text-color);
+	position: relative;
+	margin: 0 1rem;
+}
+nav a:before {
+	content: "";
+	position: absolute;
+	width: 100%;
+	height: 2px;
+	background: var(--text-color);
+	top: 47%;
+	animation: out 0.2s cubic-bezier(1, 0, 0.58, 0.97) 1 both;
+}
+nav a:hover:before {
+	animation: in 0.2s cubic-bezier(1, 0, 0.58, 0.97) 1 both;
+}
+#google-btn {
+	padding: 0 1rem;
+	height: 2.5rem;
+	border-radius: 20px;
+	border: 2px solid  var(--primary_2);
+	box-shadow: 7px 7px 7px var(--background);
+	font-size: 1rem;
+	font-weight: bold;
+	color: var(--text-color2);
+	cursor: pointer;
+	transition: all 250ms;
+	position: relative;
+	overflow: hidden;
+	z-index: 1;
+  }
+  
+#google-btn::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 0;
+	background-color: var(--primary_2);
+	z-index: -1;
+	-webkit-box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+	box-shadow: 4px 8px 19px -3px rgba(0, 0, 0, 0.27);
+	transition: all 250ms;
+}
+
+#google-btn:hover {
+	color: #e8e8e8;
+	text-shadow: 4px 4px 3px var(--background);
+	& svg{
+		filter: drop-shadow(4px 4px 3px var(--background));
+	}
+  }
+  
+#google-btn:hover::before {
+	width: 100%;
+  }
+@keyframes in {
+	0% {
+		width: 0;
+		left: 0;
+		right: auto;
+	}
+	100% {
+		left: 0;
+		right: auto;
+		width: 100%;
+	}
+}
+@keyframes out {
+	0% {
+		width: 100%;
+		left: auto;
+		right: 0;
+	}
+	100% {
+		width: 0;
+		left: auto;
+		right: 0;
+	}
+}
+#landing-content {
+	height: 50rem;
+	& h1 {
+		font-family: var(--title);
+	}
+}
+#welcome {
+	display: flex;
+	margin: 6rem 3rem;
+	justify-content: space-evenly;
+	& h1 {
+		font-size: 6rem;
+	}
+	& h2 {
+		margin-top: 2rem;
+		font-size: 2rem;
+	}
+	& svg {
+		margin-top: 8rem;
+		width: 62rem;
+		filter: drop-shadow(23px 13px 5px #08133dd2);
+	}
+}
+#about {
+	display: flex;
+	margin: 2rem 3rem;
+	justify-content: center;
+	flex-direction: column;
+	align-items: center;
+	& h1 {
+		font-size: 2.5rem;
+		margin-bottom: 1rem;
+	}
+	& h2 {
+		margin: 1rem 0;
+	}
+	& ul {
+		display: flex;
+		margin: 2rem;
+		flex-direction: column;
+		align-items: center;
+	}
+	& li {
+		font-size: 1.5rem;
+	}
+	& p {
+		font-size: 1.5rem;
+	}
+	& svg {
+		margin-top: 1rem;
+		height: 19rem;
+	}
+}
+#team {
+	display: flex;
+	justify-content: center;
+	flex-direction: column;
+	margin: 0 3rem;
+	align-items: center;
+	& h1 {
+		font-size: 3rem;
+	}
+}
+#cards {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	margin: 6rem 0;
+	justify-content: space-evenly;
+	width: 80%;
+}
+.card {
+	width: 13rem;
+	height: 17rem;
+	margin: 1rem;
+	background-image: linear-gradient(
+		144deg,
+		var(--primary),
+		var(--background),
+		var(--primary-hover)
+	);
+	border: none;
+	border-radius: 10px;
+	padding-top: 10px;
+	position: relative;
+	font-family: var(--title);
+	box-shadow: 0 8px 10px rgb(55 47 70 / 70%);
+	transition: transform 0.3 ease;
+	&:hover {
+		transform: scale(1.05);
+	}
+}
+
+.card span {
+	font-weight: large;
+	font-weight: bold;
+	color: white;
+	text-align: center;
+	display: block;
+	padding-top: 2rem;
+	font-size: 1.3em;
+}
+
+.card .img {
+	width: 10rem;
+	height: 10rem;
+	background-position: center;
+	background-size: cover;
+	border-radius: 100%;
+	margin: auto;
+	margin-top: 20px;
+	box-shadow: inset 0 8px 8px rgba(51, 42, 63, 0.73);
+}
+#img1 {
+	background-image: url("https://avatars.githubusercontent.com/u/105376328?v=4");
+}
+#img2 {
+	background-image: url("https://avatars.githubusercontent.com/u/152179240?v=4");
+}
+#img3 {
+	background-image: url("https://avatars.githubusercontent.com/u/15158865?v=4");
+}
+#img4 {
+	background-image: url("https://avatars.githubusercontent.com/u/100249234?v=4");
+}
+
+#team-content {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	padding-bottom: 8rem;
+}
+@media (max-width:2002px){
+	#about svg{
+		height: 16rem;
+	}
+}
+@media (max-width: 1532px){
+	#about {
+		& h1{
+			font-size: 2rem;
+		}
+		& p{
+			font-size: 1.3rem;
+		}
+		& li{
+			font-size: 1.3rem;
+		}
+	}
+}
+@media (max-width: 1487px){
+	#welcome h1{
+		font-size: 5rem;
+	}
+}
+@media (max-width: 1439px){
+	#welcome svg{
+		width: 55rem;
+	}
+	#cards{
+		width: 90%;
+	}
+}
+@media (max-width: 1318px){
+	#welcome svg{
+		width: 50rem;
+	}
+}
+@media (max-width: 1234px){
+	#welcome svg{
+		width: 45rem;
+	}
+	#cards{
+		width: 100%;
+	}
+}
+@media (max-width: 1150px){
+	#welcome svg{
+		width: 40rem;
+	}
+	#about svg{
+		height: 14rem;
+	}
+	.card{
+		width: 12rem;
+	}
+	.card .img{
+		width: 9rem;
+		height: 9rem;
+	}
+}
+@media (max-width: 1060px){
+	#welcome svg{
+		width: 35rem;
+	}
+	#about svg{
+		height: 13rem;
+	}
+	.card{
+		width: 10.5rem;
+	}
+	.card .img{
+		width: 8rem;
+		height: 8rem;
+	}
+}
