@@ -4,13 +4,13 @@
 :root {
 	--title: Finlandica;
 	--text: Montserrat;
-	--text-color: #1A2447;
-	--text-color2: #2B3BF3;
-	--bkg_1: #ECF4FF;
-	--primary-hover: #2B3BF3;
-	--background: #1A2447;
-	--primary: #B1CDFF;
-	--primary_2: #2B3BF3;
+	--text-color: #1a2447;
+	--text-color2: #2b3bf3;
+	--bkg_1: #ecf4ff;
+	--primary-hover: #2b3bf3;
+	--background: #1a2447;
+	--primary: #b1cdff;
+	--primary_2: #2b3bf3;
 	--accent: #67ce3b;
 	--red: #fc5c56;
 	--red-hover: #ed5853;
@@ -50,7 +50,7 @@ body {
 	align-items: center;
 	overflow-x: hidden;
 }
-main{
+main {
 	width: 100%;
 	display: flex;
 	justify-content: center;
