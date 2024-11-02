@@ -11,7 +11,7 @@
 		background-color: var(--color-2);
 		display: flex;
 		justify-content: space-between;
-		background-image: url('./../../assets/imgs/bkg-home.png');
+		background-image: url('./../../assets/imgs/bkg-home.webp');
 		background-repeat: no-repeat;
 		background-position: bottom left;
 		position: relative;
