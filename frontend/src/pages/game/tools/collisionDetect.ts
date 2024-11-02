@@ -73,7 +73,6 @@ export class CollisionDetector {
 				);
 			} else {
 				futurePlayer.y -= deltaY;
-				futurePlayer.velocities.vx = 0;
 				futurePlayer.velocities.vy = 0;
 			}
 		} else if (typeof escapePosition.down === "number") {
@@ -82,10 +81,10 @@ export class CollisionDetector {
 				const deltaX = rightFuturePlayer - escapePosition.left;
 				this.handleDiagonalEscape(
 					futurePlayer,
-					deltaY,
 					deltaX,
-					yPlayerVelocity,
+					deltaY,
 					xPlayerVelocity,
+					yPlayerVelocity,
 					1,
 					-1
 				);
@@ -93,22 +92,22 @@ export class CollisionDetector {
 				const deltaX = escapePosition.right - leftFuturePlayer;
 				this.handleDiagonalEscape(
 					futurePlayer,
-					deltaY,
 					deltaX,
-					yPlayerVelocity,
+					deltaY,
 					xPlayerVelocity,
+					yPlayerVelocity,
 					1,
 					1
 				);
 			} else {
 				futurePlayer.y += deltaY;
-				futurePlayer.velocities.vx = 0;
 				futurePlayer.velocities.vy = 0;
 			}
 		} else if (typeof escapePosition.left === "number") {
 			const deltaX = rightFuturePlayer - escapePosition.left;
 			futurePlayer.x -= deltaX;
-			futurePlayer.velocities.vx = deltaX;
+			const newSpeed = (Math.abs(futurePlayer.velocities.vx) / 2) * -1;
+			futurePlayer.velocities.vx = newSpeed;
 		} else if (typeof escapePosition.right === "number") {
 			const deltaX = escapePosition.right - leftFuturePlayer;
 			futurePlayer.x += deltaX;
@@ -133,19 +132,29 @@ export class CollisionDetector {
 			velocityB
 		);
 		if (result === "a") {
+			console.log("x");
 			player.x += deltaA * multiplierB;
 			player.y +=
 				((deltaA * Math.abs(velocityB)) / Math.abs(velocityA)) *
 				multiplierA;
 			player.velocities.vx = 0;
-			player.velocities.vy = 0;
+			// player.velocities.vy = 0;
+			player.velocities.vy = player.velocities.vy * 0.93;
+			player.y += player.velocities.vy;
 		} else {
-			player.x +=
-				((deltaB * Math.abs(velocityA)) / Math.abs(velocityB)) *
-				multiplierB;
+			console.log("y");
+			const res =
+			((deltaB * Math.abs(velocityA)) / Math.abs(velocityB)) *
+			multiplierB;
+			console.log(res);
+
+			player.x += res;
 			player.y += deltaB * multiplierA;
-			player.velocities.vx = 0;
+			// player.velocities.vx = 0;
 			player.velocities.vy = 0;
+
+			player.velocities.vx = player.velocities.vx * 0.93;
+			player.x += player.velocities.vx;
 		}
 	}
 

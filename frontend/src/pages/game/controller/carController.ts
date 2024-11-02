@@ -9,8 +9,8 @@ export class CarController {
 		ArrowDown: false,
 	};
 
-	private width = 35;
-	private height = 25;
+	private width = 30;
+	private height = 30;
 
 	private maxVelocity = 5.5;
 	private acceleration = 0.06;

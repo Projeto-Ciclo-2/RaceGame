@@ -18,33 +18,36 @@ export class GameController {
 	private debug = true || config.DEBUG_MODE;
 
 	private hitBox: Array<IBox> = [
-		{ x: 0, y: 0, width: 60, height: 600 },
-		{ x: 60, y: 0, width: 20, height: 40 },
-		{ x: 80, y: 0, width: 760, height: 20 },
-		{ x: 180, y: 20, width: 140, height: 20 },
-		{ x: 200, y: 40, width: 100, height: 20 },
-		{ x: 200, y: 60, width: 80, height: 80 },
-		{ x: 200, y: 140, width: 100, height: 120 },
-		{ x: 300, y: 160, width: 20, height: 100 },
-		{ x: 320, y: 180, width: 220, height: 80 },
-		{ x: 500, y: 260, width: 40, height: 20 },
-		{ x: 520, y: 280, width: 20, height: 140 },
-		{ x: 680, y: 20, width: 80, height: 20 },
-		{ x: 700, y: 40, width: 60, height: 560 },
-		{ x: 680, y: 560, width: 20, height: 20 },
-		{ x: 60, y: 560, width: 20, height: 20 },
-		{ x: 60, y: 580, width: 640, height: 20 },
-		{ x: 120, y: 80, width: 20, height: 440 },
-		{ x: 140, y: 280, width: 20, height: 240 },
-		{ x: 160, y: 300, width: 20, height: 220 },
-		{ x: 180, y: 320, width: 280, height: 200 },
-		{ x: 460, y: 440, width: 20, height: 80 },
-		{ x: 480, y: 460, width: 20, height: 60 },
-		{ x: 500, y: 480, width: 80, height: 40 },
-		{ x: 580, y: 460, width: 20, height: 60 },
-		{ x: 600, y: 90, width: 50, height: 430 },
-		{ x: 350, y: 90, width: 250, height: 20 },
-		{ x: 580, y: 110, width: 20, height: 20 },
+		{ x: 0, y: 0, width: 55, height: 600 },
+		{ x: 55, y: 0, width: 25, height: 25 },
+		{ x: 80, y: 0, width: 760, height: 15 },
+		{ x: 195, y: 15, width: 115, height: 15 },
+		{ x: 210, y: 30, width: 80, height: 20 },
+		{ x: 210, y: 50, width: 70, height: 90 },
+		{ x: 210, y: 140, width: 80, height: 110 },
+		{ x: 290, y: 170, width: 30, height: 80 },
+		{ x: 320, y: 180, width: 220, height: 70 },
+		{ x: 490, y: 250, width: 50, height: 10 },
+		{ x: 515, y: 260, width: 25, height: 20 },
+		{ x: 525, y: 280, width: 15, height: 135 },
+		{ x: 700, y: 15, width: 60, height: 15 },
+		{ x: 720, y: 30, width: 50, height: 570 },
+		{ x: 710, y: 560, width: 10, height: 10 },
+		{ x: 690, y: 570, width: 30, height: 10 },
+		{ x: 55, y: 570, width: 25, height: 10 },
+		{ x: 55, y: 580, width: 665, height: 20 },
+		{ x: 125, y: 85, width: 15, height: 425 },
+		{ x: 140, y: 290, width: 10, height: 220 },
+		{ x: 150, y: 320, width: 30, height:190 },
+		{ x: 180, y: 325, width: 275, height: 185 },
+		{ x: 455, y: 470, width: 15, height: 10 },
+		{ x: 455, y: 480, width: 25, height: 30 },
+		{ x: 480, y: 480, width: 20, height: 30 },
+		{ x: 500, y: 490, width: 80, height: 20 },
+		{ x: 580, y: 480, width: 30, height: 30 },
+		{ x: 610, y: 90, width: 40, height: 420 },
+		{ x: 350, y: 90, width: 260, height: 15 },
+		{ x: 590, y: 105, width: 20, height: 10 },
 	];
 	private boxCollided: Array<IBox> = [];
 	private collisions = {
@@ -115,10 +118,10 @@ export class GameController {
 			// this.gameDebug.makeHitBox(this.hitBox);
 			// this.gameDebug.makeGrid();
 			for (const p of this.players) {
-				this.gameDebug.renderDebugInfo(p);
+				// this.gameDebug.renderDebugInfo(p);
 			}
-			this.gameDebug.renderCollidedBoxes(this.boxCollided);
-			this.gameDebug.renderPlayerInfo(this.players);
+			// this.gameDebug.renderCollidedBoxes(this.boxCollided);
+			// this.gameDebug.renderPlayerInfo(this.players);
 		}
 		this.updatePlayers();
 		this.renderPlayers();
@@ -161,7 +164,7 @@ export class GameController {
 					// this.correctMerge(futurePlayer, result);
 				}
 
-				this.checkPlayerInsideMap(futurePlayer);
+				// this.checkPlayerInsideMap(futurePlayer);
 				return futurePlayer;
 			}
 			return p;
@@ -174,12 +177,12 @@ export class GameController {
 		let boxMerge: undefined | IBox;
 
 		if (this.debug) {
-			this.gameDebug.renderPlayerHitBox(
-				futurePlayer.x,
-				futurePlayer.y,
-				futurePlayer.width,
-				futurePlayer.height
-			);
+			// this.gameDebug.renderPlayerHitBox(
+			// 	futurePlayer.x,
+			// 	futurePlayer.y,
+			// 	futurePlayer.width,
+			// 	futurePlayer.height
+			// );
 		}
 
 		const valid = this.hitBox.every((box) => {
