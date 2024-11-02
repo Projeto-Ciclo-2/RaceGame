@@ -1,0 +1,88 @@
+#ldb-content{
+    background-color: var(--bkg_1);
+    width: 90%;
+    height: 90vh;
+}
+#ldb-header{
+    display: flex;
+    align-items: center;
+}
+#back-home{
+    background-color: var(--background);
+    border-radius: 50%;
+    cursor: pointer;
+    height: 3rem;
+    width: 3rem;
+    margin-left: 1rem;
+    display: flex;
+    align-items: center;
+    transition: transform 0.3 ease;
+    box-shadow: 4px 4px 4px var(--gray);
+	&:hover {
+		transform: scale(1.20);
+	}
+    & svg{
+        height: 2rem;
+    }
+    
+}
+#ldb-header-logo{
+    display: flex;
+    justify-content: center;
+    margin: 2rem;
+    color: var(--text-color);
+    align-items: center;
+    width: 90%;
+}
+#ldb-body{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    
+}
+#ldb-img{
+    width: 35%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+#ldb-body-content{
+    width: 75%;
+    margin: 2rem;
+    margin-top: .5rem;
+    & #ldb-content-header{
+        display: flex;
+        width: 100%;
+        justify-content: space-between;
+        margin: 1rem 0;
+        padding: 0 1rem;
+}
+}
+
+.ranking-card{
+    display: flex;
+    justify-content: space-between;
+    background-color: var(--background);
+    height: 3.5rem;
+    margin-bottom: 1rem;
+    color: var(--primary);
+    padding: 0 1rem;
+    align-items: center;
+    box-shadow: 4px 4px 4px var(--gray);
+    border-radius: 10px;
+    transition: transform 0.3 ease;
+	&:hover {
+		transform: scale(1.03);
+	}
+    & svg{
+		filter: drop-shadow(7px 4px 3px var(--gray));
+	}
+}
+#rank0, #rank1, #rank2{
+    background-color: var(--primary);
+    color: var(--background);
+    box-shadow: 4px 4px 4px var(--background);
+    & svg{
+		filter: drop-shadow(7px 4px 3px var(--background));
+	}
+}
