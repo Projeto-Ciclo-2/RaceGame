@@ -5,6 +5,7 @@ import UserProvider from "./context/UserContext";
 import Game from "./pages/game/Game";
 import LandingPage from "./pages/landingpage/landingpage";
 import Homepage from "./pages/homepage/Homepage";
+import Lobby from "./pages/lobby/Lobby";
 
 const AppRouter = () => {
 	return (
@@ -16,6 +17,7 @@ const AppRouter = () => {
 							<Route element={<LandingPage/>} path="/" />
 							<Route element={<Game />} path="/game" />
 							<Route element={<Homepage />} path="/home" />
+							<Route element={<Lobby />} path="/lobby" />
 						</Switch>
 					</BrowserRouter>
 				</WebSocketProvider>
