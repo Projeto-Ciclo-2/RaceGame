@@ -13,10 +13,8 @@ export interface IPlayer {
 	defaultHeight: number;
 
 	velocities: {
-		up: number;
-		down: number;
-		left: number;
-		right: number;
+		vx: number;
+		vy: number;
 	}
 }
 

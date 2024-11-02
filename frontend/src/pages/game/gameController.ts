@@ -2,6 +2,7 @@ import { config } from "../../config/config";
 import { CarController } from "./controller/carController";
 import { GameDebug } from "./debug/gameDebug";
 import { IBox, IPlayer } from "./interfaces/gameInterfaces";
+import { CollisionDetector } from "./tools/collisionDetect";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
@@ -9,6 +10,7 @@ export class GameController {
 
 	private gameDebug: GameDebug;
 	private carController = new CarController();
+	private collisionDetector = new CollisionDetector();
 
 	private bkg: CanvasImageSource;
 	private userCar: CanvasImageSource;
@@ -68,10 +70,8 @@ export class GameController {
 			defaultHeight: 25,
 			defaultWidth: 35,
 			velocities: {
-				up: 0,
-				down: 0,
-				left: 0,
-				right: 0,
+				vx: 0,
+				vy: 0,
 			},
 		},
 	];
@@ -149,22 +149,19 @@ export class GameController {
 			if (p.canControl) {
 				const futurePlayer = this.carController.getFutureCarPosition(p);
 
-				let result = this.validateMove(futurePlayer);
-				let ttl = 30;
-				while (typeof result !== "boolean" && ttl > 0) {
-					this.breakVelocity(p, futurePlayer);
-					this.correctMerge(futurePlayer, result);
-					result = this.validateMove(futurePlayer);
-					ttl--;
+				const result = this.validateMove(futurePlayer);
+				if (typeof result !== "boolean") {
+					this.collisionDetector.resolveCollision(
+						p,
+						futurePlayer,
+						result
+					);
+					// this.detectMerge(futurePlayer, result);
+					// this.breakVelocity(p, futurePlayer);
+					// this.correctMerge(futurePlayer, result);
 				}
-				this.collisions = {
-					up: false,
-					down: false,
-					left: false,
-					right: false,
-				};
 
-				this.checkPlayerInsideMap(p);
+				this.checkPlayerInsideMap(futurePlayer);
 				return futurePlayer;
 			}
 			return p;
@@ -219,60 +216,73 @@ export class GameController {
 			player.x = this.spawn.x;
 			player.y = this.spawn.y;
 			player.velocities = {
-				up: 0,
-				down: 0,
-				left: 0,
-				right: 0,
+				vx: 0,
+				vy: 0,
 			};
 		}
 		if (player.y < 0 || player.y + player.height > this.canvas.height) {
 			player.x = this.spawn.x;
 			player.y = this.spawn.y;
 			player.velocities = {
-				up: 0,
-				down: 0,
-				left: 0,
-				right: 0,
+				vx: 0,
+				vy: 0,
 			};
+		}
+	}
+
+	private detectMerge(p: IPlayer, box: IBox) {
+		this.collisions.up = false;
+		this.collisions.down = false;
+		this.collisions.left = false;
+		this.collisions.right = false;
+
+		const leftSidePlayer = p.x;
+		const rightSidePlayer = p.x + p.width;
+		const topSidePlayer = p.y;
+		const bottomSidePlayer = p.y + p.height;
+
+		const leftSideBox = box.x;
+		const rightSideBox = box.x + box.width;
+		const topSideBox = box.y;
+		const bottomSideBox = box.y + box.height;
+
+		if (bottomSidePlayer > topSideBox && topSidePlayer < bottomSideBox) {
+			if (
+				leftSidePlayer < rightSideBox &&
+				rightSidePlayer > leftSideBox
+			) {
+				if (p.x < leftSideBox) this.collisions.right = true;
+				if (rightSidePlayer > rightSideBox) this.collisions.left = true;
+			}
+		}
+
+		if (leftSidePlayer < rightSideBox && rightSidePlayer > leftSideBox) {
+			if (
+				topSidePlayer < bottomSideBox &&
+				bottomSidePlayer > topSideBox
+			) {
+				if (topSidePlayer < topSideBox) this.collisions.down = true;
+				if (bottomSidePlayer > bottomSideBox) this.collisions.up = true;
+			}
 		}
 	}
 
 	private breakVelocity(oldPlayer: IPlayer, futurePlayer: IPlayer) {
 		if (futurePlayer.x > oldPlayer.x) {
-			const newVelocity = Math.floor(
-				futurePlayer.velocities.right * -1 * 0.3
-			);
-			futurePlayer.velocities.left =
-				newVelocity === -1 ? -0.5 : newVelocity;
-			futurePlayer.velocities.right = 0;
-			this.collisions.right = true;
+			const newSpeed = Math.floor(futurePlayer.velocities.vx * -1 * 0.3);
+			futurePlayer.velocities.vx = newSpeed === -1 ? -0.5 : newSpeed;
 		}
 		if (futurePlayer.x < oldPlayer.x) {
-			const newVelocity = Math.ceil(
-				futurePlayer.velocities.left * -1 * 0.3
-			);
-			futurePlayer.velocities.right =
-				newVelocity === 1 ? 0.5 : newVelocity;
-			futurePlayer.velocities.left = 0;
-			this.collisions.left = true;
+			const newSpeed = Math.ceil(futurePlayer.velocities.vx * -1 * 0.3);
+			futurePlayer.velocities.vx = newSpeed === 1 ? 0.5 : newSpeed;
 		}
 		if (futurePlayer.y > oldPlayer.y) {
-			const newVelocity = Math.floor(
-				futurePlayer.velocities.down * -1 * 0.3
-			);
-			futurePlayer.velocities.up =
-				newVelocity === -1 ? -0.5 : newVelocity;
-			futurePlayer.velocities.down = 0;
-			this.collisions.down = true;
+			const newSpeed = Math.floor(futurePlayer.velocities.vy * -1 * 0.3);
+			futurePlayer.velocities.vy = newSpeed === -1 ? -0.5 : newSpeed;
 		}
 		if (futurePlayer.y < oldPlayer.y) {
-			const newVelocity = Math.ceil(
-				futurePlayer.velocities.up * -1 * 0.3
-			);
-			futurePlayer.velocities.down =
-				newVelocity === 1 ? 0.5 : newVelocity;
-			futurePlayer.velocities.up = 0;
-			this.collisions.up = true;
+			const newSpeed = Math.ceil(futurePlayer.velocities.vy * -1 * 0.3);
+			futurePlayer.velocities.vy = newSpeed === 1 ? 0.5 : newSpeed;
 		}
 	}
 

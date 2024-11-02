@@ -13,7 +13,7 @@ export class CarController {
 	private height = 25;
 
 	private maxVelocity = 5.5;
-	private acceleration = 0.04;
+	private acceleration = 0.06;
 	private decelerationRate = 0.01;
 	private maxDecelerationRate = 0.05;
 
@@ -40,49 +40,31 @@ export class CarController {
 	}
 
 	private getFuturePosition(player: IPlayer): IPlayer {
-		const upVelocity = player.velocities.up + this.acceleration * -1;
-		const downVelocity = player.velocities.down + this.acceleration;
-		const leftVelocity = player.velocities.left + this.acceleration * -1;
-		const rightVelocity = player.velocities.right + this.acceleration;
+		const upVelocity = player.velocities.vy + this.acceleration * -1;
+		const downVelocity = player.velocities.vy + this.acceleration;
+		const leftVelocity = player.velocities.vx + this.acceleration * -1;
+		const rightVelocity = player.velocities.vx + this.acceleration;
 
-		const upCanIncrease =
-			upVelocity <= 0 && upVelocity > this.maxVelocity * -1;
-		const downCanIncrease =
-			downVelocity >= 0 && downVelocity < this.maxVelocity;
-		const leftCanIncrease =
-			leftVelocity <= 0 && leftVelocity > this.maxVelocity * -1;
-		const rightCanIncrease =
-			rightVelocity >= 0 && rightVelocity < this.maxVelocity;
+		const upCanIncrease = upVelocity > this.maxVelocity * -1;
+		const downCanIncrease = downVelocity < this.maxVelocity;
+		const leftCanIncrease = leftVelocity > this.maxVelocity * -1;
+		const rightCanIncrease = rightVelocity < this.maxVelocity;
 
 		if (this.keys.ArrowUp && upCanIncrease) {
-			player.velocities.up = upVelocity;
-			if (player.velocities.down > 0) {
-				player.velocities.down -= this.acceleration;
-			}
+			player.velocities.vy = upVelocity;
 		}
 		if (this.keys.ArrowDown && downCanIncrease) {
-			player.velocities.down = downVelocity;
-			if (player.velocities.up < 0) {
-				player.velocities.up += this.acceleration;
-			}
+			player.velocities.vy = downVelocity;
 		}
 		if (this.keys.ArrowLeft && leftCanIncrease) {
-			player.velocities.left = leftVelocity;
-			if (player.velocities.right > 0) {
-				player.velocities.right -= this.acceleration;
-			}
+			player.velocities.vx = leftVelocity;
 		}
 		if (this.keys.ArrowRight && rightCanIncrease) {
-			player.velocities.right = rightVelocity;
-			if (player.velocities.left < 0) {
-				player.velocities.left += this.acceleration;
-			}
+			player.velocities.vx = rightVelocity;
 		}
 
-		const horizontalMove = player.velocities.left + player.velocities.right;
-		const verticalMove = player.velocities.up + player.velocities.down;
-		player.x += horizontalMove;
-		player.y += verticalMove;
+		player.x += player.velocities.vx;
+		player.y += player.velocities.vy;
 
 		return player;
 	}
@@ -133,40 +115,41 @@ export class CarController {
 	}
 
 	private correctVelocities(player: IPlayer) {
-		const { up, down, left, right } = player.velocities;
+		const { vx, vy } = player.velocities;
 		const negativeMaxVelocity = this.maxVelocity * -1;
 
-		if (up > 0 || up < negativeMaxVelocity) {
-			player.velocities.up = 0;
+		if (vx > this.maxVelocity || vx < negativeMaxVelocity) {
+			player.velocities.vx = 0;
 		}
-		if (down < 0 || down > this.maxVelocity) {
-			player.velocities.down = 0;
-		}
-		if (left > 0 || left < negativeMaxVelocity) {
-			player.velocities.left = 0;
-		}
-		if (right < 0 || right > this.maxVelocity) {
-			player.velocities.right = 0;
+		if (vy > this.maxVelocity || vy < negativeMaxVelocity) {
+			player.velocities.vy = 0;
 		}
 	}
 
 	private decreaseVelocityOverTime(player: IPlayer) {
-		const { up, down, left, right } = player.velocities;
+		const { vx, vy } = player.velocities;
 		const negativeMaxVelocity = this.maxVelocity * -1;
 
 		this.defineDecelerationRate();
 
-		if (up < 0 && up > negativeMaxVelocity) {
-			player.velocities.up += this.decelerationRate;
+		if (vy < 0 && vy > negativeMaxVelocity) {
+			const newSpeed = player.velocities.vy + this.decelerationRate;
+			const speed = newSpeed > 0 ? 0 : newSpeed;
+			player.velocities.vy = speed;
+		} else if (vy > 0 && vy < this.maxVelocity) {
+			const newSpeed = player.velocities.vy - this.decelerationRate;
+			const speed = newSpeed < 0 ? 0 : newSpeed;
+			player.velocities.vy = speed;
 		}
-		if (down > 0 && down < this.maxVelocity) {
-			player.velocities.down -= this.decelerationRate;
-		}
-		if (left < 0 && left > negativeMaxVelocity) {
-			player.velocities.left += this.decelerationRate;
-		}
-		if (right > 0 && right < this.maxVelocity) {
-			player.velocities.right -= this.decelerationRate;
+
+		if (vx < 0 && vx > negativeMaxVelocity) {
+			const newSpeed = player.velocities.vx + this.decelerationRate;
+			const speed = newSpeed > 0 ? 0 : newSpeed;
+			player.velocities.vx = speed;
+		} else if (vx > 0 && vx < this.maxVelocity) {
+			const newSpeed = player.velocities.vx - this.decelerationRate;
+			const speed = newSpeed < 0 ? 0 : newSpeed;
+			player.velocities.vx = speed;
 		}
 	}
 

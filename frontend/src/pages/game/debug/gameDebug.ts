@@ -88,10 +88,8 @@ export class GameDebug {
 
 		const debugText = [
 			`Velocities:`,
-			`Up: ${player.velocities.up}`,
-			`Down: ${player.velocities.down}`,
-			`Left: ${player.velocities.left}`,
-			`Right: ${player.velocities.right}`,
+			`vx: ${player.velocities.vx}`,
+			`vy: ${player.velocities.vy}`,
 		];
 
 		debugText.forEach((text, index) => {
