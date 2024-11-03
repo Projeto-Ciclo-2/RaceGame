@@ -1,0 +1,112 @@
+#lobby {
+	width: 100%;
+	height: 100vh;
+	background-color: var(--color-1);
+	padding: 2rem;
+
+	#content-lobby {
+		width: 100%;
+		height: 100%;
+		padding: 2rem;
+		display: flex;
+		gap: 1rem;
+		background-color: var(--color-2);
+
+		#content-game {
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			gap: 2rem;
+			width: 50%;
+
+			& #status-game {
+				display: flex;
+				flex-direction: column;
+				gap: 1.5rem;
+				& p {
+					font-family: var(--font-title);
+					color: var(--color-1);
+					font-size: 1.2rem;
+
+					& span {
+						font-size: 1rem;
+						font-family: var(--font-title);
+						color: var(--color-3);
+					}
+				}
+			}
+
+			& .alert-game-init {
+				color: var(--color-1);
+				font-weight: 200;
+				font-size: 1.1rem;
+			}
+
+			& #image-lobby {
+				background-image: url("./../../assets/imgs/bkg-home.webp");
+				background-repeat: no-repeat;
+				background-size: 100% 100%;
+				width: 500px;
+				height: 300px;
+			}
+
+			& #last-div {
+				display: flex;
+				flex-direction: column;
+				gap: 0.5rem;
+
+				& div {
+					display: flex;
+					justify-content: flex-start;
+					gap: 1rem;
+				}
+			}
+		}
+	}
+
+	& #chat-lobby {
+		width: 50%;
+		color: white;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+
+		& #chat {
+			background-color: rgba(0,0,0,.05);
+			border-radius: 0.5rem;
+			height: 90%;
+			padding: 0.5rem;
+			display: flex;
+			flex-direction: column;
+			gap: 0.5rem;
+			overflow: auto;
+			box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.15);
+
+			& p {
+				width: 100%;
+				color: var(--color-1);
+				display: flex;
+				gap: 0.5rem;
+				align-items: center;
+
+				& .name-user {
+					background-color: white;
+					padding: 0.2rem;
+					border-radius: 0.2rem;
+					color: var(--color-3);
+				}
+			}
+		}
+
+		& hr {
+			margin-top: 15px;
+			margin-bottom: -1px;
+		}
+
+		& .react-emoji {
+			margin-left: -10px;
+			border-radius: 1rem;
+			box-shadow: 5px 5px 10px rgba(0,0,0,.2);
+		}
+	}
+}
