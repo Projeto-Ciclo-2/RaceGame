@@ -1,5 +1,5 @@
 // connecting
-const socket = new WebSocket("ws://localhost:5000");
+const socket = new WebSocket("ws://localhost:5000?username=meuUser");
 socket.onopen = (e) => {
 	console.log("Connection opened", e);
 };
