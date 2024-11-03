@@ -12,7 +12,8 @@ const dotenvIsConfig =
 	process.env.DB_PORT != null &&
 	process.env.JWT != null &&
 	process.env.REDIS_PORT != null &&
-	process.env.REDIS_HOST != null;
+	process.env.REDIS_HOST != null &&
+	process.env.GOOGLE_CLIENT_SECRET != null;
 
 if (!dotenvIsConfig)
 	console.error(
@@ -35,4 +36,6 @@ export const config = {
 	JWT: process.env.JWT || "1234",
 	REDIS_PORT: process.env.REDIS_PORT || "6379",
 	REDIS_HOST: process.env.REDIS_HOST || "localhost",
+
+	GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || "",
 };

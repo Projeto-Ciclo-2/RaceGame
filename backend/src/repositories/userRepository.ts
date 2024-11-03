@@ -7,6 +7,8 @@ export default class UserRepository {
 			.insert(user)
 			.returning([
 				"username",
+				"name",
+				"google_id",
 				"created_at",
 				"wins",
 				"messages_send",
@@ -22,6 +24,7 @@ export default class UserRepository {
 			.first([
 				"id",
 				"username",
+				"name",
 				"created_at",
 				"wins",
 				"messages_send",
@@ -35,6 +38,7 @@ export default class UserRepository {
 	public async getAllUsers() {
 		const users = await dbConnection<IUser>("users").select([
 			"username",
+			"name",
 			"created_at",
 			"wins",
 			"messages_send",
@@ -52,12 +56,20 @@ export default class UserRepository {
 		return user;
 	}
 
+	public async getUserByGoogleId(google_id: string) {
+		const user = await dbConnection<IUser>("users")
+			.where({ google_id })
+			.first();
+		return user;
+	}
+
 	public async update(id: string, user: Partial<IUser>) {
 		const [updatedUser] = await dbConnection<IUser>("users")
 			.where({ id })
 			.update(user)
 			.returning([
 				"username",
+				"name",
 				"created_at",
 				"wins",
 				"messages_send",
@@ -73,6 +85,7 @@ export default class UserRepository {
 			.del()
 			.returning([
 				"username",
+				"name",
 				"created_at",
 				"wins",
 				"messages_send",
