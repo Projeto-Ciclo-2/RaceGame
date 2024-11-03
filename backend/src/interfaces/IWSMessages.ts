@@ -1,5 +1,4 @@
-import { IMessage, IRoom } from "./IRoom";
-
+import { IMessage, IPlayer, IRoom } from "./IRoom";
 
 /**
  * |===============================|
@@ -21,8 +20,8 @@ export interface WsRoomInfo {
 	room: IRoom;
 }
 
-export interface WsJoinGame {
-	type: "joinGame";
+export interface WsBroadcastJoinGame {
+	type: "broadcastJoinGame";
 	username: string;
 	userID: string;
 	room: IRoom;
@@ -56,9 +55,7 @@ export interface WsGameInit {
 export interface WsBroadcastPlayerMove {
 	type: "broadcastPlayerMove";
 	roomID: string;
-	userID: string;
-	x: number;
-	y: number;
+	player: IPlayer
 }
 
 export interface WsBroadcastPlayerPickItem {
@@ -68,22 +65,32 @@ export interface WsBroadcastPlayerPickItem {
 	itemID: string;
 }
 
+export interface WsBroadcastUseItem {
+	type: "broadcastUseItem";
+	roomID: string;
+	userID: string;
+	itemID: string;
+}
+
 export interface WsPublishItem {
 	type: "publishItem";
 	roomID: string;
 	itemID: string;
+	x: number;
+	y: number;
 }
 
 export interface WsEndGame {
 	type: "endGame";
 	roomID: string;
+	players: Array<IPlayer>
 	winner: string; //username
 }
 
 /***********************************
  * |===============================|
  * | FRONT END WEB SOCKET MESSAGES |
- * |============================== |
+ * |===============================|
  ***********************************/
 
 export interface WsCreateRoom {
@@ -119,9 +126,7 @@ export interface WsPlayerReady {
 export interface WsPlayerMove {
 	type: "playerMove";
 	roomID: string;
-	userID: string;
-	x: number;
-	y: number;
+	player: IPlayer
 }
 
 export interface WsPlayerPicksItem {
@@ -129,6 +134,13 @@ export interface WsPlayerPicksItem {
 	roomID: string;
 	userID: string;
 	itemID: number;
+}
+
+export interface WsPlayerUsesItem {
+	type: "playerUsesItem";
+	roomID: string;
+	userID: string;
+	itemID: string;
 }
 
 export interface WsPlayerArrives {
