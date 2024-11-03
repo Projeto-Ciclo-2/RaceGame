@@ -4,7 +4,7 @@ import { config } from "./config/index";
 import { router } from "./routes/router";
 import cors from "cors";
 import http from "http";
-import { wss } from "./websocket";
+import { wss } from "./websocket/websocket";
 import GoogleAuth from "./services/GoogleAuthService";
 import session from "express-session";
 import passport from "passport";
