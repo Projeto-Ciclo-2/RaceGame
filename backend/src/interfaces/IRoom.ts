@@ -1,14 +1,29 @@
-export interface IPosition {
-	x: number;
-	y: number;
+export interface IItems {
+	id: string;
+	velocity_effect: number;
 }
 
 export interface IPlayer {
 	id: string;
 	username: string;
+
 	ready: boolean;
-	position: IPosition;
+
+	x: number;
+	y: number;
+
+	width: number;
+	height: number;
+
 	done_laps: number;
+	done_checkpoints: number;
+
+	velocities: {
+		vx: number;
+		vy: number;
+	}
+
+	items: Array<IItems>
 }
 
 export interface IMessage {

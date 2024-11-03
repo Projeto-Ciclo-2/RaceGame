@@ -4,7 +4,8 @@ import { config } from "./config/index";
 import { router } from "./routes/router";
 import cors from "cors";
 import http from "http";
-import { wss } from "./websocket";
+import { wss } from "./websocket/websocket";
+
 import session from "express-session";
 
 const app: Express = express();

@@ -1,7 +1,8 @@
 import React from "react";
 import { GameController } from "./gameController";
 import "./game.css";
-import img from "./assets/map1.svg";
+import bkg from "./assets/map1.svg";
+import car from "./assets/blue-car.svg";
 
 export default function Game() {
 	const gameController = React.useRef<null | GameController>(null);
@@ -9,18 +10,35 @@ export default function Game() {
 
 	React.useEffect(() => {
 		if (!gameController.current) {
-			const image = new Image();
-			image.src = img;
-
-			image.onload = () => {
-				if (canvas.current) {
-					gameController.current = new GameController(canvas.current, image);
-					gameController.current.listen();
-					gameController.current.start();
-				}
+			const loadImage = (src: string): Promise<HTMLImageElement> => {
+				return new Promise((resolve, reject) => {
+					const img = new Image();
+					img.src = src;
+					img.onload = () => resolve(img);
+					img.onerror = (error) => reject(error);
+				});
 			};
+
+			// Load both images
+			Promise.all([loadImage(bkg), loadImage(car)])
+				.then(([bkgImg, carImg]) => {
+					if (canvas.current) {
+						gameController.current = new GameController(
+							canvas.current,
+							bkgImg,
+							carImg
+						);
+						gameController.current.listen();
+						gameController.current.start();
+					}
+					console.log("load");
+				})
+				.catch((error) => {
+					console.error("Failed to load images:", error);
+				});
 		}
-	});
+	}, []);
+
 
 	return (
 		<div id="game">

@@ -1,0 +1,23 @@
+.css-76aryx-MuiSpeedDial-root {
+	flex-direction: column !important;
+	top: 1rem !important;
+	right: 2rem !important;
+
+	.MuiButtonBase-root {
+		background-color: var(--color-2) !important;
+
+		& .menu-icon {
+			width: 3rem;
+			height: 3rem;
+			color: var(--color-1);
+		}
+	}
+}
+
+.css-1usvvvc-MuiButtonBase-root-MuiFab-root-MuiSpeedDial-fab {
+	box-shadow: none !important;
+
+	&:hover {
+		background-color: var(--color-2) !important;
+	}
+}

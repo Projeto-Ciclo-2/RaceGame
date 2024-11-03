@@ -1,87 +1,107 @@
 import { config } from "../../config/config";
-
-type typeOptions = "ArrowRight" | "ArrowLeft" | "ArrowUp" | "ArrowDown";
-interface IPlayer {
-	canControl: boolean;
-	x: number;
-	y: number;
-}
+import { CarController } from "./controller/carController";
+import { GameDebug } from "./debug/gameDebug";
+import { IBox, IPlayer } from "./interfaces/gameInterfaces";
+import { CollisionDetector } from "./tools/collisionDetect";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
 	private ctx: CanvasRenderingContext2D;
 
+	private gameDebug: GameDebug;
+	private carController = new CarController();
+	private collisionDetector = new CollisionDetector();
+
 	private bkg: CanvasImageSource;
+	private userCar: CanvasImageSource;
 
 	private debug = true || config.DEBUG_MODE;
-	private gridPad = 20;
 
-	private hitBox = [
-		{ x: 0, y: 0, width: 60, height: 600 },
-		{ x: 60, y: 0, width: 20, height: 40 },
-		{ x: 80, y: 0, width: 760, height: 20 },
-		{ x: 180, y: 20, width: 140, height: 20 },
-		{ x: 200, y: 40, width: 100, height: 20 },
-		{ x: 200, y: 60, width: 80, height: 80 },
-		{ x: 200, y: 140, width: 100, height: 120 },
-		{ x: 300, y: 160, width: 20, height: 100 },
-		{ x: 320, y: 180, width: 220, height: 80 },
-		{ x: 500, y: 260, width: 40, height: 20 },
-		{ x: 520, y: 280, width: 20, height: 140 },
-		{ x: 680, y: 20, width: 80, height: 20 },
-		{ x: 700, y: 40, width: 60, height: 560 },
-		{ x: 680, y: 560, width: 20, height: 20 },
-		{ x: 60, y: 560, width: 20, height: 20 },
-		{ x: 60, y: 580, width: 640, height: 20 },
-		{ x: 120, y: 80, width: 20, height: 440 },
-		{ x: 140, y: 280, width: 20, height: 240 },
-		{ x: 160, y: 300, width: 20, height: 220 },
-		{ x: 180, y: 320, width: 280, height: 200 },
-		{ x: 460, y: 440, width: 20, height: 80 },
-		{ x: 480, y: 460, width: 20, height: 60 },
-		{ x: 500, y: 480, width: 80, height: 40 },
-		{ x: 580, y: 460, width: 20, height: 60 },
-		{ x: 600, y: 90, width: 50, height: 430 },
-		{ x: 350, y: 90, width: 250, height: 20 },
-		{ x: 580, y: 110, width: 20, height: 20 },
+	private hitBox: Array<IBox> = [
+		{ x: 0, y: 0, width: 55, height: 600 },
+		{ x: 55, y: 0, width: 25, height: 25 },
+		{ x: 80, y: 0, width: 760, height: 15 },
+		{ x: 195, y: 15, width: 115, height: 15 },
+		{ x: 210, y: 30, width: 80, height: 20 },
+		{ x: 210, y: 50, width: 70, height: 90 },
+		{ x: 210, y: 140, width: 80, height: 110 },
+		{ x: 290, y: 170, width: 30, height: 80 },
+		{ x: 320, y: 180, width: 220, height: 70 },
+		{ x: 490, y: 250, width: 50, height: 10 },
+		{ x: 515, y: 260, width: 25, height: 20 },
+		{ x: 525, y: 280, width: 15, height: 135 },
+		{ x: 700, y: 15, width: 60, height: 15 },
+		{ x: 720, y: 30, width: 50, height: 570 },
+		{ x: 710, y: 560, width: 10, height: 10 },
+		{ x: 690, y: 570, width: 30, height: 10 },
+		{ x: 55, y: 570, width: 25, height: 10 },
+		{ x: 55, y: 580, width: 665, height: 20 },
+		{ x: 125, y: 85, width: 15, height: 425 },
+		{ x: 140, y: 290, width: 10, height: 220 },
+		{ x: 150, y: 320, width: 30, height:190 },
+		{ x: 180, y: 325, width: 275, height: 185 },
+		{ x: 455, y: 470, width: 15, height: 10 },
+		{ x: 455, y: 480, width: 25, height: 30 },
+		{ x: 480, y: 480, width: 20, height: 30 },
+		{ x: 500, y: 490, width: 80, height: 20 },
+		{ x: 580, y: 480, width: 30, height: 30 },
+		{ x: 610, y: 90, width: 40, height: 420 },
+		{ x: 350, y: 90, width: 260, height: 15 },
+		{ x: 590, y: 105, width: 20, height: 10 },
 	];
-
-	private width = 30;
-	private height = 15;
-	private velocity = 5;
-
-	private options = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
-	private keys = {
-		ArrowLeft: false,
-		ArrowRight: false,
-		ArrowUp: false,
-		ArrowDown: false,
+	private boxCollided: Array<IBox> = [];
+	private collisions = {
+		up: false,
+		down: false,
+		left: false,
+		right: false,
 	};
 
-	private players: Array<IPlayer> = [{ canControl: true, x: 380, y: 540 }];
+	private spawn = {
+		x: 380,
+		y: 540,
+	};
 
-	constructor(canvas: HTMLCanvasElement, bkg: CanvasImageSource) {
+	private players: Array<IPlayer> = [
+		{
+			canControl: true,
+			rotation: 0,
+			x: this.spawn.x,
+			y: this.spawn.y,
+			height: 25,
+			width: 35,
+			defaultHeight: 25,
+			defaultWidth: 35,
+			velocities: {
+				vx: 0,
+				vy: 0,
+			},
+		},
+	];
+
+	constructor(
+		canvas: HTMLCanvasElement,
+		bkg: CanvasImageSource,
+		carImg: CanvasImageSource
+	) {
 		this.canvas = canvas;
 		this.bkg = bkg;
+		this.userCar = carImg;
 		const ctx = this.canvas.getContext("2d");
 		if (ctx) {
 			this.ctx = ctx;
+			this.gameDebug = new GameDebug(this.ctx);
 			return;
 		}
 		throw new Error("Canvas has no correct context.");
 	}
 
 	public listen() {
-		document.addEventListener("keydown", (e) =>
-			this.handleKeyPress(e, true)
-		);
-		document.addEventListener("keyup", (e) =>
-			this.handleKeyPress(e, false)
-		);
+		this.carController.listen();
 	}
 
 	public start() {
-		// window.requestAnimationFrame(() => this.animate);
+		// this.hitBox = [];
 		this.animate();
 	}
 
@@ -95,8 +115,13 @@ export class GameController {
 			this.canvas.height
 		);
 		if (this.debug) {
-			this.makeHitBox();
-			this.makeGrid();
+			// this.gameDebug.makeHitBox(this.hitBox);
+			// this.gameDebug.makeGrid();
+			for (const p of this.players) {
+				// this.gameDebug.renderDebugInfo(p);
+			}
+			// this.gameDebug.renderCollidedBoxes(this.boxCollided);
+			// this.gameDebug.renderPlayerInfo(this.players);
 		}
 		this.updatePlayers();
 		this.renderPlayers();
@@ -107,33 +132,15 @@ export class GameController {
 		this.ctx.fillStyle = "red";
 		for (const p of this.players) {
 			this.ctx.save();
+			this.ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
+			this.ctx.rotate((p.rotation * Math.PI) / 180);
 
-			this.ctx.translate(p.x + this.width / 2, p.y + this.height / 2);
-
-			const diagonalTurnLeft =
-				(this.keys.ArrowUp && this.keys.ArrowLeft) ||
-				(this.keys.ArrowDown && this.keys.ArrowRight);
-			const diagonalTurnRight =
-				(this.keys.ArrowUp && this.keys.ArrowRight) ||
-				(this.keys.ArrowDown && this.keys.ArrowLeft);
-			const diagonalPress = diagonalTurnLeft || diagonalTurnRight;
-
-			let degree = diagonalTurnLeft ? 45 : diagonalTurnRight ? 135 : 0;
-
-			if (
-				(!diagonalPress && this.keys.ArrowUp) ||
-				(!diagonalPress && this.keys.ArrowDown)
-			) {
-				degree = 90;
-			}
-			this.ctx.rotate((degree * Math.PI) / 180);
-
-			this.ctx.fillStyle = "red";
-			this.ctx.fillRect(
-				-this.width / 2,
-				-this.height / 2,
-				this.width,
-				this.height
+			this.ctx.drawImage(
+				this.userCar,
+				-p.defaultWidth / 2,
+				-p.defaultHeight / 2,
+				p.defaultWidth,
+				p.defaultHeight
 			);
 
 			this.ctx.restore();
@@ -143,73 +150,161 @@ export class GameController {
 	private updatePlayers() {
 		this.players = this.players.map((p) => {
 			if (p.canControl) {
-				if (this.validateMove(p)) return this.updatePosition(p);
+				const futurePlayer = this.carController.getFutureCarPosition(p);
+
+				const result = this.validateMove(futurePlayer);
+				if (typeof result !== "boolean") {
+					this.collisionDetector.resolveCollision(
+						p,
+						futurePlayer,
+						result
+					);
+					// this.detectMerge(futurePlayer, result);
+					// this.breakVelocity(p, futurePlayer);
+					// this.correctMerge(futurePlayer, result);
+				}
+
+				// this.checkPlayerInsideMap(futurePlayer);
+				return futurePlayer;
 			}
 			return p;
 		});
 	}
 
-	private updatePosition(player: IPlayer): IPlayer {
-		const tempPlayer = Object.assign({}, player);
+	private validateMove(player: IPlayer): true | IBox {
+		const futurePlayer = Object.assign({}, player);
 
-		if (this.keys.ArrowUp) {
-			tempPlayer.y += this.velocity * -1;
-		}
-		if (this.keys.ArrowDown) {
-			tempPlayer.y += this.velocity;
-		}
-		if (this.keys.ArrowLeft) {
-			tempPlayer.x += this.velocity * -1;
-		}
-		if (this.keys.ArrowRight) {
-			tempPlayer.x += this.velocity;
-		}
-		return tempPlayer;
-	}
+		let boxMerge: undefined | IBox;
 
-	private validateMove(player: IPlayer): boolean {
-		const tempPlayer = this.updatePosition(player);
+		if (this.debug) {
+			// this.gameDebug.renderPlayerHitBox(
+			// 	futurePlayer.x,
+			// 	futurePlayer.y,
+			// 	futurePlayer.width,
+			// 	futurePlayer.height
+			// );
+		}
+
 		const valid = this.hitBox.every((box) => {
-			const playerLeftMerge = tempPlayer.x + this.width > box.x;
-			const playerRightMerge = tempPlayer.x < box.x + box.width;
-			const horizontalMerge = playerLeftMerge && playerRightMerge;
+			const playerRightBiggerThanBox =
+				futurePlayer.x + futurePlayer.width > box.x;
+			const playerLeftShorterThanBox = futurePlayer.x < box.x + box.width;
+			const horizontalMerge =
+				playerRightBiggerThanBox && playerLeftShorterThanBox;
 
-			const playerTopMerge = tempPlayer.y + this.height > box.y;
-			const playerBottomMerge = tempPlayer.y < box.y + box.height;
-			const verticalMerge = playerTopMerge && playerBottomMerge;
+			const playerBottomBiggerThanBox =
+				futurePlayer.y + futurePlayer.height > box.y;
+			const playerTopShortenThanBox = futurePlayer.y < box.y + box.height;
+			const verticalMerge =
+				playerBottomBiggerThanBox && playerTopShortenThanBox;
+
+			if (horizontalMerge && verticalMerge) {
+				boxMerge = box;
+			}
 
 			return !horizontalMerge || !verticalMerge;
 		});
-		return valid;
+		if (!valid && boxMerge) {
+			this.boxCollided.push(boxMerge);
+			if (this.boxCollided.length >= 3) {
+				this.boxCollided.shift();
+			}
+			return boxMerge;
+		}
+		return valid as true;
 	}
 
-	private makeHitBox() {
-		this.ctx.fillStyle = "#cd853f99";
-		for (const x of this.hitBox) {
-			this.ctx.fillRect(x.x, x.y, x.width, x.height);
+	private checkPlayerInsideMap(player: IPlayer): void {
+		if (player.x < 0 || player.x + player.width > this.canvas.width) {
+			player.x = this.spawn.x;
+			player.y = this.spawn.y;
+			player.velocities = {
+				vx: 0,
+				vy: 0,
+			};
+		}
+		if (player.y < 0 || player.y + player.height > this.canvas.height) {
+			player.x = this.spawn.x;
+			player.y = this.spawn.y;
+			player.velocities = {
+				vx: 0,
+				vy: 0,
+			};
 		}
 	}
 
-	private makeGrid() {
-		this.ctx.fillStyle = "black";
-		for (let index = 0; index <= this.canvas.width; index += this.gridPad) {
-			if (index === this.canvas.width) index--;
-			this.ctx.fillRect(index, 0, 1, this.canvas.height);
+	private detectMerge(p: IPlayer, box: IBox) {
+		this.collisions.up = false;
+		this.collisions.down = false;
+		this.collisions.left = false;
+		this.collisions.right = false;
+
+		const leftSidePlayer = p.x;
+		const rightSidePlayer = p.x + p.width;
+		const topSidePlayer = p.y;
+		const bottomSidePlayer = p.y + p.height;
+
+		const leftSideBox = box.x;
+		const rightSideBox = box.x + box.width;
+		const topSideBox = box.y;
+		const bottomSideBox = box.y + box.height;
+
+		if (bottomSidePlayer > topSideBox && topSidePlayer < bottomSideBox) {
+			if (
+				leftSidePlayer < rightSideBox &&
+				rightSidePlayer > leftSideBox
+			) {
+				if (p.x < leftSideBox) this.collisions.right = true;
+				if (rightSidePlayer > rightSideBox) this.collisions.left = true;
+			}
 		}
-		for (
-			let index = 0;
-			index <= this.canvas.height;
-			index += this.gridPad
-		) {
-			if (index === this.canvas.height) index--;
-			this.ctx.fillRect(0, index, this.canvas.width, 1);
+
+		if (leftSidePlayer < rightSideBox && rightSidePlayer > leftSideBox) {
+			if (
+				topSidePlayer < bottomSideBox &&
+				bottomSidePlayer > topSideBox
+			) {
+				if (topSidePlayer < topSideBox) this.collisions.down = true;
+				if (bottomSidePlayer > bottomSideBox) this.collisions.up = true;
+			}
 		}
 	}
 
-	private handleKeyPress(e: KeyboardEvent, alive: boolean) {
-		if (this.options.includes(e.key)) {
-			const key = e.key as any as typeOptions;
-			this.keys[key] = alive;
+	private breakVelocity(oldPlayer: IPlayer, futurePlayer: IPlayer) {
+		if (futurePlayer.x > oldPlayer.x) {
+			const newSpeed = Math.floor(futurePlayer.velocities.vx * -1 * 0.3);
+			futurePlayer.velocities.vx = newSpeed === -1 ? -0.5 : newSpeed;
+		}
+		if (futurePlayer.x < oldPlayer.x) {
+			const newSpeed = Math.ceil(futurePlayer.velocities.vx * -1 * 0.3);
+			futurePlayer.velocities.vx = newSpeed === 1 ? 0.5 : newSpeed;
+		}
+		if (futurePlayer.y > oldPlayer.y) {
+			const newSpeed = Math.floor(futurePlayer.velocities.vy * -1 * 0.3);
+			futurePlayer.velocities.vy = newSpeed === -1 ? -0.5 : newSpeed;
+		}
+		if (futurePlayer.y < oldPlayer.y) {
+			const newSpeed = Math.ceil(futurePlayer.velocities.vy * -1 * 0.3);
+			futurePlayer.velocities.vy = newSpeed === 1 ? 0.5 : newSpeed;
+		}
+	}
+
+	private correctMerge(player: IPlayer, mergedBox: IBox) {
+		if (this.collisions.up) {
+			const diference = mergedBox.y + mergedBox.height - player.y;
+			player.y += diference;
+		}
+		if (this.collisions.down) {
+			const diference = player.y + player.height - mergedBox.y;
+			player.y -= diference;
+		}
+		if (this.collisions.left) {
+			const diference = mergedBox.x + mergedBox.width - player.x;
+			player.x += diference;
+		}
+		if (this.collisions.right) {
+			const diference = player.x + player.width - mergedBox.x;
+			player.x -= diference;
 		}
 	}
 }

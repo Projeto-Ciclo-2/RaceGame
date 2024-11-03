@@ -6,6 +6,7 @@ import { config } from "../config";
 import { UserService } from "../services/userService";
 import { IncomingMessage } from "http";
 import url from "url";
+import { WsBroadcastPlayerMove } from "../interfaces/IWSMessages";
 
 const userService = new UserService();
 const users = new Set<WsUser>();
@@ -40,6 +41,29 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 	ws.on("message", async (message) => {
 		const data = JSON.parse(message.toString());
 		switch (data.type) {
+			case "playerMove":
+				const message: WsBroadcastPlayerMove = {
+					player: {
+						done_checkpoints: 0,
+						done_laps: 0,
+						height: 30,
+						id: "",
+						items: [],
+						ready: true,
+						username: "",
+						velocities: {
+							vx: 0,
+							vy: 0,
+						},
+						width: 30,
+						x: 0,
+						y: 0,
+					},
+					roomID: "",
+					type: "broadcastPlayerMove",
+				};
+				broadcast(JSON.stringify(message));
+				break;
 			default:
 				throw new BadRequestException(Message.INVALID_TYPE);
 		}
