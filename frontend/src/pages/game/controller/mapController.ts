@@ -1,1 +1,170 @@
-export class MapController {}
+import {
+	IBox,
+	ICheckPoint,
+	IEntities,
+	IItems,
+	IPlayer,
+} from "../interfaces/gameInterfaces";
+import { CollisionDetector } from "../tools/collisionDetect";
+import { CarController } from "./carController";
+
+export class MapController {
+	private spawn = {
+		x: 380,
+		y: 540,
+	};
+
+	private canvas: HTMLCanvasElement;
+	private carController = new CarController();
+	private collisionDetector = new CollisionDetector();
+	private players: Array<IPlayer>;
+
+	private walls: Array<IBox> = [
+		{ x: 0, y: 0, width: 55, height: 600 },
+		{ x: 55, y: 0, width: 25, height: 25 },
+		{ x: 80, y: 0, width: 760, height: 15 },
+		{ x: 195, y: 15, width: 115, height: 15 },
+		{ x: 210, y: 30, width: 80, height: 20 },
+		{ x: 210, y: 50, width: 70, height: 90 },
+		{ x: 210, y: 140, width: 80, height: 110 },
+		{ x: 290, y: 170, width: 30, height: 80 },
+		{ x: 320, y: 180, width: 220, height: 70 },
+		{ x: 490, y: 250, width: 50, height: 10 },
+		{ x: 515, y: 260, width: 25, height: 20 },
+		{ x: 525, y: 280, width: 15, height: 135 },
+		{ x: 700, y: 15, width: 60, height: 15 },
+		{ x: 720, y: 30, width: 50, height: 570 },
+		{ x: 710, y: 560, width: 10, height: 10 },
+		{ x: 690, y: 570, width: 30, height: 10 },
+		{ x: 55, y: 570, width: 25, height: 10 },
+		{ x: 55, y: 580, width: 665, height: 20 },
+		{ x: 125, y: 85, width: 15, height: 425 },
+		{ x: 140, y: 290, width: 10, height: 220 },
+		{ x: 150, y: 320, width: 30, height: 190 },
+		{ x: 180, y: 325, width: 275, height: 185 },
+		{ x: 455, y: 470, width: 15, height: 10 },
+		{ x: 455, y: 480, width: 25, height: 30 },
+		{ x: 480, y: 480, width: 20, height: 30 },
+		{ x: 500, y: 490, width: 80, height: 20 },
+		{ x: 580, y: 480, width: 30, height: 30 },
+		{ x: 610, y: 90, width: 40, height: 420 },
+		{ x: 350, y: 90, width: 260, height: 15 },
+		{ x: 590, y: 105, width: 20, height: 10 },
+	];
+	private wallsCollided: Array<IBox> = [];
+	private checkPoints: Array<ICheckPoint> = [
+		{ x: 50, y: 400, width: 80, height: 20 },
+		{ x: 140, y: 100, width: 80, height: 20 },
+		{ x: 540, y: 300, width: 80, height: 20 },
+		{ x: 640, y: 300, width: 80, height: 20 },
+		{ x: 420, y: 500, width: 20, height: 80 },
+	];
+	private items: Array<IItems> = [
+		{ id: "2", x: 60, y: 450, width: 20, height: 20, velocity_effect: -2 },
+		{ id: "1", x: 100, y: 250, width: 20, height: 20, velocity_effect: 2 },
+		{ id: "2", x: 180, y: 160, width: 20, height: 20, velocity_effect: -2 },
+		{ id: "2", x: 300, y: 300, width: 20, height: 20, velocity_effect: -2 },
+		{ id: "2", x: 380, y: 150, width: 20, height: 20, velocity_effect: -2 },
+		{ id: "2", x: 440, y: 20, width: 20, height: 20, velocity_effect: -2 },
+		{ id: "1", x: 660, y: 150, width: 20, height: 20, velocity_effect: 2 },
+		{ id: "3", x: 650, y: 450, width: 25, height: 30, velocity_effect: -3 },
+		{ id: "1", x: 600, y: 520, width: 20, height: 20, velocity_effect: 2 },
+	];
+
+	constructor(canvas: HTMLCanvasElement, players: Array<IPlayer>) {
+		this.canvas = canvas;
+		this.players = players;
+		this.carController.listen();
+	}
+
+	public getEntities(): IEntities {
+		this.updatePlayers();
+		const entities: IEntities = {
+			players: this.players,
+			items: this.items,
+		};
+		return entities;
+	}
+
+	public getCheckPoints(): Array<ICheckPoint> {
+		return this.checkPoints;
+	}
+
+	public getWallsCollided(): Array<IBox> {
+		return this.wallsCollided;
+	}
+
+	private updatePlayers() {
+		this.players = this.players.map((p) => {
+			if (p.canControl) {
+				const futurePlayer = this.carController.getFutureCarPosition(p);
+
+				const result = this.collisionDetector.detect(
+					futurePlayer,
+					this.walls
+				);
+				if (typeof result !== "boolean") {
+					if (result.length === 1) {
+						this.collisionDetector.resolveCollision(
+							p,
+							futurePlayer,
+							result[0],
+							true,
+							false
+						);
+					} else {
+						result.forEach((box, i, arr) => {
+							if (i === arr.length - 1) {
+								return this.collisionDetector.resolveCollision(
+									p,
+									futurePlayer,
+									box,
+									true,
+									true
+								);
+							}
+							this.collisionDetector.resolveCollision(
+								p,
+								futurePlayer,
+								box,
+								false,
+								false
+							);
+						});
+					}
+					this.wallsCollided = result;
+				} else {
+					futurePlayer.disableArrow = {
+						down: false,
+						up: false,
+						left: false,
+						right: false,
+					};
+				}
+
+				this.checkPlayerInsideMap(futurePlayer);
+				return futurePlayer;
+			}
+			return p;
+		});
+	}
+
+	private checkPlayerInsideMap(player: IPlayer): void {
+		if (player.x < 0 || player.x + player.width > this.canvas.width) {
+			player.x = this.spawn.x;
+			player.y = this.spawn.y;
+			player.velocities = {
+				vx: 0,
+				vy: 0,
+			};
+		}
+		if (player.y < 0 || player.y + player.height > this.canvas.height) {
+			player.x = this.spawn.x;
+			player.y = this.spawn.y;
+			player.velocities = {
+				vx: 0,
+				vy: 0,
+			};
+		}
+	}
+}

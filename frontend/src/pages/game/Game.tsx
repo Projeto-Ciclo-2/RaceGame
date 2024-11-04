@@ -28,7 +28,6 @@ export default function Game() {
 							bkgImg,
 							carImg
 						);
-						gameController.current.listen();
 						gameController.current.start();
 					}
 				})

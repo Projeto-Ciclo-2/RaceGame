@@ -16,6 +16,13 @@ export class GameDebug {
 		}
 	}
 
+	public renderBoxes(boxes: Array<IBox>, style: string) {
+		this.ctx.fillStyle = style;
+		for (const x of boxes) {
+			this.ctx.fillRect(x.x, x.y, x.width, x.height);
+		}
+	}
+
 	public renderPlayerInfo(players: Array<IPlayer>) {
 		this.ctx.fillStyle = "white";
 		this.ctx.strokeStyle = "black";
