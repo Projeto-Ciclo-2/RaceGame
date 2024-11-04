@@ -31,7 +31,6 @@ export default function Game() {
 						gameController.current.listen();
 						gameController.current.start();
 					}
-					console.log("load");
 				})
 				.catch((error) => {
 					console.error("Failed to load images:", error);

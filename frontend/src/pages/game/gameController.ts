@@ -38,7 +38,7 @@ export class GameController {
 		{ x: 55, y: 580, width: 665, height: 20 },
 		{ x: 125, y: 85, width: 15, height: 425 },
 		{ x: 140, y: 290, width: 10, height: 220 },
-		{ x: 150, y: 320, width: 30, height:190 },
+		{ x: 150, y: 320, width: 30, height: 190 },
 		{ x: 180, y: 325, width: 275, height: 185 },
 		{ x: 455, y: 470, width: 15, height: 10 },
 		{ x: 455, y: 480, width: 25, height: 30 },
@@ -76,6 +76,12 @@ export class GameController {
 				vx: 0,
 				vy: 0,
 			},
+			disableArrow: {
+				up: false,
+				down: false,
+				left: false,
+				right: false,
+			},
 		},
 	];
 
@@ -101,7 +107,6 @@ export class GameController {
 	}
 
 	public start() {
-		// this.hitBox = [];
 		this.animate();
 	}
 
@@ -118,10 +123,10 @@ export class GameController {
 			// this.gameDebug.makeHitBox(this.hitBox);
 			// this.gameDebug.makeGrid();
 			for (const p of this.players) {
-				// this.gameDebug.renderDebugInfo(p);
+				this.gameDebug.renderDebugInfo(p);
 			}
-			// this.gameDebug.renderCollidedBoxes(this.boxCollided);
-			// this.gameDebug.renderPlayerInfo(this.players);
+			this.gameDebug.renderCollidedBoxes(this.boxCollided);
+			this.gameDebug.renderPlayerInfo(this.players);
 		}
 		this.updatePlayers();
 		this.renderPlayers();
@@ -152,66 +157,54 @@ export class GameController {
 			if (p.canControl) {
 				const futurePlayer = this.carController.getFutureCarPosition(p);
 
-				const result = this.validateMove(futurePlayer);
+				const result = this.collisionDetector.detect(
+					futurePlayer,
+					this.hitBox
+				);
 				if (typeof result !== "boolean") {
-					this.collisionDetector.resolveCollision(
-						p,
-						futurePlayer,
-						result
-					);
-					// this.detectMerge(futurePlayer, result);
-					// this.breakVelocity(p, futurePlayer);
-					// this.correctMerge(futurePlayer, result);
+					if (result.length === 1) {
+						this.collisionDetector.resolveCollision(
+							p,
+							futurePlayer,
+							result[0],
+							true,
+							false
+						);
+					} else {
+						result.forEach((box, i, arr) => {
+							if (i === arr.length - 1) {
+								return this.collisionDetector.resolveCollision(
+									p,
+									futurePlayer,
+									box,
+									true,
+									true
+								);
+							}
+							this.collisionDetector.resolveCollision(
+								p,
+								futurePlayer,
+								box,
+								false,
+								false
+							);
+						});
+					}
+					this.boxCollided = result;
+				} else {
+					futurePlayer.disableArrow = {
+						down: false,
+						up: false,
+						left: false,
+						right: false,
+					};
 				}
 
-				// this.checkPlayerInsideMap(futurePlayer);
+				this.checkPlayerInsideMap(futurePlayer);
 				return futurePlayer;
 			}
 			return p;
 		});
-	}
-
-	private validateMove(player: IPlayer): true | IBox {
-		const futurePlayer = Object.assign({}, player);
-
-		let boxMerge: undefined | IBox;
-
-		if (this.debug) {
-			// this.gameDebug.renderPlayerHitBox(
-			// 	futurePlayer.x,
-			// 	futurePlayer.y,
-			// 	futurePlayer.width,
-			// 	futurePlayer.height
-			// );
-		}
-
-		const valid = this.hitBox.every((box) => {
-			const playerRightBiggerThanBox =
-				futurePlayer.x + futurePlayer.width > box.x;
-			const playerLeftShorterThanBox = futurePlayer.x < box.x + box.width;
-			const horizontalMerge =
-				playerRightBiggerThanBox && playerLeftShorterThanBox;
-
-			const playerBottomBiggerThanBox =
-				futurePlayer.y + futurePlayer.height > box.y;
-			const playerTopShortenThanBox = futurePlayer.y < box.y + box.height;
-			const verticalMerge =
-				playerBottomBiggerThanBox && playerTopShortenThanBox;
-
-			if (horizontalMerge && verticalMerge) {
-				boxMerge = box;
-			}
-
-			return !horizontalMerge || !verticalMerge;
-		});
-		if (!valid && boxMerge) {
-			this.boxCollided.push(boxMerge);
-			if (this.boxCollided.length >= 3) {
-				this.boxCollided.shift();
-			}
-			return boxMerge;
-		}
-		return valid as true;
 	}
 
 	private checkPlayerInsideMap(player: IPlayer): void {

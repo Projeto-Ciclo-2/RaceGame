@@ -45,10 +45,14 @@ export class CarController {
 		const leftVelocity = player.velocities.vx + this.acceleration * -1;
 		const rightVelocity = player.velocities.vx + this.acceleration;
 
-		const upCanIncrease = upVelocity > this.maxVelocity * -1;
-		const downCanIncrease = downVelocity < this.maxVelocity;
-		const leftCanIncrease = leftVelocity > this.maxVelocity * -1;
-		const rightCanIncrease = rightVelocity < this.maxVelocity;
+		const upCanIncrease =
+			upVelocity > this.maxVelocity * -1 && !player.disableArrow.up;
+		const downCanIncrease =
+			downVelocity < this.maxVelocity && !player.disableArrow.down;
+		const leftCanIncrease =
+			leftVelocity > this.maxVelocity * -1 && !player.disableArrow.left;
+		const rightCanIncrease =
+			rightVelocity < this.maxVelocity && !player.disableArrow.right;
 
 		if (this.keys.ArrowUp && upCanIncrease) {
 			player.velocities.vy = upVelocity;

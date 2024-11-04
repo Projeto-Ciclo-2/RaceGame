@@ -15,7 +15,14 @@ export interface IPlayer {
 	velocities: {
 		vx: number;
 		vy: number;
-	}
+	};
+
+	disableArrow: {
+		up: boolean;
+		down: boolean;
+		left: boolean;
+		right: boolean;
+	};
 }
 
 export interface IBox {
