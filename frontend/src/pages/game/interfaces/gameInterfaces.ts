@@ -20,6 +20,13 @@ export interface IPlayer extends IBox {
 	items: Array<IItems>;
 	usingNitro: boolean;
 	nitroUsedAt: number | null; //timestamp
+	nitroDirection: {
+		up: boolean;
+		down: boolean;
+		left: boolean;
+		right: boolean;
+	};
+	nitroParticles: Array<IParticle>;
 
 	rotation: rotation;
 
@@ -51,6 +58,13 @@ export interface IItems extends IBox {
 	id: string;
 	type: 1 | 2 | 3;
 	velocity_effect: number;
+}
+
+export interface IParticle extends IBox {
+	velocityX: number;
+	velocityY: number;
+	color: string;
+	opacity: number;
 }
 
 export interface IEntities {

@@ -25,13 +25,14 @@ export class CarController {
 	private width = 30;
 	private height = 30;
 
-	private maxItems = 3;
-
 	private maxVelocity = 5.5;
 	private acceleration = 0.06;
 	private decelerationRate = 0.01;
 	private maxDecelerationRate = 0.05;
 
+	private maxItems = 3;
+
+	private nitroAcceleration = 0.1;
 	private nitroDuration = 2000;
 	private nitroMaxVelocity = 7;
 
@@ -54,12 +55,16 @@ export class CarController {
 		this.checkNitroValidity(futurePlayer);
 		this.triggerNitroIfSpacePressed(futurePlayer);
 
+		const maxVelocity = futurePlayer.usingNitro
+			? this.nitroMaxVelocity
+			: this.maxVelocity;
+
 		this.defineRotation(futurePlayer);
 		this.updateHitBox(futurePlayer);
-		this.decreaseVelocityOverTime(futurePlayer);
+		this.decreaseVelocityOverTime(futurePlayer, maxVelocity);
 
 		this.getFuturePosition(futurePlayer);
-		this.correctVelocities(futurePlayer);
+		this.correctVelocities(futurePlayer, maxVelocity);
 
 		return futurePlayer;
 	}
@@ -75,10 +80,12 @@ export class CarController {
 		}
 		if (player.velocities.vx < 0) {
 			const diference = player.velocities.vx + item.velocity_effect * -1;
+			console.log(diference);
+
 			if (diference > 0) {
 				player.velocities.vx = 0;
 			} else {
-				player.velocities.vx += item.velocity_effect;
+				player.velocities.vx += item.velocity_effect * -1;
 			}
 		}
 		if (player.velocities.vy > 0) {
@@ -94,7 +101,7 @@ export class CarController {
 			if (diference > 0) {
 				player.velocities.vy = 0;
 			} else {
-				player.velocities.vy += item.velocity_effect;
+				player.velocities.vy += item.velocity_effect * -1;
 			}
 		}
 	}
@@ -107,47 +114,89 @@ export class CarController {
 		return true;
 	}
 
-	private getFuturePosition(player: IPlayer): IPlayer {
-		const upVelocity = player.velocities.vy + this.acceleration * -1;
-		const downVelocity = player.velocities.vy + this.acceleration;
-		const leftVelocity = player.velocities.vx + this.acceleration * -1;
-		const rightVelocity = player.velocities.vx + this.acceleration;
+	private getFuturePosition(player: IPlayer) {
+		const nitro = player.usingNitro;
+		if (nitro) {
+			this.increasePlayerVelocity(player, this.nitroMaxVelocity);
+			this.applyNitro(player);
+			return;
+		}
+		this.increasePlayerVelocity(player, this.maxVelocity);
+	}
 
-		const upCanIncrease = upVelocity > this.maxVelocity * -1;
-		const downCanIncrease = downVelocity < this.maxVelocity;
-		const leftCanIncrease = leftVelocity > this.maxVelocity * -1;
-		const rightCanIncrease = rightVelocity < this.maxVelocity;
+	private increasePlayerVelocity(player: IPlayer, maxVelocity: number) {
+		const upSpeed = player.velocities.vy + this.acceleration * -1;
+		const downSpeed = player.velocities.vy + this.acceleration;
+		const leftSpeed = player.velocities.vx + this.acceleration * -1;
+		const rightSpeed = player.velocities.vx + this.acceleration;
 
-		const keyUp = this.keys.ArrowUp;
-		const keyDown = this.keys.ArrowDown;
-		const keyLeft = this.keys.ArrowLeft;
-		const keyRight = this.keys.ArrowRight;
+		const upCanIncrease = upSpeed > maxVelocity * -1;
+		const downCanIncrease = downSpeed < maxVelocity;
+		const leftCanIncrease = leftSpeed > maxVelocity * -1;
+		const rightCanIncrease = rightSpeed < maxVelocity;
+
+		const {
+			ArrowUp: keyUp,
+			ArrowDown: keyDown,
+			ArrowLeft: keyLeft,
+			ArrowRight: keyRight,
+		} = this.keys;
 
 		if (keyUp && upCanIncrease && !player.disableArrow.up) {
-			player.velocities.vy = upVelocity;
+			player.velocities.vy = Number.parseFloat(upSpeed.toFixed(2));
+			player.nitroDirection.up = true;
+			player.nitroDirection.down = false;
+			player.nitroDirection.right = false;
+			player.nitroDirection.left = false;
 		}
 		if (keyDown && downCanIncrease && !player.disableArrow.down) {
-			player.velocities.vy = downVelocity;
+			player.velocities.vy = Number.parseFloat(downSpeed.toFixed(2));
+			player.nitroDirection.up = false;
+			player.nitroDirection.down = true;
+			player.nitroDirection.right = false;
+			player.nitroDirection.left = false;
 		}
 		if (keyLeft && leftCanIncrease && !player.disableArrow.left) {
-			player.velocities.vx = leftVelocity;
+			player.velocities.vx = Number.parseFloat(leftSpeed.toFixed(2));
+			player.nitroDirection.up = false;
+			player.nitroDirection.down = false;
+			player.nitroDirection.right = false;
+			player.nitroDirection.left = true;
 		}
 		if (keyRight && rightCanIncrease && !player.disableArrow.right) {
-			player.velocities.vx = rightVelocity;
+			player.velocities.vx = Number.parseFloat(rightSpeed.toFixed(2));
+			player.nitroDirection.up = false;
+			player.nitroDirection.down = false;
+			player.nitroDirection.right = true;
+			player.nitroDirection.left = false;
 		}
 
 		player.x += player.velocities.vx;
 		player.y += player.velocities.vy;
+	}
 
-		return player;
+	private applyNitro(player: IPlayer) {
+		const {down, left, right, up} = player.nitroDirection;
+		if(up) {
+			player.velocities.vy -= this.nitroAcceleration;
+		}
+		if(down) {
+			player.velocities.vy += this.nitroAcceleration;
+		}
+		if(left) {
+			player.velocities.vx -= this.nitroAcceleration;
+		}
+		if(right) {
+			player.velocities.vx += this.nitroAcceleration;
+		}
 	}
 
 	private checkNitroValidity(player: IPlayer) {
-		if(player.usingNitro && player.nitroUsedAt) {
+		if (player.usingNitro && player.nitroUsedAt) {
 			const limitDate = player.nitroUsedAt + this.nitroDuration;
 			const now = Date.now();
 
-			if(now >= limitDate) {
+			if (now >= limitDate) {
 				player.usingNitro = false;
 				player.nitroUsedAt = null;
 			}
@@ -213,21 +262,31 @@ export class CarController {
 		player.width = this.width;
 	}
 
-	private correctVelocities(player: IPlayer) {
+	private correctVelocities(player: IPlayer, maxVelocity: number) {
 		const { vx, vy } = player.velocities;
-		const negativeMaxVelocity = this.maxVelocity * -1;
+		const negativeMaxVelocity = maxVelocity * -1;
 
-		if (vx > this.maxVelocity || vx < negativeMaxVelocity) {
-			player.velocities.vx = 0;
+		if (vx > maxVelocity) {
+			const diference = vx - maxVelocity;
+			player.velocities.vx -= diference;
 		}
-		if (vy > this.maxVelocity || vy < negativeMaxVelocity) {
-			player.velocities.vy = 0;
+		if (vx < negativeMaxVelocity) {
+			const diference = Math.abs(vx) - maxVelocity;
+			player.velocities.vx += diference;
+		}
+		if (vy > maxVelocity) {
+			const diference = vy - maxVelocity;
+			player.velocities.vy -= diference;
+		}
+		if (vy < negativeMaxVelocity) {
+			const diference = Math.abs(vy) - maxVelocity;
+			player.velocities.vy += diference;
 		}
 	}
 
-	private decreaseVelocityOverTime(player: IPlayer) {
+	private decreaseVelocityOverTime(player: IPlayer, maxVelocity: number) {
 		const { vx, vy } = player.velocities;
-		const negativeMaxVelocity = this.maxVelocity * -1;
+		const negativeMaxVelocity = maxVelocity * -1;
 
 		this.defineDecelerationRate();
 
@@ -235,7 +294,8 @@ export class CarController {
 			const newSpeed = player.velocities.vy + this.decelerationRate;
 			const speed = newSpeed > 0 ? 0 : newSpeed;
 			player.velocities.vy = speed;
-		} else if (vy > 0 && vy < this.maxVelocity) {
+			//
+		} else if (vy > 0 && vy < maxVelocity) {
 			const newSpeed = player.velocities.vy - this.decelerationRate;
 			const speed = newSpeed < 0 ? 0 : newSpeed;
 			player.velocities.vy = speed;
@@ -245,7 +305,8 @@ export class CarController {
 			const newSpeed = player.velocities.vx + this.decelerationRate;
 			const speed = newSpeed > 0 ? 0 : newSpeed;
 			player.velocities.vx = speed;
-		} else if (vx > 0 && vx < this.maxVelocity) {
+			//
+		} else if (vx > 0 && vx < maxVelocity) {
 			const newSpeed = player.velocities.vx - this.decelerationRate;
 			const speed = newSpeed < 0 ? 0 : newSpeed;
 			player.velocities.vx = speed;

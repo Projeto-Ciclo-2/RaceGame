@@ -18,6 +18,8 @@ export class GameController {
 	private bkg: CanvasImageSource | undefined;
 	private userCar: CanvasImageSource | undefined;
 
+	private particleColors = ["red", "orange", "white"];
+
 	private debug = true || config.DEBUG_MODE;
 
 	private spawn = {
@@ -29,13 +31,23 @@ export class GameController {
 		{
 			id: "abcd1234",
 			username: "carlo",
+
+			ready: true,
+			canControl: true,
 			checkpoint: 0,
 			done_laps: 0,
+
 			items: [],
 			usingNitro: false,
 			nitroUsedAt: null,
-			ready: true,
-			canControl: true,
+			nitroDirection: {
+				down: false,
+				up: false,
+				left: false,
+				right: false,
+			},
+			nitroParticles: [],
+
 			rotation: 0,
 			x: this.spawn.x,
 			y: this.spawn.y,
@@ -153,5 +165,9 @@ export class GameController {
 			}
 			this.ctx.fillRect(item.x, item.y, item.width, item.height);
 		}
+	}
+
+	private drawNitro(player: IPlayer) {
+
 	}
 }
