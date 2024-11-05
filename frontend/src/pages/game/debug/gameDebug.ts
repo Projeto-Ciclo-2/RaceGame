@@ -93,15 +93,18 @@ export class GameDebug {
 		this.ctx.strokeStyle = "black";
 		this.ctx.lineWidth = 2;
 
+		const items = JSON.stringify(player.items.map((i) => i.id));
+
 		const debugText = [
 			`Velocities:`,
 			`vx: ${player.velocities.vx}`,
 			`vy: ${player.velocities.vy}`,
 			`done_laps: ${player.done_laps}`,
 			`checkpoint: ${player.checkpoint}`,
-			`rotation: ${player.rotation}`,
-			`id: ${player.id}`,
-			`username: ${player.username}`,
+			// `rotation: ${player.rotation}`,
+			// `id: ${player.id}`,
+			// `username: ${player.username}`,
+			`items: ${items}`,
 		];
 
 		debugText.forEach((text, index) => {

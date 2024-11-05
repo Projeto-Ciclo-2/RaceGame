@@ -1,4 +1,9 @@
-import { IPlayer, rotation, typeOptions } from "../interfaces/gameInterfaces";
+import {
+	IItems,
+	IPlayer,
+	rotation,
+	typeOptions,
+} from "../interfaces/gameInterfaces";
 
 export class CarController {
 	private options = ["ArrowRight", "ArrowLeft", "ArrowUp", "ArrowDown"];
@@ -7,10 +12,13 @@ export class CarController {
 		ArrowRight: false,
 		ArrowUp: false,
 		ArrowDown: false,
+
 	};
 
 	private width = 30;
 	private height = 30;
+
+	private maxItems = 3;
 
 	private maxVelocity = 5.5;
 	private acceleration = 0.06;
@@ -37,6 +45,49 @@ export class CarController {
 		this.correctVelocities(futurePlayer);
 
 		return futurePlayer;
+	}
+
+	public useItem(player: IPlayer, item: IItems) {
+		if (player.velocities.vx > 0) {
+			const diference = player.velocities.vx + item.velocity_effect;
+			if(diference < 0) {
+				player.velocities.vx = 0;
+			} else {
+				player.velocities.vx += item.velocity_effect;
+			}
+		}
+		if (player.velocities.vx < 0) {
+			const diference = player.velocities.vx + item.velocity_effect * -1;
+			if(diference > 0) {
+				player.velocities.vx = 0;
+			} else {
+				player.velocities.vx += item.velocity_effect;
+			}
+		}
+		if (player.velocities.vy > 0) {
+			const diference = player.velocities.vy + item.velocity_effect;
+			if(diference < 0) {
+				player.velocities.vy = 0;
+			} else {
+				player.velocities.vy += item.velocity_effect;
+			}
+		}
+		if (player.velocities.vy < 0) {
+			const diference = player.velocities.vy + item.velocity_effect * -1;
+			if(diference > 0) {
+				player.velocities.vy = 0;
+			} else {
+				player.velocities.vy += item.velocity_effect;
+			}
+		}
+	}
+
+	public addNitro(player: IPlayer, item: IItems): boolean {
+		if(player.items.length >= this.maxItems) {
+			return false;
+		}
+		player.items.push(item);
+		return true;
 	}
 
 	private getFuturePosition(player: IPlayer): IPlayer {
@@ -173,6 +224,8 @@ export class CarController {
 	}
 
 	private handleKeyPress(e: KeyboardEvent, alive: boolean) {
+		console.log("Space" === e.code);
+
 		if (this.options.includes(e.key)) {
 			const key = e.key as any as typeOptions;
 			this.keys[key] = alive;

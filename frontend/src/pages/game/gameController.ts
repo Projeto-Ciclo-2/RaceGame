@@ -130,10 +130,10 @@ export class GameController {
 	private renderItems(items: Array<IItems>) {
 		for (const item of items) {
 			this.ctx.fillStyle = "#ff4455AA";
-			if (item.id === "1") {
+			if (item.type === 1) {
 				this.ctx.fillStyle = "#0044ff99";
 			}
-			if (item.id === "3") {
+			if (item.type === 3) {
 				this.ctx.fillStyle = "#AA44FF99";
 			}
 			this.ctx.fillRect(item.x, item.y, item.width, item.height);

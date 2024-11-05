@@ -39,7 +39,7 @@ export interface IPlayer extends IBox {
 }
 
 export interface ICheckPoint extends IBox {
-	order: checkPointOrder
+	order: checkPointOrder;
 }
 
 export interface IFinishLine extends IBox {
@@ -48,6 +48,7 @@ export interface IFinishLine extends IBox {
 
 export interface IItems extends IBox {
 	id: string;
+	type: 1 | 2 | 3;
 	velocity_effect: number;
 }
 
