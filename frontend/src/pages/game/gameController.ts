@@ -1,111 +1,72 @@
 import { config } from "../../config/config";
-import { CarController } from "./controller/carController";
+import { MapController } from "./controller/mapController";
 import { GameDebug } from "./debug/gameDebug";
-import { IBox, IPlayer } from "./interfaces/gameInterfaces";
-import { CollisionDetector } from "./tools/collisionDetect";
+import { IItems, IParticle, IPlayer } from "./interfaces/gameInterfaces";
+
+import bkg from "./assets/map1.svg";
+import carBlue from "./assets/carBlue.svg";
+import carYellow from "./assets/carYellow.svg";
+import carGreen from "./assets/carGreen.svg";
+import { loadImage } from "./tools/imgLoader";
+import { players } from "./mock/players";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
 	private ctx: CanvasRenderingContext2D;
 
-	private gameDebug: GameDebug;
-	private carController = new CarController();
-	private collisionDetector = new CollisionDetector();
+	private mapController: MapController;
 
-	private bkg: CanvasImageSource;
-	private userCar: CanvasImageSource;
+	private gameDebug: GameDebug;
+
+	private bkg: CanvasImageSource | undefined;
+	private carBlue: CanvasImageSource | undefined;
+	private carYellow: CanvasImageSource | undefined;
+	private carGreen: CanvasImageSource | undefined;
+
+	private particleColors = ["red", "orange", "white", "crimson"];
+	private particlesLimit = 50;
 
 	private debug = true || config.DEBUG_MODE;
 
-	private hitBox: Array<IBox> = [
-		{ x: 0, y: 0, width: 55, height: 600 },
-		{ x: 55, y: 0, width: 25, height: 25 },
-		{ x: 80, y: 0, width: 760, height: 15 },
-		{ x: 195, y: 15, width: 115, height: 15 },
-		{ x: 210, y: 30, width: 80, height: 20 },
-		{ x: 210, y: 50, width: 70, height: 90 },
-		{ x: 210, y: 140, width: 80, height: 110 },
-		{ x: 290, y: 170, width: 30, height: 80 },
-		{ x: 320, y: 180, width: 220, height: 70 },
-		{ x: 490, y: 250, width: 50, height: 10 },
-		{ x: 515, y: 260, width: 25, height: 20 },
-		{ x: 525, y: 280, width: 15, height: 135 },
-		{ x: 700, y: 15, width: 60, height: 15 },
-		{ x: 720, y: 30, width: 50, height: 570 },
-		{ x: 710, y: 560, width: 10, height: 10 },
-		{ x: 690, y: 570, width: 30, height: 10 },
-		{ x: 55, y: 570, width: 25, height: 10 },
-		{ x: 55, y: 580, width: 665, height: 20 },
-		{ x: 125, y: 85, width: 15, height: 425 },
-		{ x: 140, y: 290, width: 10, height: 220 },
-		{ x: 150, y: 320, width: 30, height:190 },
-		{ x: 180, y: 325, width: 275, height: 185 },
-		{ x: 455, y: 470, width: 15, height: 10 },
-		{ x: 455, y: 480, width: 25, height: 30 },
-		{ x: 480, y: 480, width: 20, height: 30 },
-		{ x: 500, y: 490, width: 80, height: 20 },
-		{ x: 580, y: 480, width: 30, height: 30 },
-		{ x: 610, y: 90, width: 40, height: 420 },
-		{ x: 350, y: 90, width: 260, height: 15 },
-		{ x: 590, y: 105, width: 20, height: 10 },
-	];
-	private boxCollided: Array<IBox> = [];
-	private collisions = {
-		up: false,
-		down: false,
-		left: false,
-		right: false,
-	};
+	private players: Array<IPlayer> = players;
 
-	private spawn = {
-		x: 380,
-		y: 540,
-	};
-
-	private players: Array<IPlayer> = [
-		{
-			canControl: true,
-			rotation: 0,
-			x: this.spawn.x,
-			y: this.spawn.y,
-			height: 25,
-			width: 35,
-			defaultHeight: 25,
-			defaultWidth: 35,
-			velocities: {
-				vx: 0,
-				vy: 0,
-			},
-		},
-	];
-
-	constructor(
-		canvas: HTMLCanvasElement,
-		bkg: CanvasImageSource,
-		carImg: CanvasImageSource
-	) {
+	constructor(canvas: HTMLCanvasElement) {
 		this.canvas = canvas;
-		this.bkg = bkg;
-		this.userCar = carImg;
 		const ctx = this.canvas.getContext("2d");
 		if (ctx) {
 			this.ctx = ctx;
 			this.gameDebug = new GameDebug(this.ctx);
+			this.mapController = new MapController(this.canvas, this.players);
+
+			Promise.all([
+				loadImage(bkg),
+				loadImage(carBlue),
+				loadImage(carYellow),
+				loadImage(carGreen),
+			])
+				.then(([bkgImg, carBlue, carYellow, carGreen]) => {
+					this.bkg = bkgImg;
+					this.carBlue = carBlue;
+					this.carYellow = carYellow;
+					this.carGreen = carGreen;
+				})
+				.catch((error) => {
+					console.error("Failed to load images:", error);
+				});
 			return;
 		}
 		throw new Error("Canvas has no correct context.");
 	}
 
-	public listen() {
-		this.carController.listen();
-	}
-
 	public start() {
-		// this.hitBox = [];
 		this.animate();
 	}
 
 	private animate() {
+		if (!this.bkg || !this.carGreen || !this.carBlue || !this.carYellow) {
+			window.requestAnimationFrame(() => this.animate());
+			return;
+		}
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		this.ctx.drawImage(
 			this.bkg,
@@ -114,29 +75,59 @@ export class GameController {
 			this.canvas.width,
 			this.canvas.height
 		);
+		const entities = this.mapController.getEntities();
+		this.renderPlayers(entities.players);
+		this.renderItems(entities.items);
+
 		if (this.debug) {
-			// this.gameDebug.makeHitBox(this.hitBox);
+			// this.gameDebug.makeHitBox(this.mapController.getWalls());
 			// this.gameDebug.makeGrid();
-			for (const p of this.players) {
-				// this.gameDebug.renderDebugInfo(p);
-			}
-			// this.gameDebug.renderCollidedBoxes(this.boxCollided);
+			// .forEach((p, i) => {
+			// });
+			this.gameDebug.renderDebugInfo(entities.players[0], 10 );
+			// this.gameDebug.renderCollidedBoxes(
+			// 	this.mapController.getWallsCollided()
+			// );
 			// this.gameDebug.renderPlayerInfo(this.players);
+			this.gameDebug.renderBoxes(
+				this.mapController.getCheckPoints(),
+				"#44FFadbb"
+			);
+			this.gameDebug.renderBoxes(
+				[this.mapController.getFinishLine()],
+				"#bbbb0099"
+			);
+			// this.gameDebug.renderKeyInfo(this.mapController._getCarKeys());
 		}
-		this.updatePlayers();
-		this.renderPlayers();
+
 		window.requestAnimationFrame(() => this.animate());
 	}
 
-	private renderPlayers() {
+	private renderPlayers(players: Array<IPlayer>) {
 		this.ctx.fillStyle = "red";
-		for (const p of this.players) {
+		for (const p of players) {
 			this.ctx.save();
+
+			this.drawNitroParticles(p);
+
+			if (!p.canControl) {
+				this.ctx.globalAlpha = 0.5;
+			}
+
+			this.drawnUsername(p);
+
 			this.ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
 			this.ctx.rotate((p.rotation * Math.PI) / 180);
 
+			const img =
+				p.color === "1"
+					? this.carBlue!
+					: p.color === "2"
+					? this.carGreen!
+					: this.carYellow!;
+
 			this.ctx.drawImage(
-				this.userCar,
+				img,
 				-p.defaultWidth / 2,
 				-p.defaultHeight / 2,
 				p.defaultWidth,
@@ -147,164 +138,72 @@ export class GameController {
 		}
 	}
 
-	private updatePlayers() {
-		this.players = this.players.map((p) => {
-			if (p.canControl) {
-				const futurePlayer = this.carController.getFutureCarPosition(p);
-
-				const result = this.validateMove(futurePlayer);
-				if (typeof result !== "boolean") {
-					this.collisionDetector.resolveCollision(
-						p,
-						futurePlayer,
-						result
-					);
-					// this.detectMerge(futurePlayer, result);
-					// this.breakVelocity(p, futurePlayer);
-					// this.correctMerge(futurePlayer, result);
-				}
-
-				// this.checkPlayerInsideMap(futurePlayer);
-				return futurePlayer;
+	private renderItems(items: Array<IItems>) {
+		for (const item of items) {
+			this.ctx.fillStyle = "#ff4455AA";
+			if (item.type === 1) {
+				this.ctx.fillStyle = "#0044ff99";
 			}
-			return p;
-		});
-	}
-
-	private validateMove(player: IPlayer): true | IBox {
-		const futurePlayer = Object.assign({}, player);
-
-		let boxMerge: undefined | IBox;
-
-		if (this.debug) {
-			// this.gameDebug.renderPlayerHitBox(
-			// 	futurePlayer.x,
-			// 	futurePlayer.y,
-			// 	futurePlayer.width,
-			// 	futurePlayer.height
-			// );
-		}
-
-		const valid = this.hitBox.every((box) => {
-			const playerRightBiggerThanBox =
-				futurePlayer.x + futurePlayer.width > box.x;
-			const playerLeftShorterThanBox = futurePlayer.x < box.x + box.width;
-			const horizontalMerge =
-				playerRightBiggerThanBox && playerLeftShorterThanBox;
-
-			const playerBottomBiggerThanBox =
-				futurePlayer.y + futurePlayer.height > box.y;
-			const playerTopShortenThanBox = futurePlayer.y < box.y + box.height;
-			const verticalMerge =
-				playerBottomBiggerThanBox && playerTopShortenThanBox;
-
-			if (horizontalMerge && verticalMerge) {
-				boxMerge = box;
+			if (item.type === 3) {
+				this.ctx.fillStyle = "#AA44FF99";
 			}
-
-			return !horizontalMerge || !verticalMerge;
-		});
-		if (!valid && boxMerge) {
-			this.boxCollided.push(boxMerge);
-			if (this.boxCollided.length >= 3) {
-				this.boxCollided.shift();
-			}
-			return boxMerge;
-		}
-		return valid as true;
-	}
-
-	private checkPlayerInsideMap(player: IPlayer): void {
-		if (player.x < 0 || player.x + player.width > this.canvas.width) {
-			player.x = this.spawn.x;
-			player.y = this.spawn.y;
-			player.velocities = {
-				vx: 0,
-				vy: 0,
-			};
-		}
-		if (player.y < 0 || player.y + player.height > this.canvas.height) {
-			player.x = this.spawn.x;
-			player.y = this.spawn.y;
-			player.velocities = {
-				vx: 0,
-				vy: 0,
-			};
+			this.ctx.fillRect(item.x, item.y, item.width, item.height);
 		}
 	}
 
-	private detectMerge(p: IPlayer, box: IBox) {
-		this.collisions.up = false;
-		this.collisions.down = false;
-		this.collisions.left = false;
-		this.collisions.right = false;
-
-		const leftSidePlayer = p.x;
-		const rightSidePlayer = p.x + p.width;
-		const topSidePlayer = p.y;
-		const bottomSidePlayer = p.y + p.height;
-
-		const leftSideBox = box.x;
-		const rightSideBox = box.x + box.width;
-		const topSideBox = box.y;
-		const bottomSideBox = box.y + box.height;
-
-		if (bottomSidePlayer > topSideBox && topSidePlayer < bottomSideBox) {
-			if (
-				leftSidePlayer < rightSideBox &&
-				rightSidePlayer > leftSideBox
-			) {
-				if (p.x < leftSideBox) this.collisions.right = true;
-				if (rightSidePlayer > rightSideBox) this.collisions.left = true;
-			}
+	private drawNitroParticles(player: IPlayer) {
+		if (player.usingNitro) {
+			player.nitroParticles.push(this.getParticle(player));
+			player.nitroParticles.push(this.getParticle(player));
 		}
+		player.nitroParticles = player.nitroParticles
+			.map((particle) => {
+				particle.x -= particle.velocityX;
+				particle.y += particle.velocityY;
+				particle.opacity -= 0.01;
 
-		if (leftSidePlayer < rightSideBox && rightSidePlayer > leftSideBox) {
-			if (
-				topSidePlayer < bottomSideBox &&
-				bottomSidePlayer > topSideBox
-			) {
-				if (topSidePlayer < topSideBox) this.collisions.down = true;
-				if (bottomSidePlayer > bottomSideBox) this.collisions.up = true;
-			}
-		}
+				this.ctx.fillStyle = particle.color;
+				this.ctx.globalAlpha = particle.opacity;
+				this.ctx.fillRect(
+					particle.x,
+					particle.y,
+					particle.width,
+					particle.height
+				);
+
+				return particle;
+			})
+			.filter((particle) => particle.opacity > 0);
+		this.ctx.globalAlpha = 1;
 	}
 
-	private breakVelocity(oldPlayer: IPlayer, futurePlayer: IPlayer) {
-		if (futurePlayer.x > oldPlayer.x) {
-			const newSpeed = Math.floor(futurePlayer.velocities.vx * -1 * 0.3);
-			futurePlayer.velocities.vx = newSpeed === -1 ? -0.5 : newSpeed;
-		}
-		if (futurePlayer.x < oldPlayer.x) {
-			const newSpeed = Math.ceil(futurePlayer.velocities.vx * -1 * 0.3);
-			futurePlayer.velocities.vx = newSpeed === 1 ? 0.5 : newSpeed;
-		}
-		if (futurePlayer.y > oldPlayer.y) {
-			const newSpeed = Math.floor(futurePlayer.velocities.vy * -1 * 0.3);
-			futurePlayer.velocities.vy = newSpeed === -1 ? -0.5 : newSpeed;
-		}
-		if (futurePlayer.y < oldPlayer.y) {
-			const newSpeed = Math.ceil(futurePlayer.velocities.vy * -1 * 0.3);
-			futurePlayer.velocities.vy = newSpeed === 1 ? 0.5 : newSpeed;
-		}
+	private getParticle(player: IPlayer): IParticle {
+		return {
+			x: player.x + Math.floor(Math.random() * 10),
+			y: player.y + Math.floor(Math.random() * 10),
+			width: Math.floor(Math.random() * 2 + 1),
+			height: Math.floor(Math.random() * 3 + 1),
+			velocityX: Math.floor((Math.random() - 0.5) * 0.5),
+			velocityY: Math.floor(Math.random() * 1 + 1),
+			color: this.particleColors[
+				Math.floor(Math.random() * this.particleColors.length)
+			],
+			opacity: 1,
+		};
 	}
 
-	private correctMerge(player: IPlayer, mergedBox: IBox) {
-		if (this.collisions.up) {
-			const diference = mergedBox.y + mergedBox.height - player.y;
-			player.y += diference;
-		}
-		if (this.collisions.down) {
-			const diference = player.y + player.height - mergedBox.y;
-			player.y -= diference;
-		}
-		if (this.collisions.left) {
-			const diference = mergedBox.x + mergedBox.width - player.x;
-			player.x += diference;
-		}
-		if (this.collisions.right) {
-			const diference = player.x + player.width - mergedBox.x;
-			player.x -= diference;
-		}
+	private drawnUsername(player: IPlayer) {
+		this.ctx.font = "Press Start 2P 16px bold";
+		this.ctx.fillStyle = "white";
+		this.ctx.strokeStyle = "black";
+		this.ctx.lineWidth = 2;
+
+		const x =
+			player.x +
+			player.width / 2 -
+			player.username.slice(0, 20).length * 3.5;
+		const y = player.y + player.height + 15;
+		this.ctx.strokeText(player.username.slice(0, 15), x, y);
+		this.ctx.fillText(player.username.slice(0, 15), x, y);
 	}
 }
