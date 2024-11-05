@@ -55,7 +55,7 @@ export interface WsGameInit {
 export interface WsBroadcastPlayerMove {
 	type: "broadcastPlayerMove";
 	roomID: string;
-	player: IPlayer
+	player: IPlayer;
 }
 
 export interface WsBroadcastPlayerPickItem {
@@ -83,7 +83,7 @@ export interface WsPublishItem {
 export interface WsEndGame {
 	type: "endGame";
 	roomID: string;
-	players: Array<IPlayer>
+	players: Array<IPlayer>;
 	winner: string; //username
 }
 
@@ -126,7 +126,7 @@ export interface WsPlayerReady {
 export interface WsPlayerMove {
 	type: "playerMove";
 	roomID: string;
-	player: IPlayer
+	player: IPlayer;
 }
 
 export interface WsPlayerPicksItem {
