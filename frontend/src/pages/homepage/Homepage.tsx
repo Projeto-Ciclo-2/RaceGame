@@ -2,6 +2,7 @@ import React from "react";
 import Helmet from "../../assets/icons/Helmet";
 import SpeedDialComponent from "../../components/speed-dial/SpeedDial";
 import "./Homepage.css";
+import { useNavigate } from "react-router-dom";
 
 const Homepage = () => {
 	const rooms = [
@@ -34,7 +35,7 @@ const Homepage = () => {
 			labs: 4,
 		},
 	];
-
+	const navigate = useNavigate()
 	return (
 		<section id="homepage">
 			<section id="content-homepage">
@@ -80,7 +81,7 @@ const Homepage = () => {
 							))}
 						</tbody>
 					</table>
-					<button>Create Race</button>
+					<button onClick={() => navigate('/lobby')}>Create Race</button>
 				</div>
 			</section>
 		</section>
