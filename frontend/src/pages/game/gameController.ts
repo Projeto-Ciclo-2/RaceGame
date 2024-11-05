@@ -28,6 +28,8 @@ export class GameController {
 			checkpoint: 0,
 			done_laps: 0,
 			items: [],
+			usingNitro: false,
+			nitroUsedAt: null,
 			ready: true,
 			canControl: true,
 			rotation: 0,
@@ -103,6 +105,7 @@ export class GameController {
 				[this.mapController.getFinishLine()],
 				"#bbbb0099"
 			);
+			// this.gameDebug.renderKeyInfo(this.mapController._getCarKeys());
 		}
 
 		window.requestAnimationFrame(() => this.animate());

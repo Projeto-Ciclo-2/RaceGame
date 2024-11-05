@@ -158,6 +158,10 @@ export class MapController {
 		this.carController.listen();
 	}
 
+	public _getCarKeys() {
+		return this.carController._getKeys();
+	}
+
 	public getEntities(): IEntities {
 		this.updatePlayers();
 

@@ -105,12 +105,40 @@ export class GameDebug {
 			// `id: ${player.id}`,
 			// `username: ${player.username}`,
 			`items: ${items}`,
+			`using nitro: ${player.usingNitro}`,
+			`nitro used at: ${player.nitroUsedAt}`,
 		];
 
 		debugText.forEach((text, index) => {
 			const yPosition = 20 + index * 20;
 			this.ctx.strokeText(text, 10, yPosition);
 			this.ctx.fillText(text, 10, yPosition);
+		});
+	}
+
+	public renderKeyInfo(keys: object) {
+		const x = 10;
+		const y = 400;
+
+		this.ctx.fillStyle = "white";
+		this.ctx.strokeStyle = "black";
+		this.ctx.lineWidth = 2;
+		this.ctx.font = "16px Arial";
+
+		const keysTitle = "Key Status:";
+		const keysInfo = Object.entries(keys).map(
+			([key, isPressed]) => `${key}: ${isPressed}`
+		);
+
+		// Draw title with border
+		this.ctx.strokeText(keysTitle, x, y); // Adjust position as needed
+		this.ctx.fillText(keysTitle, x, y);
+
+		// Render each key status
+		keysInfo.forEach((info, index) => {
+			const yPosition = y + (index + 1) * 20; // Space each line
+			this.ctx.strokeText(info, x, yPosition);
+			this.ctx.fillText(info, x, yPosition);
 		});
 	}
 }

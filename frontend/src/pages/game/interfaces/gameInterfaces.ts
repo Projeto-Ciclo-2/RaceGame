@@ -1,4 +1,3 @@
-export type typeOptions = "ArrowRight" | "ArrowLeft" | "ArrowUp" | "ArrowDown";
 export type rotation = 0 | 45 | 90 | 135 | 180 | 235 | 270 | 315;
 type checkPointOrder = 1 | 2 | 3 | 4 | 5;
 
@@ -19,6 +18,8 @@ export interface IPlayer extends IBox {
 	checkpoint: checkPointOrder | 0;
 
 	items: Array<IItems>;
+	usingNitro: boolean;
+	nitroUsedAt: number | null; //timestamp
 
 	rotation: rotation;
 
