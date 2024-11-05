@@ -4,7 +4,9 @@ import { GameDebug } from "./debug/gameDebug";
 import { IItems, IParticle, IPlayer } from "./interfaces/gameInterfaces";
 
 import bkg from "./assets/map1.svg";
-import car from "./assets/blue-car.svg";
+import carBlue from "./assets/carBlue.svg";
+import carYellow from "./assets/carYellow.svg";
+import carGreen from "./assets/carGreen.svg";
 import { loadImage } from "./tools/imgLoader";
 import { players } from "./mock/players";
 
@@ -17,7 +19,9 @@ export class GameController {
 	private gameDebug: GameDebug;
 
 	private bkg: CanvasImageSource | undefined;
-	private userCar: CanvasImageSource | undefined;
+	private carBlue: CanvasImageSource | undefined;
+	private carYellow: CanvasImageSource | undefined;
+	private carGreen: CanvasImageSource | undefined;
 
 	private particleColors = ["red", "orange", "white", "crimson"];
 	private particlesLimit = 50;
@@ -34,10 +38,17 @@ export class GameController {
 			this.gameDebug = new GameDebug(this.ctx);
 			this.mapController = new MapController(this.canvas, this.players);
 
-			Promise.all([loadImage(bkg), loadImage(car)])
-				.then(([bkgImg, carImg]) => {
+			Promise.all([
+				loadImage(bkg),
+				loadImage(carBlue),
+				loadImage(carYellow),
+				loadImage(carGreen),
+			])
+				.then(([bkgImg, carBlue, carYellow, carGreen]) => {
 					this.bkg = bkgImg;
-					this.userCar = carImg;
+					this.carBlue = carBlue;
+					this.carYellow = carYellow;
+					this.carGreen = carGreen;
 				})
 				.catch((error) => {
 					console.error("Failed to load images:", error);
@@ -52,7 +63,7 @@ export class GameController {
 	}
 
 	private animate() {
-		if (!this.bkg || !this.userCar) {
+		if (!this.bkg || !this.carGreen || !this.carBlue || !this.carYellow) {
 			window.requestAnimationFrame(() => this.animate());
 			return;
 		}
@@ -71,12 +82,12 @@ export class GameController {
 		if (this.debug) {
 			// this.gameDebug.makeHitBox(this.mapController.getWalls());
 			// this.gameDebug.makeGrid();
-			entities.players.forEach((p, i) => {
-				this.gameDebug.renderDebugInfo(p, 10 + (i * 200));
-			})
-			this.gameDebug.renderCollidedBoxes(
-				this.mapController.getWallsCollided()
-			);
+			// .forEach((p, i) => {
+			// });
+			this.gameDebug.renderDebugInfo(entities.players[0], 10 );
+			// this.gameDebug.renderCollidedBoxes(
+			// 	this.mapController.getWallsCollided()
+			// );
 			// this.gameDebug.renderPlayerInfo(this.players);
 			this.gameDebug.renderBoxes(
 				this.mapController.getCheckPoints(),
@@ -95,15 +106,28 @@ export class GameController {
 	private renderPlayers(players: Array<IPlayer>) {
 		this.ctx.fillStyle = "red";
 		for (const p of players) {
+			this.ctx.save();
+
 			this.drawNitroParticles(p);
+
+			if (!p.canControl) {
+				this.ctx.globalAlpha = 0.5;
+			}
+
 			this.drawnUsername(p);
 
-			this.ctx.save();
 			this.ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
 			this.ctx.rotate((p.rotation * Math.PI) / 180);
 
+			const img =
+				p.color === "1"
+					? this.carBlue!
+					: p.color === "2"
+					? this.carGreen!
+					: this.carYellow!;
+
 			this.ctx.drawImage(
-				this.userCar!,
+				img,
 				-p.defaultWidth / 2,
 				-p.defaultHeight / 2,
 				p.defaultWidth,

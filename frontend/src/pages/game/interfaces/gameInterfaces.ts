@@ -13,6 +13,8 @@ export interface IPlayer extends IBox {
 	username: string;
 	canControl: boolean;
 
+	color: "1" | "2" | "3"
+
 	ready: boolean;
 	done_laps: number;
 	checkpoint: checkPointOrder | 0;
