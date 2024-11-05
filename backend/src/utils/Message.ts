@@ -10,15 +10,13 @@ export const Message = {
 	DUPLICATED_NAME: "Nome já utilizado",
 	NAME_REQUIRED: "Nome obrigatório",
 	TOKEN_NOT_PROVIDED: "Token não informado",
-	POLL_NOT_FOUND: "Quiz não encontrado",
+
 	INVALID_ID: "Id inválido",
 	MISSING_FIELDS: "Todos os campos são obrigatórios",
 	INVALID_TYPE: "Tipo de requisição inválida",
-	VOTE_ALREDY_DONE: "Voto ja efetuado para essa questão",
 	USER_NOT_FOUND_OR_NOT_OWNER: "Usuario não encontrado ou não é dono do quiz",
 	USER_ALREADY_IN_GAME: "O usuário já está na partida.",
-	NO_USERS: "O quiz não possuí nenhum jogador registrado.",
-	NO_QUESTIONS: "O quiz não possuí nenhuma questão.",
+	ROOM_NOT_FOUND: "Sala não encontrada",
 	INVALID_NAME: "Nome inválido",
 	INVALID_PASSWORD: "A senha deve conter pelo menos 8 caracteres",
 } as const;

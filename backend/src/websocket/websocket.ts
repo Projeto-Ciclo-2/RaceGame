@@ -5,6 +5,7 @@ import { UserService } from "../services/userService";
 import { IncomingMessage } from "http";
 import url from "url";
 import {
+	WsBroadcastJoinGame,
 	WsBroadcastNewMessage,
 	WsBroadcastPlayerLeft,
 	WsBroadcastPlayerMove,
@@ -15,8 +16,10 @@ import {
 	WsNewRoom,
 	WsRoomInfo,
 } from "../interfaces/IWSMessages";
+import RoomService from "../services/roomService";
 
 const userService = new UserService();
+const roomService = new RoomService();
 const users = new Set<WsUser>();
 
 interface WsUser {
@@ -48,6 +51,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 
 	ws.on("message", async (message) => {
 		const data = JSON.parse(message.toString());
+
 		switch (data.type) {
 			case "playerMove":
 				try {
@@ -71,6 +75,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 						roomID: "",
 						type: "broadcastPlayerMove",
 					};
+					console.log(message);
 					broadcast(JSON.stringify(message));
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
@@ -79,14 +84,16 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 				break;
 			case "createRoom":
 				try {
+					const room = await roomService.createRoom(data.userID);
+					console.log(room);
 					const message: WsNewRoom = {
 						type: "newRoom",
 						room: {
-							id: "",
-							laps: 0,
-							map: 1,
-							players: [],
-							messages: [],
+							id: room.id,
+							laps: room.laps,
+							map: room.map,
+							players: room.players,
+							messages: room.messages,
 						},
 					};
 					broadcast(JSON.stringify(message));
@@ -95,9 +102,22 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 					sendErr(ws);
 				}
 				break;
-			case "requestJoinRoom": // executa join game junto?
+			case "requestJoinRoom":
 				try {
-					const message: WsRoomInfo = {
+					const message: WsBroadcastJoinGame = {
+						type: "broadcastJoinGame",
+						username: "",
+						userID: "",
+						room: {
+							id: "",
+							laps: 0,
+							map: 1,
+							players: [],
+							messages: [],
+						},
+					};
+
+					const rommInfo: WsRoomInfo = {
 						type: "roomInfo",
 						room: {
 							id: "",
@@ -107,6 +127,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 							messages: [],
 						},
 					};
+					ws.send(JSON.stringify(rommInfo));
 					broadcast(JSON.stringify(message));
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
