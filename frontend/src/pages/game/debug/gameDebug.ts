@@ -87,7 +87,7 @@ export class GameDebug {
 		this.ctx.fillRect(x, y, width, height);
 	}
 
-	public renderDebugInfo(player: IPlayer) {
+	public renderDebugInfo(player: IPlayer, x: number) {
 		this.ctx.font = "16px Arial";
 		this.ctx.fillStyle = "white";
 		this.ctx.strokeStyle = "black";
@@ -96,6 +96,7 @@ export class GameDebug {
 		const items = JSON.stringify(player.items.map((i) => i.id));
 
 		const debugText = [
+			`player: ${player.username}`,
 			`Velocities:`,
 			`vx: ${player.velocities.vx}`,
 			`vy: ${player.velocities.vy}`,
@@ -111,8 +112,8 @@ export class GameDebug {
 
 		debugText.forEach((text, index) => {
 			const yPosition = 20 + index * 20;
-			this.ctx.strokeText(text, 10, yPosition);
-			this.ctx.fillText(text, 10, yPosition);
+			this.ctx.strokeText(text, x, yPosition);
+			this.ctx.fillText(text, x, yPosition);
 		});
 	}
 

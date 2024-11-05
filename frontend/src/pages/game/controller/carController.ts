@@ -33,7 +33,7 @@ export class CarController {
 	private maxItems = 3;
 
 	private nitroAcceleration = 0.1;
-	private nitroDuration = 2000;
+	private nitroDuration = 10000;
 	private nitroMaxVelocity = 7;
 
 	public _getKeys() {

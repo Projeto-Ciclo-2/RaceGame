@@ -1,11 +1,12 @@
 import { config } from "../../config/config";
 import { MapController } from "./controller/mapController";
 import { GameDebug } from "./debug/gameDebug";
-import { IItems, IPlayer } from "./interfaces/gameInterfaces";
+import { IItems, IParticle, IPlayer } from "./interfaces/gameInterfaces";
 
 import bkg from "./assets/map1.svg";
 import car from "./assets/blue-car.svg";
 import { loadImage } from "./tools/imgLoader";
+import { players } from "./mock/players";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
@@ -18,55 +19,12 @@ export class GameController {
 	private bkg: CanvasImageSource | undefined;
 	private userCar: CanvasImageSource | undefined;
 
-	private particleColors = ["red", "orange", "white"];
+	private particleColors = ["red", "orange", "white", "crimson"];
+	private particlesLimit = 50;
 
 	private debug = true || config.DEBUG_MODE;
 
-	private spawn = {
-		x: 380,
-		y: 540,
-	};
-
-	private players: Array<IPlayer> = [
-		{
-			id: "abcd1234",
-			username: "carlo",
-
-			ready: true,
-			canControl: true,
-			checkpoint: 0,
-			done_laps: 0,
-
-			items: [],
-			usingNitro: false,
-			nitroUsedAt: null,
-			nitroDirection: {
-				down: false,
-				up: false,
-				left: false,
-				right: false,
-			},
-			nitroParticles: [],
-
-			rotation: 0,
-			x: this.spawn.x,
-			y: this.spawn.y,
-			height: 25,
-			width: 35,
-			defaultHeight: 25,
-			defaultWidth: 35,
-			velocities: {
-				vx: 0,
-				vy: 0,
-			},
-			disableArrow: {
-				up: false,
-				down: false,
-				left: false,
-				right: false,
-			},
-		},
-	];
+	private players: Array<IPlayer> = players;
 
 	constructor(canvas: HTMLCanvasElement) {
 		this.canvas = canvas;
@@ -84,7 +42,6 @@ export class GameController {
 				.catch((error) => {
 					console.error("Failed to load images:", error);
 				});
-
 			return;
 		}
 		throw new Error("Canvas has no correct context.");
@@ -114,9 +71,9 @@ export class GameController {
 		if (this.debug) {
 			// this.gameDebug.makeHitBox(this.mapController.getWalls());
 			// this.gameDebug.makeGrid();
-			for (const p of entities.players) {
-				this.gameDebug.renderDebugInfo(p);
-			}
+			entities.players.forEach((p, i) => {
+				this.gameDebug.renderDebugInfo(p, 10 + (i * 200));
+			})
 			this.gameDebug.renderCollidedBoxes(
 				this.mapController.getWallsCollided()
 			);
@@ -138,6 +95,9 @@ export class GameController {
 	private renderPlayers(players: Array<IPlayer>) {
 		this.ctx.fillStyle = "red";
 		for (const p of players) {
+			this.drawNitroParticles(p);
+			this.drawnUsername(p);
+
 			this.ctx.save();
 			this.ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
 			this.ctx.rotate((p.rotation * Math.PI) / 180);
@@ -167,7 +127,59 @@ export class GameController {
 		}
 	}
 
-	private drawNitro(player: IPlayer) {
+	private drawNitroParticles(player: IPlayer) {
+		if (player.usingNitro) {
+			player.nitroParticles.push(this.getParticle(player));
+			player.nitroParticles.push(this.getParticle(player));
+		}
+		player.nitroParticles = player.nitroParticles
+			.map((particle) => {
+				particle.x -= particle.velocityX;
+				particle.y += particle.velocityY;
+				particle.opacity -= 0.01;
 
+				this.ctx.fillStyle = particle.color;
+				this.ctx.globalAlpha = particle.opacity;
+				this.ctx.fillRect(
+					particle.x,
+					particle.y,
+					particle.width,
+					particle.height
+				);
+
+				return particle;
+			})
+			.filter((particle) => particle.opacity > 0);
+		this.ctx.globalAlpha = 1;
+	}
+
+	private getParticle(player: IPlayer): IParticle {
+		return {
+			x: player.x + Math.floor(Math.random() * 10),
+			y: player.y + Math.floor(Math.random() * 10),
+			width: Math.floor(Math.random() * 2 + 1),
+			height: Math.floor(Math.random() * 3 + 1),
+			velocityX: Math.floor((Math.random() - 0.5) * 0.5),
+			velocityY: Math.floor(Math.random() * 1 + 1),
+			color: this.particleColors[
+				Math.floor(Math.random() * this.particleColors.length)
+			],
+			opacity: 1,
+		};
+	}
+
+	private drawnUsername(player: IPlayer) {
+		this.ctx.font = "Press Start 2P 16px bold";
+		this.ctx.fillStyle = "white";
+		this.ctx.strokeStyle = "black";
+		this.ctx.lineWidth = 2;
+
+		const x =
+			player.x +
+			player.width / 2 -
+			player.username.slice(0, 20).length * 3.5;
+		const y = player.y + player.height + 15;
+		this.ctx.strokeText(player.username.slice(0, 15), x, y);
+		this.ctx.fillText(player.username.slice(0, 15), x, y);
 	}
 }
