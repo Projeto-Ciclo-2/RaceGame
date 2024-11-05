@@ -97,6 +97,11 @@ export class GameDebug {
 			`Velocities:`,
 			`vx: ${player.velocities.vx}`,
 			`vy: ${player.velocities.vy}`,
+			`done_laps: ${player.done_laps}`,
+			`checkpoint: ${player.checkpoint}`,
+			`rotation: ${player.rotation}`,
+			`id: ${player.id}`,
+			`username: ${player.username}`,
 		];
 
 		debugText.forEach((text, index) => {

@@ -1,5 +1,6 @@
 export type typeOptions = "ArrowRight" | "ArrowLeft" | "ArrowUp" | "ArrowDown";
 export type rotation = 0 | 45 | 90 | 135 | 180 | 235 | 270 | 315;
+type checkPointOrder = 1 | 2 | 3 | 4 | 5;
 
 export interface IBox {
 	x: number;
@@ -15,7 +16,7 @@ export interface IPlayer extends IBox {
 
 	ready: boolean;
 	done_laps: number;
-	done_checkpoints: number;
+	checkpoint: checkPointOrder | 0;
 
 	items: Array<IItems>;
 
@@ -37,7 +38,13 @@ export interface IPlayer extends IBox {
 	};
 }
 
-export interface ICheckPoint extends IBox {}
+export interface ICheckPoint extends IBox {
+	order: checkPointOrder
+}
+
+export interface IFinishLine extends IBox {
+	checkpointsNeeded: number;
+}
 
 export interface IItems extends IBox {
 	id: string;

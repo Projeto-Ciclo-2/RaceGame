@@ -2,6 +2,7 @@ import {
 	IBox,
 	ICheckPoint,
 	IEntities,
+	IFinishLine,
 	IItems,
 	IPlayer,
 } from "../interfaces/gameInterfaces";
@@ -9,15 +10,22 @@ import { CollisionDetector } from "../tools/collisionDetect";
 import { CarController } from "./carController";
 
 export class MapController {
-	private spawn = {
-		x: 380,
-		y: 540,
-	};
-
 	private canvas: HTMLCanvasElement;
 	private carController = new CarController();
 	private collisionDetector = new CollisionDetector();
 	private players: Array<IPlayer>;
+
+	private spawn = {
+		x: 380,
+		y: 540,
+	};
+	private finishLine: IFinishLine = {
+		checkpointsNeeded: 5,
+		x: 330,
+		y: 500,
+		width: 30,
+		height: 80,
+	};
 
 	private walls: Array<IBox> = [
 		{ x: 0, y: 0, width: 55, height: 600 },
@@ -52,12 +60,13 @@ export class MapController {
 		{ x: 590, y: 105, width: 20, height: 10 },
 	];
 	private wallsCollided: Array<IBox> = [];
+	private checkPointsCount = 5;
 	private checkPoints: Array<ICheckPoint> = [
-		{ x: 50, y: 400, width: 80, height: 20 },
-		{ x: 140, y: 100, width: 80, height: 20 },
-		{ x: 540, y: 300, width: 80, height: 20 },
-		{ x: 640, y: 300, width: 80, height: 20 },
-		{ x: 420, y: 500, width: 20, height: 80 },
+		{ order: 1, x: 50, y: 400, width: 80, height: 20 },
+		{ order: 2, x: 140, y: 100, width: 80, height: 20 },
+		{ order: 3, x: 540, y: 300, width: 80, height: 20 },
+		{ order: 4, x: 640, y: 300, width: 80, height: 20 },
+		{ order: 5, x: 420, y: 500, width: 20, height: 80 },
 	];
 	private items: Array<IItems> = [
 		{ id: "2", x: 60, y: 450, width: 20, height: 20, velocity_effect: -2 },
@@ -79,6 +88,8 @@ export class MapController {
 
 	public getEntities(): IEntities {
 		this.updatePlayers();
+		this.updateCheckpointInPlayer();
+		this.checkPlayersFinishesLap();
 		const entities: IEntities = {
 			players: this.players,
 			items: this.items,
@@ -92,6 +103,67 @@ export class MapController {
 
 	public getWallsCollided(): Array<IBox> {
 		return this.wallsCollided;
+	}
+
+	public getFinishLine(): IFinishLine {
+		return this.finishLine;
+	}
+
+	private updateCheckpointInPlayer() {
+		for (const p of this.players) {
+			const result = this.collisionDetector.detect(
+				p,
+				this.checkPoints
+			) as boolean | Array<ICheckPoint>;
+			if (typeof result !== "boolean") {
+				// console.log("checkpoint fn");
+				// console.log("checkpoint x, y", result[0].x, result[0].y);
+				// console.log("player checkpoint", p.checkpoint);
+				const box = result[0];
+				if (
+					p.checkpoint === box.order - 1 ||
+					p.checkpoint === box.order
+				) {
+					if (p.checkpoint === box.order - 1) {
+						p.checkpoint++;
+						console.log("checkpoint added.");
+					}
+				} else {
+					this.collisionDetector.resolveCollision(
+						p,
+						p,
+						box,
+						true,
+						false
+					);
+				}
+			}
+		}
+	}
+
+	private checkPlayersFinishesLap() {
+		for (const p of this.players) {
+			const collidedBoxes = this.collisionDetector.detect(p, [
+				this.finishLine,
+			]);
+			if (typeof collidedBoxes !== "boolean") {
+				const finishLine = collidedBoxes[0];
+				if (p.checkpoint === this.checkPointsCount || p.checkpoint === 0) {
+					if (p.checkpoint === this.checkPointsCount) {
+						p.checkpoint = 0;
+						p.done_laps++;
+					}
+				} else {
+					this.collisionDetector.resolveCollision(
+						p,
+						p,
+						finishLine,
+						true,
+						false
+					);
+				}
+			}
+		}
 	}
 
 	private updatePlayers() {
@@ -140,6 +212,7 @@ export class MapController {
 						left: false,
 						right: false,
 					};
+					this.wallsCollided = [];
 				}
 
 				this.checkPlayerInsideMap(futurePlayer);

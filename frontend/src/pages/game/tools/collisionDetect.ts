@@ -1,7 +1,7 @@
 import { IBox, IPlayer } from "../interfaces/gameInterfaces";
 
 export class CollisionDetector {
-	public detect(player: IPlayer, boxes: Array<IBox>): true | Array<IBox> {
+	public detect(player: IPlayer, boxes: Array<IBox>): false | Array<IBox> {
 		const futurePlayer = Object.assign({}, player);
 		const mergedBoxes: Array<IBox> = boxes.filter((box) => {
 			const playerRightBiggerThanBox =
@@ -22,7 +22,7 @@ export class CollisionDetector {
 		if (mergedBoxes.length > 0) {
 			return mergedBoxes;
 		}
-		return true;
+		return false;
 	}
 
 	public resolveCollision(

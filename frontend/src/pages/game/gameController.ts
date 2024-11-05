@@ -25,7 +25,7 @@ export class GameController {
 		{
 			id: "abcd1234",
 			username: "carlo",
-			done_checkpoints: 0,
+			checkpoint: 0,
 			done_laps: 0,
 			items: [],
 			ready: true,
@@ -81,10 +81,14 @@ export class GameController {
 			this.canvas.width,
 			this.canvas.height
 		);
+		const entities = this.mapController.getEntities();
+		this.renderPlayers(entities.players);
+		this.renderItems(entities.items);
+
 		if (this.debug) {
 			// this.gameDebug.makeHitBox(this.hitBox);
-			this.gameDebug.makeGrid();
-			for (const p of this.players) {
+			// this.gameDebug.makeGrid();
+			for (const p of entities.players) {
 				this.gameDebug.renderDebugInfo(p);
 			}
 			this.gameDebug.renderCollidedBoxes(
@@ -95,10 +99,12 @@ export class GameController {
 				this.mapController.getCheckPoints(),
 				"#44FFadbb"
 			);
+			this.gameDebug.renderBoxes(
+				[this.mapController.getFinishLine()],
+				"#bbbb0099"
+			);
 		}
-		const entities = this.mapController.getEntities();
-		this.renderPlayers(entities.players);
-		this.renderItems(entities.items);
+
 		window.requestAnimationFrame(() => this.animate());
 	}
 
@@ -124,10 +130,10 @@ export class GameController {
 	private renderItems(items: Array<IItems>) {
 		for (const item of items) {
 			this.ctx.fillStyle = "#ff4455AA";
-			if(item.id === '1') {
+			if (item.id === "1") {
 				this.ctx.fillStyle = "#0044ff99";
 			}
-			if(item.id === '3') {
+			if (item.id === "3") {
 				this.ctx.fillStyle = "#AA44FF99";
 			}
 			this.ctx.fillRect(item.x, item.y, item.width, item.height);
