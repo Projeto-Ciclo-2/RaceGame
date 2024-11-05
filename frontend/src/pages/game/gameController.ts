@@ -3,6 +3,10 @@ import { MapController } from "./controller/mapController";
 import { GameDebug } from "./debug/gameDebug";
 import { IItems, IPlayer } from "./interfaces/gameInterfaces";
 
+import bkg from "./assets/map1.svg";
+import car from "./assets/blue-car.svg";
+import { loadImage } from "./tools/imgLoader";
+
 export class GameController {
 	private canvas: HTMLCanvasElement;
 	private ctx: CanvasRenderingContext2D;
@@ -11,8 +15,8 @@ export class GameController {
 
 	private gameDebug: GameDebug;
 
-	private bkg: CanvasImageSource;
-	private userCar: CanvasImageSource;
+	private bkg: CanvasImageSource | undefined;
+	private userCar: CanvasImageSource | undefined;
 
 	private debug = true || config.DEBUG_MODE;
 
@@ -52,19 +56,23 @@ export class GameController {
 		},
 	];
 
-	constructor(
-		canvas: HTMLCanvasElement,
-		bkg: CanvasImageSource,
-		carImg: CanvasImageSource
-	) {
+	constructor(canvas: HTMLCanvasElement) {
 		this.canvas = canvas;
-		this.bkg = bkg;
-		this.userCar = carImg;
 		const ctx = this.canvas.getContext("2d");
 		if (ctx) {
 			this.ctx = ctx;
 			this.gameDebug = new GameDebug(this.ctx);
 			this.mapController = new MapController(this.canvas, this.players);
+
+			Promise.all([loadImage(bkg), loadImage(car)])
+				.then(([bkgImg, carImg]) => {
+					this.bkg = bkgImg;
+					this.userCar = carImg;
+				})
+				.catch((error) => {
+					console.error("Failed to load images:", error);
+				});
+
 			return;
 		}
 		throw new Error("Canvas has no correct context.");
@@ -75,6 +83,10 @@ export class GameController {
 	}
 
 	private animate() {
+		if (!this.bkg || !this.userCar) {
+			window.requestAnimationFrame(() => this.animate());
+			return;
+		}
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		this.ctx.drawImage(
 			this.bkg,
@@ -88,7 +100,7 @@ export class GameController {
 		this.renderItems(entities.items);
 
 		if (this.debug) {
-			// this.gameDebug.makeHitBox(this.hitBox);
+			// this.gameDebug.makeHitBox(this.mapController.getWalls());
 			// this.gameDebug.makeGrid();
 			for (const p of entities.players) {
 				this.gameDebug.renderDebugInfo(p);
@@ -119,7 +131,7 @@ export class GameController {
 			this.ctx.rotate((p.rotation * Math.PI) / 180);
 
 			this.ctx.drawImage(
-				this.userCar,
+				this.userCar!,
 				-p.defaultWidth / 2,
 				-p.defaultHeight / 2,
 				p.defaultWidth,

@@ -24,7 +24,7 @@ export class MapController {
 		checkpointsNeeded: 5,
 		x: 330,
 		y: 500,
-		width: 30,
+		width: 37,
 		height: 80,
 	};
 
@@ -176,6 +176,10 @@ export class MapController {
 		return entities;
 	}
 
+	public getWalls(): Array<IBox> {
+		return this.walls;
+	}
+
 	public getCheckPoints(): Array<ICheckPoint> {
 		return this.checkPoints;
 	}
@@ -251,9 +255,6 @@ export class MapController {
 				this.checkPoints
 			) as boolean | Array<ICheckPoint>;
 			if (typeof result !== "boolean") {
-				// console.log("checkpoint fn");
-				// console.log("checkpoint x, y", result[0].x, result[0].y);
-				// console.log("player checkpoint", p.checkpoint);
 				const box = result[0];
 				if (
 					p.checkpoint === box.order - 1 ||
@@ -261,7 +262,6 @@ export class MapController {
 				) {
 					if (p.checkpoint === box.order - 1) {
 						p.checkpoint++;
-						console.log("checkpoint added.");
 					}
 				} else {
 					this.collisionDetector.resolveCollision(
@@ -332,7 +332,6 @@ export class MapController {
 	private scheduleRespawnForItem(item: IItems): void {
 		setTimeout(() => {
 			this.items.push(item);
-			console.log("respawned");
 		}, this.itemRespawnTime);
 	}
 
