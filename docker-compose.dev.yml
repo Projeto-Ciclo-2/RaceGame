@@ -6,9 +6,9 @@ services:
             - "5432:5432"
         restart: always
         environment:
-            POSTGRES_DB: copilot
-            POSTGRES_USER: copilot
-            POSTGRES_PASSWORD: copilotPass123
+            POSTGRES_DB: racegame
+            POSTGRES_USER: racegame
+            POSTGRES_PASSWORD: racegamePass123
         networks:
             - copilot-network
         healthcheck:
