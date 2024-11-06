@@ -1,6 +1,5 @@
 import React from "react";
 import { config } from "../config/config";
-import { IWSMessagePolls } from "../interfaces/IWSMessages";
 import DebugConsole from "../log/DebugConsole";
 import { UserContext } from "./UserContext";
 
