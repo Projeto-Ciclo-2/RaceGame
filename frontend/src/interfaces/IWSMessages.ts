@@ -1,104 +1,150 @@
-import { IPoll } from "./IQuiz";
+import { IMessage, IPlayer, IRoom } from "./IRoom";
 
-/**	SERVER MESSAGES
- * messages that only server will send
+/**
+ * |===============================|
+ * | BACK END WEB SOCKET MESSAGES  |
+ * |===============================|
  */
-export interface IWSMessagePolls {
-	type: "allPolls";
-	polls: IPoll[];
+export interface WsAllRooms {
+	type: "allRooms";
+	rooms: Array<IRoom>;
 }
 
-export interface IWSMessageSendPoll {
-	type: "sendPoll";
-	poll: IPoll;
+export interface WsNewRoom {
+	type: "newRoom";
+	room: IRoom;
 }
 
-export interface IWSMessagePlayerJoin {
-	type: "sendPlayerJoin";
-	pollID: string;
+export interface WsRoomInfo {
+	type: "roomInfo";
+	room: IRoom;
+}
+
+export interface WsBroadcastJoinGame {
+	type: "broadcastJoinGame";
 	username: string;
-	poll: IPoll;
+	userID: string;
+	room: IRoom;
 }
 
-export interface IWSMessageLeftQuiz {
-	type: "leftQuiz";
+export interface WsBroadcastPlayerLeft {
+	type: "broadcastPlayerLeft";
 	username: string;
-	pollID: string;
-	poll: IPoll;
-}
-
-export interface IWSMessageOwnerChange {
-	type: "ownerChange";
 	userID: string;
+	roomID: string;
 }
 
-export interface IWSMessageSendGameInit {
-	type: "sendGameInit";
-	pollID: string;
-	started_at: number; //timestamp
+export interface WsBroadcastNewMessage {
+	type: "broadcastNewMessage";
+	message: IMessage;
+	roomID: string;
 }
 
-export interface IWSMessageSendVote {
-	type: "sendVote";
+export interface WsBroadcastPlayerReady {
+	type: "broadcastPlayerReady";
 	userID: string;
-	pollID: string;
-	pollQuestionID: number;
-	userChoice: string;
+	roomID: string;
 }
 
-export interface IWSMessagePollRank {
-	type: "pollRank";
-	poll: IPoll;
-	players: Array<{
-		username: string;
-		correctAnswers: number;
-		points: number;
-	}>;
-}
-
-/**	CLIENT MESSAGES
- * messages that only client will send
- */
-export interface IWSMessagePostPoll {
-	type: "postPoll";
-	body: {
-		title: string;
-		number_of_question: number;
-		number_of_alternatives: number;
-		theme: string;
-		duration_in_minutes: number;
-		owner: string;
-	};
-}
-
-export interface IWSMessageOwnerGiveUp {
-	type: "ownerGiveUp";
-	userID: string;
-}
-
-export interface IWSMessageJoinQuiz {
-	type: "joinQuiz";
-	userID: string;
-	pollID: string;
-}
-
-export interface IWSMessagePostLeftQuiz {
-	type: "leftQuiz";
-	userID: string;
-	pollID: string;
-}
-
-export interface IWSMessageGameInit {
+export interface WsGameInit {
 	type: "gameInit";
-	userID: string;
-	pollID: string;
+	roomID: string;
+	started_at: string;
 }
 
-export interface IWSMessagePostVote {
-	type: "postVote";
+export interface WsBroadcastPlayerMove {
+	type: "broadcastPlayerMove";
+	roomID: string;
+	player: IPlayer;
+}
+
+export interface WsBroadcastPlayerPickItem {
+	type: "broadcastPlayerPickItem";
+	roomID: string;
 	userID: string;
-	pollID: string;
-	pollQuestionID: string;
-	userChoice: string;
-	timestamp: string; //timestamp
+	itemID: string;
+}
+
+export interface WsBroadcastUseItem {
+	type: "broadcastUseItem";
+	roomID: string;
+	userID: string;
+	itemID: string;
+}
+
+export interface WsPublishItem {
+	type: "publishItem";
+	roomID: string;
+	itemID: string;
+	x: number;
+	y: number;
+}
+
+export interface WsEndGame {
+	type: "endGame";
+	roomID: string;
+	players: Array<IPlayer>;
+	winner: string; //username
+}
+
+/***********************************
+ * |===============================|
+ * | FRONT END WEB SOCKET MESSAGES |
+ * |===============================|
+ ***********************************/
+
+export interface WsCreateRoom {
+	type: "createRoom";
+	userID: string;
+}
+
+export interface WsRequestJoinRoom {
+	type: "requestJoinRoom";
+	roomID: string;
+	userID: string;
+}
+
+export interface WsPlayerLeft {
+	type: "playerLeft";
+	roomID: string;
+	userID: string;
+	username: string;
+}
+
+export interface WsPostMessage {
+	type: "postMessage";
+	message: IMessage;
+	roomID: string;
+}
+
+export interface WsPlayerReady {
+	type: "playerReady";
+	roomID: string;
+	userID: string;
+}
+
+export interface WsPlayerMove {
+	type: "playerMove";
+	roomID: string;
+	player: IPlayer;
+}
+
+export interface WsPlayerPicksItem {
+	type: "playerPicksItem";
+	roomID: string;
+	userID: string;
+	itemID: number;
+}
+
+export interface WsPlayerUsesItem {
+	type: "playerUsesItem";
+	roomID: string;
+	userID: string;
+	itemID: string;
+}
+
+export interface WsPlayerArrives {
+	type: "playerArrives";
+	roomID: string;
+	userID: string;
 }

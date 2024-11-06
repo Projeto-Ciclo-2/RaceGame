@@ -26,6 +26,7 @@ export default class RoomRepository {
 		};
 
 		await this.redis.set(`room:${room.id}`, JSON.stringify(room));
+
 		return room;
 	}
 
