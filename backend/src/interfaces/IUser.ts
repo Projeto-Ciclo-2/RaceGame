@@ -1,3 +1,5 @@
+import { WebSocket } from "ws";
+
 export interface IUser {
 	id: string; //uuid;
 	username: string;
@@ -22,4 +24,9 @@ export interface IGoogleProfile {
 	gender?: string;
 	birthday?: string;
 	link?: string;
+}
+
+export interface WsUser {
+	username: string;
+	ws: WebSocket;
 }

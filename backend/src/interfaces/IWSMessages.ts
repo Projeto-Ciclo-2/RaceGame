@@ -1,4 +1,4 @@
-import { IMessage, IPlayer, IRoom } from "./IRoom";
+import { IEntities, IMessage, IPlayer, IRoom } from "./IRoom";
 
 /**
  * |===============================|
@@ -127,6 +127,8 @@ export interface WsPlayerMove {
 	type: "playerMove";
 	roomID: string;
 	player: IPlayer;
+	key: KeyboardEvent;
+	alive: boolean;
 }
 
 export interface WsPlayerPicksItem {
@@ -147,4 +149,9 @@ export interface WsPlayerArrives {
 	type: "playerArrives";
 	roomID: string;
 	userID: string;
+}
+
+export interface WsGameState {
+	type: "gameState";
+	entities: IEntities;
 }

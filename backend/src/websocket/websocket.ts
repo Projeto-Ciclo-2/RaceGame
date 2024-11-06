@@ -14,18 +14,33 @@ import {
 	WsBroadcastUseItem,
 	WsEndGame,
 	WsNewRoom,
+	WsPlayerArrives,
+	WsPlayerMove,
+	WsPlayerPicksItem,
+	WsPlayerUsesItem,
 	WsRoomInfo,
 } from "../interfaces/IWSMessages";
 import RoomService from "../services/roomService";
+import { WsUser } from "../interfaces/IUser";
+import { RaceGame } from "../game/game";
+import { GameService } from "../game/service/gameService";
+import { getPlayer } from "../game/mock/players";
+import { randomUUID } from "crypto";
 
 const userService = new UserService();
 const roomService = new RoomService();
 const users = new Set<WsUser>();
 
-interface WsUser {
-	username: string;
-	ws: WebSocket;
-}
+const raceGame = new RaceGame();
+raceGame.addRoom({
+	gameService: new GameService(),
+	id: "1234",
+	laps: 4,
+	map: 1,
+	messages: [],
+	players: [],
+	WsPlayers: [],
+});
 
 export const wss = new WebSocket.Server({ noServer: true });
 
@@ -48,6 +63,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 	const thisUser = { username: username, ws: ws };
 
 	users.add(thisUser);
+	raceGame._addPlayer(thisUser, getPlayer(randomUUID(), username), "1234");
 
 	ws.on("message", async (message) => {
 		const data = JSON.parse(message.toString());
@@ -148,28 +164,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 				break;
 			case "playerMove":
 				try {
-					const message: WsBroadcastPlayerMove = {
-						player: {
-							done_checkpoints: 0,
-							done_laps: 0,
-							height: 30,
-							id: "",
-							items: [],
-							ready: true,
-							username: "",
-							velocities: {
-								vx: 0,
-								vy: 0,
-							},
-							width: 30,
-							x: 0,
-							y: 0,
-						},
-						roomID: "",
-						type: "broadcastPlayerMove",
-					};
-					console.log(message);
-					broadcast(JSON.stringify(message));
+					raceGame.queuePlayerMove(data as WsPlayerMove);
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
 					sendErr(ws);
@@ -177,13 +172,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 				break;
 			case "playerPicksItem":
 				try {
-					const message: WsBroadcastPlayerPickItem = {
-						type: "broadcastPlayerPickItem",
-						userID: "",
-						roomID: "",
-						itemID: "",
-					};
-					broadcast(JSON.stringify(message));
+					raceGame.queuePlayerPickItem(data as WsPlayerPicksItem);
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
 					sendErr(ws);
@@ -191,13 +180,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 				break;
 			case "playerUsesItem":
 				try {
-					const message: WsBroadcastUseItem = {
-						type: "broadcastUseItem",
-						userID: "",
-						roomID: "",
-						itemID: "",
-					};
-					broadcast(JSON.stringify(message));
+					raceGame.queuePlayerUsesItem(data as WsPlayerUsesItem);
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
 					sendErr(ws);
@@ -205,14 +188,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 				break;
 			case "playerArrives":
 				try {
-					//refactor: if para verificar quantidade de voltas
-					const message: WsEndGame = {
-						type: "endGame",
-						roomID: "",
-						players: [],
-						winner: "",
-					};
-					broadcast(JSON.stringify(message));
+					raceGame.queuePlayerArrives(data as WsPlayerArrives);
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
 					sendErr(ws);

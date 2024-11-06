@@ -1,13 +1,34 @@
-export interface IItems {
-	id: string;
-	velocity_effect: number;
+import { CarController } from "../game/controller/carController";
+import { GameService } from "../game/service/gameService";
+import { WsUser } from "./IUser";
+
+type checkPointOrder = 1 | 2 | 3 | 4 | 5;
+
+export interface IBox {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
 }
 
-export interface IPlayer {
+export interface IPlayer extends IBox {
 	id: string;
 	username: string;
 
 	ready: boolean;
+
+	done_laps: number;
+	checkpoint: checkPointOrder | 0;
+
+	items: Array<IItems>;
+	usingNitro: boolean;
+	nitroUsedAt: number | null; //timestamp
+	nitroDirection: {
+		up: boolean;
+		down: boolean;
+		left: boolean;
+		right: boolean;
+	};
 
 	x: number;
 	y: number;
@@ -15,16 +36,51 @@ export interface IPlayer {
 	width: number;
 	height: number;
 
-	done_laps: number;
-	done_checkpoints: number;
+	rotation: number;
 
 	velocities: {
 		vx: number;
 		vy: number;
-	}
+	};
 
-	items: Array<IItems>
+	disableArrow: {
+		up: boolean;
+		down: boolean;
+		left: boolean;
+		right: boolean;
+	};
 }
+
+export interface IPlayerControllable extends IPlayer {
+	carController: CarController;
+}
+
+export interface ICheckPoint extends IBox {
+	order: checkPointOrder;
+}
+
+export interface IFinishLine extends IBox {
+	checkpointsNeeded: number;
+}
+
+export interface IItems extends IBox {
+	id: string;
+	type: 1 | 2 | 3;
+	velocity_effect: number;
+}
+
+export interface IEntities {
+	players: Array<IPlayer>;
+	items: Array<IItems>;
+}
+
+
+
+
+
+//
+//
+//
 
 export interface IMessage {
 	content: string;
@@ -36,6 +92,11 @@ export interface IRoom {
 	id: string;
 	laps: number;
 	map: 1;
-	players: Array<IPlayer>
-	messages: Array<IMessage>
+	players: Array<IPlayer>;
+	messages: Array<IMessage>;
+}
+
+export interface IRoomActive extends IRoom {
+	WsPlayers: Array<WsUser>;
+	gameService: GameService;
 }
