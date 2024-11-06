@@ -87,6 +87,11 @@ export interface WsEndGame {
 	winner: string; //username
 }
 
+export interface WsGameState {
+	type: "gameState";
+	entities: IEntities;
+}
+
 /***********************************
  * |===============================|
  * | FRONT END WEB SOCKET MESSAGES |
@@ -149,9 +154,4 @@ export interface WsPlayerArrives {
 	type: "playerArrives";
 	roomID: string;
 	userID: string;
-}
-
-export interface WsGameState {
-	type: "gameState";
-	entities: IEntities;
 }

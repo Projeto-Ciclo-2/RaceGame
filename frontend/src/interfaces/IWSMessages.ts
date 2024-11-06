@@ -1,3 +1,4 @@
+import { IEntities } from "../pages/game/interfaces/gameInterfaces";
 import { IMessage, IPlayer, IRoom } from "./IRoom";
 
 /**
@@ -87,6 +88,12 @@ export interface WsEndGame {
 	winner: string; //username
 }
 
+export interface WsGameState {
+	type: "gameState";
+	entities: IEntities;
+}
+
+
 /***********************************
  * |===============================|
  * | FRONT END WEB SOCKET MESSAGES |
@@ -127,6 +134,8 @@ export interface WsPlayerMove {
 	type: "playerMove";
 	roomID: string;
 	player: IPlayer;
+	key: KeyboardEvent;
+	alive: boolean;
 }
 
 export interface WsPlayerPicksItem {
