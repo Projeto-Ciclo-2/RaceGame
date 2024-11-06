@@ -53,35 +53,6 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 		const data = JSON.parse(message.toString());
 
 		switch (data.type) {
-			case "playerMove":
-				try {
-					const message: WsBroadcastPlayerMove = {
-						player: {
-							done_checkpoints: 0,
-							done_laps: 0,
-							height: 30,
-							id: "",
-							items: [],
-							ready: true,
-							username: "",
-							velocities: {
-								vx: 0,
-								vy: 0,
-							},
-							width: 30,
-							x: 0,
-							y: 0,
-						},
-						roomID: "",
-						type: "broadcastPlayerMove",
-					};
-					console.log(message);
-					broadcast(JSON.stringify(message));
-				} catch (error) {
-					if (error instanceof Error) return sendErr(ws, error);
-					sendErr(ws);
-				}
-				break;
 			case "createRoom":
 				try {
 					const room = await roomService.createRoom(data.userID);
@@ -169,6 +140,35 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 						userID: "",
 						roomID: "",
 					};
+					broadcast(JSON.stringify(message));
+				} catch (error) {
+					if (error instanceof Error) return sendErr(ws, error);
+					sendErr(ws);
+				}
+				break;
+			case "playerMove":
+				try {
+					const message: WsBroadcastPlayerMove = {
+						player: {
+							done_checkpoints: 0,
+							done_laps: 0,
+							height: 30,
+							id: "",
+							items: [],
+							ready: true,
+							username: "",
+							velocities: {
+								vx: 0,
+								vy: 0,
+							},
+							width: 30,
+							x: 0,
+							y: 0,
+						},
+						roomID: "",
+						type: "broadcastPlayerMove",
+					};
+					console.log(message);
 					broadcast(JSON.stringify(message));
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
