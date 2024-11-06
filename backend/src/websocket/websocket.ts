@@ -13,15 +13,23 @@ import {
 	WsBroadcastPlayerReady,
 	WsBroadcastUseItem,
 	WsEndGame,
+	WsGameInit,
 	WsNewRoom,
+	WsPlayerLeft,
+	WsPlayerReady,
+	WsPostMessage,
+	WsRequestJoinRoom,
 	WsRoomInfo,
 } from "../interfaces/IWSMessages";
 import RoomService from "../services/roomService";
 import { IUser } from "../interfaces/IUser";
+import { LobbySevice } from "../services/lobbyService";
+import { IRoom } from "../interfaces/IRoom";
 
 const userService = new UserService();
 const roomService = new RoomService();
 const users = new Set<WsUser>();
+const lobbyService = new LobbySevice();
 
 interface WsUser {
 	username: string;
@@ -138,6 +146,17 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 					};
 					ws.send(JSON.stringify(rommInfo));
 					broadcast(JSON.stringify(message));
+
+					const messageChat: WsBroadcastNewMessage = {
+						type: "broadcastNewMessage",
+						message: {
+							content: `${username} entered!`,
+							userID: data.userID,
+							username: username,
+						},
+						roomID: data.roomID,
+					};
+					broadcast(JSON.stringify(messageChat));
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
 					sendErr(ws);
@@ -145,13 +164,65 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 				break;
 			case "playerLeft":
 				try {
-					const message: WsBroadcastPlayerLeft = {
-						type: "broadcastPlayerLeft",
-						username: "",
-						userID: "",
-						roomID: "",
-					};
-					broadcast(JSON.stringify(message));
+					const dataWS = data as WsPlayerLeft;
+					const updateRoom: IRoom = await lobbyService.playerLeft(
+						dataWS
+					);
+
+					// Percorrer players para saber se todos estão prontos
+					const initGame = updateRoom.players.every(
+						(player) => player.ready === true
+					); // retorna true(se todos estão prontos) e retorna false(se pelo menos um player não estiver pronto)
+					const numberPlayers = updateRoom.players.length;
+
+					// Inciar jogo
+					if (initGame && numberPlayers > 1) {
+						// Enviar mensagem específica para o usuário que saiu
+						const messageExit: WsBroadcastPlayerLeft = {
+							type: "broadcastPlayerLeft",
+							username: dataWS.username,
+							userID: dataWS.userID,
+							roomID: dataWS.roomID,
+						};
+						const userWhoLeft = Array.from(users).find(
+							(user) => user.username === dataWS.username
+						);
+						if (userWhoLeft) {
+							userWhoLeft.ws.send(JSON.stringify(messageExit));
+						}
+
+						// Enviar mensagem `gameInit` para os demais jogadores
+						const message: WsGameInit = {
+							type: "gameInit",
+							roomID: dataWS.roomID,
+							started_at: Date.now(),
+						};
+						broadcast(JSON.stringify(message));
+					}
+
+					// Game não iniciado
+					if (!initGame) {
+						// Atualização do front
+						const message: WsBroadcastPlayerLeft = {
+							type: "broadcastPlayerLeft",
+							username: dataWS.username,
+							userID: dataWS.userID,
+							roomID: dataWS.roomID,
+						};
+						broadcast(JSON.stringify(message));
+
+						// Mensagem para o chat informando que o usuário saiu
+						const messageChat: WsBroadcastNewMessage = {
+							type: "broadcastNewMessage",
+							message: {
+								content: `${username} saiu`,
+								userID: dataWS.userID,
+								username: dataWS.username,
+							},
+							roomID: dataWS.roomID,
+						};
+						broadcast(JSON.stringify(messageChat));
+					}
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
 					sendErr(ws);
@@ -160,11 +231,17 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 				break;
 			case "postMessage":
 				try {
+					const dataWS = data as WsPostMessage;
 					const message: WsBroadcastNewMessage = {
 						type: "broadcastNewMessage",
-						message: { content: "", username: "", userID: "" },
-						roomID: "",
+						message: {
+							content: dataWS.message.content,
+							username: dataWS.message.username,
+							userID: dataWS.message.userID,
+						},
+						roomID: dataWS.roomID,
 					};
+					await lobbyService.postMessage(dataWS);
 					broadcast(JSON.stringify(message));
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
@@ -173,12 +250,51 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 				break;
 			case "playerReady":
 				try {
-					const message: WsBroadcastPlayerReady = {
-						type: "broadcastPlayerReady",
-						userID: "",
-						roomID: "",
-					};
-					broadcast(JSON.stringify(message));
+					const dataWs = data as WsPlayerReady;
+
+					const updateRoom: IRoom = await lobbyService.playerReady(
+						dataWs,
+						username
+					);
+
+					// Percorrer players para saber se todos estão prontos
+					const initGame = updateRoom.players.every(
+						(player) => player.ready === true
+					); // retorna true(se todos estão prontos) e retorna false(se pelo menos um player não estiver pronto)
+					const numberPlayers = updateRoom.players.length;
+
+					// Inciar jogo
+					if (initGame && numberPlayers > 1) {
+						const message: WsGameInit = {
+							type: "gameInit",
+							roomID: dataWs.roomID,
+							started_at: Date.now(),
+						};
+						broadcast(JSON.stringify(message));
+					}
+
+					// Jogo não inciado
+					if (!initGame) {
+						// Atualizar informações no front
+						const message: WsBroadcastPlayerReady = {
+							type: "broadcastPlayerReady",
+							userID: dataWs.userID,
+							roomID: dataWs.roomID,
+						};
+						broadcast(JSON.stringify(message));
+
+						// Enviar mensagem no chat
+						const message2: WsBroadcastNewMessage = {
+							type: "broadcastNewMessage",
+							message: {
+								content: `${username} is ready!`,
+								userID: data.userID,
+								username: username,
+							},
+							roomID: dataWs.roomID,
+						};
+						broadcast(JSON.stringify(message2));
+					}
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
 					sendErr(ws);
