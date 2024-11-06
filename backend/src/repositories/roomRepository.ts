@@ -5,6 +5,7 @@ import { NotFoundException } from "../utils/Exception";
 import { Message } from "../utils/Message";
 import { IUser } from "../interfaces/IUser";
 import Redis from "ioredis";
+import { getPlayer } from "../game/mock/players";
 
 export default class RoomRepository {
 	private redis: Redis;
@@ -14,22 +15,7 @@ export default class RoomRepository {
 	}
 
 	async createRoom(user: IUser): Promise<IRoom> {
-		const player: IPlayer = {
-			id: user.id,
-			username: user.username,
-			ready: false,
-			x: 0,
-			y: 0,
-			width: 0,
-			height: 0,
-			done_laps: 0,
-			done_checkpoints: 0,
-			velocities: {
-				vx: 0,
-				vy: 0,
-			},
-			items: [],
-		};
+		const player= getPlayer(user.id, user.username);
 
 		const room: IRoom = {
 			id: randomUUID(),

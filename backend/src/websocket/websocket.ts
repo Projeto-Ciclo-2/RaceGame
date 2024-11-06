@@ -33,7 +33,7 @@ const users = new Set<WsUser>();
 
 const raceGame = new RaceGame();
 raceGame.addRoom({
-	gameService: new GameService(),
+	gameService: new GameService([]),
 	id: "1234",
 	laps: 4,
 	map: 1,
