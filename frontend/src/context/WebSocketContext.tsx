@@ -125,7 +125,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 	const userContext = React.useContext(UserContext);
 
 	const isConnected = React.useRef(false);
-	const [canConnect, setCanConnect] = React.useState(false);
+	const canConnect = React.useRef(window.location.pathname === "/game");
 	const tryingToConnect = React.useRef(false);
 	const timeInterval = React.useRef<NodeJS.Timer | undefined>(undefined);
 
@@ -134,46 +134,58 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 	);
 
 	const socketRef = React.useRef<undefined | WebSocket>(undefined);
-	const socket = React.useMemo<undefined | WebSocket>(() => {
+	const [socket, setSocket] = React.useState<undefined | WebSocket>(
+		undefined
+	);
+	const connectSocket = React.useCallback(() => {
 		DebugConsole("ws memo called");
-		if (socketRef.current) return socketRef.current as WebSocket;
+		if (socketRef.current) return;
 
 		const currentPath = window.location.pathname;
-		const pathAuth = currentPath === "/home";
-		const allowed = canConnect || !isConnected.current;
-		const userCorrect =
-			userContext && userContext.user && userContext.user.name;
-		const can = userCorrect && pathAuth;
+		const pathAuth = currentPath === "/game";
+		const allowed = canConnect.current || !isConnected.current;
+		// const userCorrect =
+		// 	userContext && userContext.user && userContext.user.name;
+		const can = true && pathAuth;
 
 		if (!allowed || tryingToConnect.current || !can) {
 			DebugConsole("-ws blocked-");
-			return undefined;
+			return;
 		}
 		DebugConsole("!ws allowed to connect. Trying to connect!");
 
 		tryingToConnect.current = true;
 
-		const wsURL = config.WS_URL + "?username=" + userContext.user!.name;
+		const wsURL = config.WS_URL + "?username=carlos";
 		const tempWS = new WebSocket(wsURL);
 
 		socketRef.current = tempWS;
-		return tempWS;
+		setSocket(tempWS);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [canConnect, isConnected.current, tryingToConnect.current, userContext]);
+	}, [
+		canConnect.current,
+		canConnect,
+		isConnected.current,
+		tryingToConnect.current,
+		userContext,
+	]);
 
 	if (!timeInterval.current) {
 		timeInterval.current = setInterval(() => {
 			if (isConnected.current) return;
 
 			const currentPath = window.location.pathname;
-			setCanConnect(currentPath === "/home");
-			DebugConsole("is not connected, canConnect: " + canConnect);
+			const can = currentPath === "/game";
+			canConnect.current = can;
+			connectSocket();
 			// eslint-disable-next-line react-hooks/exhaustive-deps
 		}, 1000);
 	}
 
 	React.useEffect(() => {
+		console.log("effect");
 		if (!socket) return;
+		console.log("effect load");
 
 		socket.onopen = () => {
 			tryingToConnect.current = false;
@@ -233,7 +245,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 			DebugConsole("ws effect dismounting context.");
 			tryingToConnect.current = false;
 			isConnected.current = false;
-			socket.close();
+			socket?.close();
 			clearInterval(timeInterval.current);
 			timeInterval.current = undefined;
 		};
@@ -263,22 +275,48 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 				latestMessage,
 				isConnected,
 				// Receiving functions (callbacks for incoming WebSocket messages)
-				onReceiveAllRooms: (cbFn) => setCallback<WsAllRooms>("allRooms", cbFn),
-				onReceiveNewRoom: (cbFn) => setCallback<WsNewRoom>("newRoom", cbFn),
-				onReceiveRoomInfo: (cbFn) => setCallback<WsRoomInfo>("roomInfo", cbFn),
+				onReceiveAllRooms: (cbFn) =>
+					setCallback<WsAllRooms>("allRooms", cbFn),
+				onReceiveNewRoom: (cbFn) =>
+					setCallback<WsNewRoom>("newRoom", cbFn),
+				onReceiveRoomInfo: (cbFn) =>
+					setCallback<WsRoomInfo>("roomInfo", cbFn),
 				// room
-				onReceiveJoinGame: (cbFn) => setCallback<WsBroadcastJoinGame>("broadcastJoinGame", cbFn),
-				onReceivePlayerLeft: (cbFn) => setCallback<WsPlayerLeft>("broadcastPlayerLeft", cbFn),
-				onReceiveNewMessage: (cbFn) => setCallback<WsBroadcastNewMessage>("broadcastNewMessage", cbFn),
-				onReceivePlayerReady: (cbFn) => setCallback<WsBroadcastPlayerReady>("broadcastPlayerReady", cbFn),
+				onReceiveJoinGame: (cbFn) =>
+					setCallback<WsBroadcastJoinGame>("broadcastJoinGame", cbFn),
+				onReceivePlayerLeft: (cbFn) =>
+					setCallback<WsPlayerLeft>("broadcastPlayerLeft", cbFn),
+				onReceiveNewMessage: (cbFn) =>
+					setCallback<WsBroadcastNewMessage>(
+						"broadcastNewMessage",
+						cbFn
+					),
+				onReceivePlayerReady: (cbFn) =>
+					setCallback<WsBroadcastPlayerReady>(
+						"broadcastPlayerReady",
+						cbFn
+					),
 				//in-game
-				onReceiveGameInit: (cbFn) => setCallback<WsGameInit>("gameInit", cbFn),
-				onReceivePlayerMove: (cbFn) => setCallback<WsBroadcastPlayerMove>("broadcastPlayerMove", cbFn),
-				onReceivePickItem: (cbFn) => setCallback<WsBroadcastPlayerPickItem>("broadcastPlayerPickItem", cbFn),
-				onReceiveUseItem: (cbFn) => setCallback<WsBroadcastUseItem>("broadcastUseItem", cbFn),
-				onReceivePublishItem: (cbFn) => setCallback<WsPublishItem>("publishItem", cbFn),
-				onReceiveEndGame: (cbFn) => setCallback<WsEndGame>("endGame", cbFn),
-				onReceiveGameState: (cbFn) => setCallback<WsGameState>("gameState", cbFn),
+				onReceiveGameInit: (cbFn) =>
+					setCallback<WsGameInit>("gameInit", cbFn),
+				onReceivePlayerMove: (cbFn) =>
+					setCallback<WsBroadcastPlayerMove>(
+						"broadcastPlayerMove",
+						cbFn
+					),
+				onReceivePickItem: (cbFn) =>
+					setCallback<WsBroadcastPlayerPickItem>(
+						"broadcastPlayerPickItem",
+						cbFn
+					),
+				onReceiveUseItem: (cbFn) =>
+					setCallback<WsBroadcastUseItem>("broadcastUseItem", cbFn),
+				onReceivePublishItem: (cbFn) =>
+					setCallback<WsPublishItem>("publishItem", cbFn),
+				onReceiveEndGame: (cbFn) =>
+					setCallback<WsEndGame>("endGame", cbFn),
+				onReceiveGameState: (cbFn) =>
+					setCallback<WsGameState>("gameState", cbFn),
 
 				// Sending functions (functions to send outgoing WebSocket messages)
 				sendCreateRoom: (obj) => sendMessage(JSON.stringify(obj)),
