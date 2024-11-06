@@ -64,7 +64,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 	const thisUser = { username: username, ws: ws };
 
 	users.add(thisUser);
-	raceGame._addPlayer(thisUser, getPlayer(randomUUID(), username), "1234");
+	// raceGame._addPlayer(thisUser, getPlayer(randomUUID(), username), "1234");
 
 	ws.on("message", async (message) => {
 		const data = JSON.parse(message.toString());
