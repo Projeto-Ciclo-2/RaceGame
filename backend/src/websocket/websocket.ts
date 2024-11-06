@@ -17,6 +17,7 @@ import {
 	WsRoomInfo,
 } from "../interfaces/IWSMessages";
 import RoomService from "../services/roomService";
+import { IUser } from "../interfaces/IUser";
 
 const userService = new UserService();
 const roomService = new RoomService();
@@ -85,7 +86,6 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 			case "createRoom":
 				try {
 					const room = await roomService.createRoom(data.userID);
-					console.log(room);
 					const message: WsNewRoom = {
 						type: "newRoom",
 						room: {
@@ -104,27 +104,36 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 				break;
 			case "requestJoinRoom":
 				try {
+					const room = await roomService.joinRoom(
+						data.userID,
+						data.roomID
+					);
+
+					const user = room.players.find(
+						(user) => user.id === data.userID
+					);
+
 					const message: WsBroadcastJoinGame = {
 						type: "broadcastJoinGame",
-						username: "",
-						userID: "",
+						username: user?.username || "",
+						userID: user?.id || "",
 						room: {
-							id: "",
-							laps: 0,
-							map: 1,
-							players: [],
-							messages: [],
+							id: room.id,
+							laps: room.laps,
+							map: room.map,
+							players: room.players,
+							messages: room.messages,
 						},
 					};
 
 					const rommInfo: WsRoomInfo = {
 						type: "roomInfo",
 						room: {
-							id: "",
-							laps: 0,
-							map: 1,
-							players: [],
-							messages: [],
+							id: room.id,
+							laps: room.laps,
+							map: room.map,
+							players: room.players,
+							messages: room.messages,
 						},
 					};
 					ws.send(JSON.stringify(rommInfo));
