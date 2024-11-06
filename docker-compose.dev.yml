@@ -12,7 +12,7 @@ services:
         networks:
             - copilot-network
         healthcheck:
-            test: ["CMD", "pg_isready", "-U", "copilot"]
+            test: ["CMD", "pg_isready", "-U", "racegame"]
             interval: 10s
             retries: 5
 
