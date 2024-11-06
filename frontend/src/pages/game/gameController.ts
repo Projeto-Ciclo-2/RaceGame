@@ -8,13 +8,18 @@ import carBlue from "./assets/carBlue.svg";
 import carYellow from "./assets/carYellow.svg";
 import carGreen from "./assets/carGreen.svg";
 import { loadImage } from "./tools/imgLoader";
-import { players } from "./mock/players";
+import { WebSocketContextType } from "../../context/WebSocketContext";
+import { WebSocketHandler } from "./websocket/websocketHandler";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
 	private ctx: CanvasRenderingContext2D;
 
-	private mapController: MapController;
+	private mapController: MapController | undefined;
+	private websocketContext: WebSocketContextType;
+	private websocketHandler = new WebSocketHandler();
+
+	private roomID: string | undefined = "1234";
 
 	private gameDebug: GameDebug;
 
@@ -28,15 +33,22 @@ export class GameController {
 
 	private debug = true || config.DEBUG_MODE;
 
-	private players: Array<IPlayer> = players;
+	private username: string;
+	private players: Array<IPlayer> = [];
 
-	constructor(canvas: HTMLCanvasElement) {
+	constructor(
+		canvas: HTMLCanvasElement,
+		websocketContext: WebSocketContextType,
+		username: string
+	) {
 		this.canvas = canvas;
 		const ctx = this.canvas.getContext("2d");
 		if (ctx) {
+			this.username = username;
 			this.ctx = ctx;
 			this.gameDebug = new GameDebug(this.ctx);
-			this.mapController = new MapController(this.canvas, this.players);
+
+			this.websocketContext = websocketContext;
 
 			Promise.all([
 				loadImage(bkg),
@@ -59,11 +71,29 @@ export class GameController {
 	}
 
 	public start() {
+		this.listenWebSocket();
 		this.animate();
 	}
 
+	private listenWebSocket() {
+		this.websocketContext.onReceiveGameState((e) => {
+			this.websocketHandler.handleGameState(
+				e,
+				this.players,
+				this.username
+			);
+		});
+	}
+
 	private animate() {
-		if (!this.bkg || !this.carGreen || !this.carBlue || !this.carYellow) {
+		if (
+			!this.bkg ||
+			!this.carGreen ||
+			!this.carBlue ||
+			!this.carYellow ||
+			!this.mapController
+		) {
+			this.initMapController();
 			window.requestAnimationFrame(() => this.animate());
 			return;
 		}
@@ -75,8 +105,19 @@ export class GameController {
 			this.canvas.width,
 			this.canvas.height
 		);
-		const entities = this.mapController.getEntities();
-		this.renderPlayers(entities.players);
+		const playablePlayers = this.players.filter(
+			(p) => p.canControl === true
+		);
+		const entities = this.mapController.getEntities(playablePlayers);
+		for (const p of entities.players) {
+			this.players = this.players.map((player) => {
+				if (player.id === p.id) {
+					return p;
+				}
+				return player;
+			});
+		}
+		this.renderPlayers(this.players);
 		this.renderItems(entities.items);
 
 		if (this.debug) {
@@ -84,7 +125,7 @@ export class GameController {
 			// this.gameDebug.makeGrid();
 			// .forEach((p, i) => {
 			// });
-			this.gameDebug.renderDebugInfo(entities.players[0], 10 );
+			// this.gameDebug.renderDebugInfo(entities.players[0], 10);
 			// this.gameDebug.renderCollidedBoxes(
 			// 	this.mapController.getWallsCollided()
 			// );
@@ -128,10 +169,10 @@ export class GameController {
 
 			this.ctx.drawImage(
 				img,
-				-p.defaultWidth / 2,
-				-p.defaultHeight / 2,
-				p.defaultWidth,
-				p.defaultHeight
+				-p.width / 2,
+				-p.height / 2,
+				p.width,
+				p.height
 			);
 
 			this.ctx.restore();
@@ -205,5 +246,19 @@ export class GameController {
 		const y = player.y + player.height + 15;
 		this.ctx.strokeText(player.username.slice(0, 15), x, y);
 		this.ctx.fillText(player.username.slice(0, 15), x, y);
+	}
+
+	private initMapController() {
+		if (!this.mapController && this.players.length > 0 && this.roomID) {
+			const player = this.players.find((p) => p.canControl);
+			if (player) {
+				this.mapController = new MapController(
+					this.canvas,
+					this.websocketContext,
+					player,
+					this.roomID
+				);
+			}
+		}
 	}
 }

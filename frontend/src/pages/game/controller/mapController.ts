@@ -1,3 +1,4 @@
+import { WebSocketContextType } from "../../../context/WebSocketContext";
 import {
 	IBox,
 	ICheckPoint,
@@ -11,9 +12,8 @@ import { CarController } from "./carController";
 
 export class MapController {
 	private canvas: HTMLCanvasElement;
-	private carController = new CarController();
+	private carController: CarController;
 	private collisionDetector = new CollisionDetector();
-	private players: Array<IPlayer>;
 
 	private itemRespawnTime = 5000;
 	private spawn = {
@@ -152,9 +152,14 @@ export class MapController {
 		},
 	];
 
-	constructor(canvas: HTMLCanvasElement, players: Array<IPlayer>) {
+	constructor(
+		canvas: HTMLCanvasElement,
+		websocketContext: WebSocketContextType,
+		player: IPlayer,
+		roomID: string
+	) {
 		this.canvas = canvas;
-		this.players = players;
+		this.carController = new CarController(websocketContext, player, roomID);
 		this.carController.listen();
 	}
 
@@ -162,15 +167,15 @@ export class MapController {
 		return this.carController._getKeys();
 	}
 
-	public getEntities(): IEntities {
-		this.updatePlayers();
+	public getEntities(players: Array<IPlayer>): IEntities {
+		this.updatePlayers(players);
 
-		this.updateCheckpointInPlayer();
-		this.checkPlayersFinishesLap();
-		this.checkPlayersGetsItem();
+		this.updateCheckpointInPlayer(players);
+		this.checkPlayersFinishesLap(players);
+		this.checkPlayersGetsItem(players);
 
 		const entities: IEntities = {
-			players: this.players,
+			players: players,
 			items: this.items,
 		};
 		return entities;
@@ -192,8 +197,8 @@ export class MapController {
 		return this.finishLine;
 	}
 
-	private updatePlayers() {
-		this.players = this.players.map((p) => {
+	private updatePlayers(players: Array<IPlayer>) {
+		players = players.map((p) => {
 			if (p.canControl) {
 				const futurePlayer = this.carController.getFutureCarPosition(p);
 
@@ -248,8 +253,8 @@ export class MapController {
 		});
 	}
 
-	private updateCheckpointInPlayer() {
-		for (const p of this.players) {
+	private updateCheckpointInPlayer(players: Array<IPlayer>) {
+		for (const p of players) {
 			const result = this.collisionDetector.detect(
 				p,
 				this.checkPoints
@@ -276,8 +281,8 @@ export class MapController {
 		}
 	}
 
-	private checkPlayersFinishesLap() {
-		for (const p of this.players) {
+	private checkPlayersFinishesLap(players: Array<IPlayer>) {
+		for (const p of players) {
 			const collidedBoxes = this.collisionDetector.detect(p, [
 				this.finishLine,
 			]) as boolean | Array<IFinishLine>;
@@ -304,8 +309,8 @@ export class MapController {
 		}
 	}
 
-	private checkPlayersGetsItem() {
-		for (const p of this.players) {
+	private checkPlayersGetsItem(players: Array<IPlayer>) {
+		for (const p of players) {
 			const collidedItems = this.collisionDetector.detect(
 				p,
 				this.items

@@ -30,10 +30,11 @@ import {
 /**
  * WebSocket context interface that defines the structure and behavior of the WebSocket provider.
  */
-interface WebSocketContextType {
+export interface WebSocketContextType {
 	socket: WebSocket | undefined;
 	latestMessage: string | null;
 	isConnected: React.MutableRefObject<boolean>;
+	username: string | undefined;
 
 	onReceiveAllRooms: (cbFn: (e: WsAllRooms) => any) => void;
 	onReceiveNewRoom: (cbFn: (e: WsNewRoom) => any) => void;
@@ -132,6 +133,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 	const [latestMessage, setLatestMessage] = React.useState<string | null>(
 		null
 	);
+	const nameRef = React.useRef<string | undefined>(undefined);
 
 	const socketRef = React.useRef<undefined | WebSocket>(undefined);
 	const [socket, setSocket] = React.useState<undefined | WebSocket>(
@@ -156,7 +158,13 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 
 		tryingToConnect.current = true;
 
-		const wsURL = config.WS_URL + "?username=carlos";
+		let username = window.prompt("digite o nome de usuário");
+		while(!username) {
+			username = window.prompt("insira um nome válido");
+		}
+		nameRef.current = username;
+
+		const wsURL = config.WS_URL + "?username=" + nameRef.current;
 		const tempWS = new WebSocket(wsURL);
 
 		socketRef.current = tempWS;
@@ -183,14 +191,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 	}
 
 	React.useEffect(() => {
-		console.log("effect");
 		if (!socket) return;
-		console.log("effect load");
 
 		socket.onopen = () => {
 			tryingToConnect.current = false;
 			isConnected.current = true;
-			DebugConsole("WebSocket connection established");
+			console.log("WebSocket connection established");
 		};
 
 		socket.onmessage = (event: MessageEvent) => {
@@ -274,6 +280,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 				socket: socket,
 				latestMessage,
 				isConnected,
+				username: nameRef.current,
 				// Receiving functions (callbacks for incoming WebSocket messages)
 				onReceiveAllRooms: (cbFn) =>
 					setCallback<WsAllRooms>("allRooms", cbFn),

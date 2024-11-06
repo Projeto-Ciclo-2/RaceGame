@@ -30,8 +30,6 @@ export const players: Array<IPlayer> = [
 		y: spawn.y,
 		height: 25,
 		width: 35,
-		defaultHeight: 25,
-		defaultWidth: 35,
 		velocities: {
 			vx: 0,
 			vy: 0,
@@ -69,8 +67,6 @@ export const players: Array<IPlayer> = [
 		y: spawn.y - 35,
 		height: 25,
 		width: 35,
-		defaultHeight: 25,
-		defaultWidth: 35,
 		velocities: {
 			vx: 0,
 			vy: 0,
@@ -108,8 +104,6 @@ export const players: Array<IPlayer> = [
 
 		height: 25,
 		width: 35,
-		defaultHeight: 25,
-		defaultWidth: 35,
 		velocities: {
 			vx: 0,
 			vy: 0,

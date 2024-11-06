@@ -1,4 +1,4 @@
-import { IItems, IPlayer } from "../../interfaces/IRoom";
+import { IItems, IPlayer, IPlayerControllable } from "../../interfaces/IRoom";
 
 type keyValid = "ArrowRight" | "ArrowLeft" | "ArrowUp" | "ArrowDown" | "Space";
 type keyAccept = keyValid | "w" | "s" | "d" | "a";
@@ -38,8 +38,10 @@ export class CarController {
 	private nitroDuration = 2000;
 	private nitroMaxVelocity = 7;
 
-	public handleKeyPress(e: KeyboardEvent, alive: boolean) {
+	public handleKeyPress(key: string, alive: boolean) {
 		const handle = (thisKey: any) => {
+			console.log(thisKey);
+
 			if (this.options.includes(thisKey)) {
 				const key = thisKey as any as keyAccept;
 				const otherKeys = {
@@ -54,10 +56,19 @@ export class CarController {
 				} else {
 					this.keys[key] = alive;
 				}
+				console.log(JSON.stringify(this.keys));
 			}
 		};
-		handle(e.key);
-		handle(e.code);
+		handle(key);
+	}
+
+	public getFutureSelf(player: IPlayerControllable): IPlayerControllable {
+		const futurePlayer = this.getFutureCarPosition(player);
+		const futurePlayerControllable: IPlayerControllable = {
+			...futurePlayer,
+			carController: player.carController,
+		};
+		return futurePlayerControllable;
 	}
 
 	public getFutureCarPosition(player: IPlayer): IPlayer {
@@ -186,17 +197,17 @@ export class CarController {
 	}
 
 	private applyNitro(player: IPlayer) {
-		const {down, left, right, up} = player.nitroDirection;
-		if(up) {
+		const { down, left, right, up } = player.nitroDirection;
+		if (up) {
 			player.velocities.vy -= this.nitroAcceleration;
 		}
-		if(down) {
+		if (down) {
 			player.velocities.vy += this.nitroAcceleration;
 		}
-		if(left) {
+		if (left) {
 			player.velocities.vx -= this.nitroAcceleration;
 		}
-		if(right) {
+		if (right) {
 			player.velocities.vx += this.nitroAcceleration;
 		}
 	}

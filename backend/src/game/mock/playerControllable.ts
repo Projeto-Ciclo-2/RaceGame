@@ -1,7 +1,10 @@
 import { IPlayerControllable } from "../../interfaces/IRoom";
 import { CarController } from "../controller/carController";
 
-export function getPlayerControllable(id: string, username: string): IPlayerControllable {
+export function getPlayerControllable(
+	id: string,
+	username: string
+): IPlayerControllable {
 	return {
 		id: id,
 		username: username,

@@ -30,10 +30,7 @@ export interface IPlayer extends IBox {
 	};
 	nitroParticles: Array<IParticle>;
 
-	rotation: rotation;
-
-	defaultWidth: number;
-	defaultHeight: number;
+	rotation: rotation | number;
 
 	velocities: {
 		vx: number;

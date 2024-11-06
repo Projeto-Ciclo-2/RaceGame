@@ -68,6 +68,7 @@ export class GameService {
 			this.players = this.players.map((p) => {
 				if (move.player.id === p.id) {
 					p.carController.handleKeyPress(move.key, move.alive);
+					return p.carController.getFutureSelf(p);
 				}
 				return p;
 			});

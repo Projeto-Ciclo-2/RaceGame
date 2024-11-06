@@ -132,7 +132,7 @@ export interface WsPlayerMove {
 	type: "playerMove";
 	roomID: string;
 	player: IPlayer;
-	key: KeyboardEvent;
+	key: string;
 	alive: boolean;
 }
 

@@ -1,11 +1,19 @@
-import { IBox, ICheckPoint, IEntities, IFinishLine, IItems, IPlayer, IPlayerControllable } from "../../interfaces/IRoom";
+import {
+	IBox,
+	ICheckPoint,
+	IEntities,
+	IFinishLine,
+	IItems,
+	IPlayer,
+	IPlayerControllable,
+} from "../../interfaces/IRoom";
 import { CollisionDetector } from "../tools/collisionDetect";
 import { CarController } from "./carController";
 
 export class MapController {
 	private canvas = {
 		width: 760,
-		height: 600
+		height: 600,
 	};
 	private collisionDetector = new CollisionDetector();
 
@@ -161,52 +169,49 @@ export class MapController {
 
 	private updatePlayers(players: Array<IPlayer>) {
 		players = players.map((p) => {
-				const result = this.collisionDetector.detect(
-					p,
-					this.walls
-				);
-				if (typeof result !== "boolean") {
-					if (result.length === 1) {
-						this.collisionDetector.resolveCollision(
-							p,
-							p,
-							result[0],
-							true,
-							false
-						);
-					} else {
-						result.forEach((box, i, arr) => {
-							if (i === arr.length - 1) {
-								return this.collisionDetector.resolveCollision(
-									p,
-									p,
-									box,
-									true,
-									true
-								);
-							}
-							this.collisionDetector.resolveCollision(
+			const result = this.collisionDetector.detect(p, this.walls);
+			if (typeof result !== "boolean") {
+				if (result.length === 1) {
+					this.collisionDetector.resolveCollision(
+						p,
+						p,
+						result[0],
+						true,
+						false
+					);
+				} else {
+					result.forEach((box, i, arr) => {
+						if (i === arr.length - 1) {
+							return this.collisionDetector.resolveCollision(
 								p,
 								p,
 								box,
-								false,
-								false
+								true,
+								true
 							);
-						});
-					}
-					this.wallsCollided = result;
-				} else {
-					p.disableArrow = {
-						down: false,
-						up: false,
-						left: false,
-						right: false,
-					};
-					this.wallsCollided = [];
+						}
+						this.collisionDetector.resolveCollision(
+							p,
+							p,
+							box,
+							false,
+							false
+						);
+					});
 				}
+				this.wallsCollided = result;
+			} else {
+				p.disableArrow = {
+					down: false,
+					up: false,
+					left: false,
+					right: false,
+				};
+				this.wallsCollided = [];
+			}
 
-				this.checkPlayerInsideMap(p);
-				return p;
+			this.checkPlayerInsideMap(p);
+			return p;
 		});
 	}
 

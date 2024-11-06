@@ -64,7 +64,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 	const thisUser = { username: username, ws: ws };
 
 	users.add(thisUser);
-	// raceGame._addPlayer(thisUser, getPlayer(randomUUID(), username), "1234");
+	raceGame._addPlayer(thisUser, getPlayer(randomUUID(), username), "1234");
 
 	ws.on("message", async (message) => {
 		const data = JSON.parse(message.toString());
@@ -173,7 +173,11 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 				break;
 			case "playerMove":
 				try {
+
+					console.log("");
 					raceGame.queuePlayerMove(data as WsPlayerMove);
+					console.log("");
+					console.log("");
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
 					sendErr(ws);

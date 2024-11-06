@@ -1,5 +1,4 @@
-import { IEntities } from "../pages/game/interfaces/gameInterfaces";
-import { IMessage, IPlayer, IRoom } from "./IRoom";
+import { IEntities, IMessage, IPlayer, IRoom } from "./IRoom";
 
 /**
  * |===============================|
@@ -134,7 +133,7 @@ export interface WsPlayerMove {
 	type: "playerMove";
 	roomID: string;
 	player: IPlayer;
-	key: KeyboardEvent;
+	key: string;
 	alive: boolean;
 }
 
