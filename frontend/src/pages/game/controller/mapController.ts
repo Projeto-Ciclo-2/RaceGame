@@ -2,7 +2,6 @@ import { WebSocketContextType } from "../../../context/WebSocketContext";
 import {
 	IBox,
 	ICheckPoint,
-	IEntities,
 	IFinishLine,
 	IItems,
 	IPlayer,
@@ -60,7 +59,6 @@ export class MapController {
 		{ x: 350, y: 90, width: 260, height: 15 },
 		{ x: 590, y: 105, width: 20, height: 10 },
 	];
-	private wallsCollided: Array<IBox> = [];
 	private checkPoints: Array<ICheckPoint> = [
 		{ order: 1, x: 50, y: 400, width: 80, height: 20 },
 		{ order: 2, x: 140, y: 100, width: 80, height: 20 },
@@ -68,117 +66,38 @@ export class MapController {
 		{ order: 4, x: 640, y: 300, width: 80, height: 20 },
 		{ order: 5, x: 420, y: 500, width: 20, height: 80 },
 	];
-	private items: Array<IItems> = [
-		{
-			id: "a",
-			type: 2,
-			x: 60,
-			y: 450,
-			width: 20,
-			height: 20,
-			velocity_effect: -5,
-		},
-		{
-			id: "b",
-			type: 1,
-			x: 100,
-			y: 250,
-			width: 20,
-			height: 20,
-			velocity_effect: 2,
-		},
-		{
-			id: "c",
-			type: 2,
-			x: 180,
-			y: 160,
-			width: 20,
-			height: 20,
-			velocity_effect: -5,
-		},
-		{
-			id: "d",
-			type: 2,
-			x: 300,
-			y: 300,
-			width: 20,
-			height: 20,
-			velocity_effect: -5,
-		},
-		{
-			id: "e",
-			type: 2,
-			x: 380,
-			y: 150,
-			width: 20,
-			height: 20,
-			velocity_effect: -5,
-		},
-		{
-			id: "f",
-			type: 2,
-			x: 440,
-			y: 20,
-			width: 20,
-			height: 20,
-			velocity_effect: -5,
-		},
-		{
-			id: "g",
-			type: 1,
-			x: 660,
-			y: 150,
-			width: 20,
-			height: 20,
-			velocity_effect: 2,
-		},
-		{
-			id: "h",
-			type: 3,
-			x: 650,
-			y: 450,
-			width: 25,
-			height: 30,
-			velocity_effect: -5,
-		},
-		{
-			id: "i",
-			type: 1,
-			x: 600,
-			y: 520,
-			width: 20,
-			height: 20,
-			velocity_effect: 2,
-		},
-	];
+	private items: Array<IItems>;
 
 	constructor(
 		canvas: HTMLCanvasElement,
 		websocketContext: WebSocketContextType,
 		player: IPlayer,
-		roomID: string
+		roomID: string,
+		items: Array<IItems>
 	) {
 		this.canvas = canvas;
-		this.carController = new CarController(websocketContext, player, roomID);
+		this.carController = new CarController(
+			websocketContext,
+			player,
+			roomID
+		);
 		this.carController.listen();
+		this.items = items;
 	}
 
 	public _getCarKeys() {
 		return this.carController._getKeys();
 	}
 
-	public getEntities(players: Array<IPlayer>): IEntities {
-		this.updatePlayers(players);
-
-		this.updateCheckpointInPlayer(players);
-		this.checkPlayersFinishesLap(players);
-		this.checkPlayersGetsItem(players);
-
-		const entities: IEntities = {
-			players: players,
-			items: this.items,
-		};
-		return entities;
+	public makePrediction(players: Array<IPlayer>, items: Array<IItems>) {
+		this.items = items;
+		for (let p of players) {
+			p = this.updatePlayer(p);
+			this.updateCheckpointInPlayer(p);
+			this.checkPlayerFinishesLap(p);
+			this.checkPlayerGetsItem(p);
+		}
+		items = this.items;
 	}
 
 	public getWalls(): Array<IBox> {
@@ -189,147 +108,116 @@ export class MapController {
 		return this.checkPoints;
 	}
 
-	public getWallsCollided(): Array<IBox> {
-		return this.wallsCollided;
-	}
-
 	public getFinishLine(): IFinishLine {
 		return this.finishLine;
 	}
 
-	private updatePlayers(players: Array<IPlayer>) {
-		players = players.map((p) => {
-			if (p.canControl) {
-				const futurePlayer = this.carController.getFutureCarPosition(p);
+	private updatePlayer(p: IPlayer): IPlayer {
+		const futurePlayer = this.carController.getFutureCarPosition(p);
 
-				const result = this.collisionDetector.detect(
+		const result = this.collisionDetector.detect(futurePlayer, this.walls);
+		if (typeof result !== "boolean") {
+			if (result.length === 1) {
+				this.collisionDetector.resolveCollision(
+					p,
 					futurePlayer,
-					this.walls
+					result[0],
+					true,
+					false
 				);
-				if (typeof result !== "boolean") {
-					if (result.length === 1) {
-						this.collisionDetector.resolveCollision(
+			} else {
+				result.forEach((box, i, arr) => {
+					if (i === arr.length - 1) {
+						return this.collisionDetector.resolveCollision(
 							p,
 							futurePlayer,
-							result[0],
+							box,
 							true,
-							false
+							true
 						);
-					} else {
-						result.forEach((box, i, arr) => {
-							if (i === arr.length - 1) {
-								return this.collisionDetector.resolveCollision(
-									p,
-									futurePlayer,
-									box,
-									true,
-									true
-								);
-							}
-							this.collisionDetector.resolveCollision(
-								p,
-								futurePlayer,
-								box,
-								false,
-								false
-							);
-						});
 					}
-					this.wallsCollided = result;
-				} else {
-					futurePlayer.disableArrow = {
-						down: false,
-						up: false,
-						left: false,
-						right: false,
-					};
-					this.wallsCollided = [];
-				}
-
-				this.checkPlayerInsideMap(futurePlayer);
-				return futurePlayer;
-			}
-			return p;
-		});
-	}
-
-	private updateCheckpointInPlayer(players: Array<IPlayer>) {
-		for (const p of players) {
-			const result = this.collisionDetector.detect(
-				p,
-				this.checkPoints
-			) as boolean | Array<ICheckPoint>;
-			if (typeof result !== "boolean") {
-				const box = result[0];
-				if (
-					p.checkpoint === box.order - 1 ||
-					p.checkpoint === box.order
-				) {
-					if (p.checkpoint === box.order - 1) {
-						p.checkpoint++;
-					}
-				} else {
 					this.collisionDetector.resolveCollision(
 						p,
-						p,
+						futurePlayer,
 						box,
-						true,
+						false,
 						false
 					);
+				});
+			}
+		} else {
+			futurePlayer.disableArrow = {
+				down: false,
+				up: false,
+				left: false,
+				right: false,
+			};
+		}
+
+		this.checkPlayerInsideMap(futurePlayer);
+		return futurePlayer;
+	}
+
+	private updateCheckpointInPlayer(p: IPlayer) {
+		const result = this.collisionDetector.detect(p, this.checkPoints) as
+			| boolean
+			| Array<ICheckPoint>;
+		if (typeof result !== "boolean") {
+			const box = result[0];
+			if (p.checkpoint === box.order - 1 || p.checkpoint === box.order) {
+				if (p.checkpoint === box.order - 1) {
+					p.checkpoint++;
 				}
+			} else {
+				this.collisionDetector.resolveCollision(p, p, box, true, false);
 			}
 		}
 	}
 
-	private checkPlayersFinishesLap(players: Array<IPlayer>) {
-		for (const p of players) {
-			const collidedBoxes = this.collisionDetector.detect(p, [
-				this.finishLine,
-			]) as boolean | Array<IFinishLine>;
-			if (typeof collidedBoxes !== "boolean") {
-				const finishLine = collidedBoxes[0];
-				if (
-					p.checkpoint === finishLine.checkpointsNeeded ||
-					p.checkpoint === 0
-				) {
-					if (p.checkpoint === finishLine.checkpointsNeeded) {
-						p.checkpoint = 0;
-						p.done_laps++;
-					}
-				} else {
-					this.collisionDetector.resolveCollision(
-						p,
-						p,
-						finishLine,
-						true,
-						false
-					);
+	private checkPlayerFinishesLap(p: IPlayer) {
+		const collidedBoxes = this.collisionDetector.detect(p, [
+			this.finishLine,
+		]) as boolean | Array<IFinishLine>;
+		if (typeof collidedBoxes !== "boolean") {
+			const finishLine = collidedBoxes[0];
+			if (
+				p.checkpoint === finishLine.checkpointsNeeded ||
+				p.checkpoint === 0
+			) {
+				if (p.checkpoint === finishLine.checkpointsNeeded) {
+					p.checkpoint = 0;
+					p.done_laps++;
 				}
+			} else {
+				this.collisionDetector.resolveCollision(
+					p,
+					p,
+					finishLine,
+					true,
+					false
+				);
 			}
 		}
 	}
 
-	private checkPlayersGetsItem(players: Array<IPlayer>) {
-		for (const p of players) {
-			const collidedItems = this.collisionDetector.detect(
-				p,
-				this.items
-			) as boolean | Array<IItems>;
-			if (typeof collidedItems !== "boolean") {
-				const item = collidedItems[0];
-				let itemAdded = true;
+	private checkPlayerGetsItem(p: IPlayer) {
+		const collidedItems = this.collisionDetector.detect(p, this.items) as
+			| boolean
+			| Array<IItems>;
+		if (typeof collidedItems !== "boolean") {
+			const item = collidedItems[0];
+			let itemAdded = true;
 
-				if (item.type !== 1) {
-					this.carController.useItem(p, item);
-				} else {
-					itemAdded = this.carController.addNitro(p, item);
-				}
+			if (item.type !== 1) {
+				this.carController.useItem(p, item);
+			} else {
+				itemAdded = this.carController.addNitro(p, item);
+			}
 
-				if (itemAdded) {
-					const index = this.items.findIndex((i) => i.id === item.id);
-					this.items.splice(index, 1);
-					this.scheduleRespawnForItem(item);
-				}
+			if (itemAdded) {
+				const index = this.items.findIndex((i) => i.id === item.id);
+				this.items.splice(index, 1);
+				this.scheduleRespawnForItem(item);
 			}
 		}
 	}
@@ -342,20 +230,19 @@ export class MapController {
 
 	private checkPlayerInsideMap(player: IPlayer): void {
 		if (player.x < 0 || player.x + player.width > this.canvas.width) {
-			player.x = this.spawn.x;
-			player.y = this.spawn.y;
-			player.velocities = {
-				vx: 0,
-				vy: 0,
-			};
+			this.resetPlayer(player);
 		}
 		if (player.y < 0 || player.y + player.height > this.canvas.height) {
-			player.x = this.spawn.x;
-			player.y = this.spawn.y;
-			player.velocities = {
-				vx: 0,
-				vy: 0,
-			};
+			this.resetPlayer(player);
 		}
+	}
+	private resetPlayer(player: IPlayer): void {
+		player.x = this.spawn.x;
+		player.y = this.spawn.y;
+		player.velocities = {
+			vx: 0,
+			vy: 0,
+		};
+		player.checkpoint = 0;
 	}
 }

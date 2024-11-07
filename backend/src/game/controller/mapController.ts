@@ -304,20 +304,19 @@ export class MapController {
 
 	private checkPlayerInsideMap(player: IPlayer): void {
 		if (player.x < 0 || player.x + player.width > this.canvas.width) {
-			player.x = this.spawn.x;
-			player.y = this.spawn.y;
-			player.velocities = {
-				vx: 0,
-				vy: 0,
-			};
+			this.resetPlayer(player);
 		}
 		if (player.y < 0 || player.y + player.height > this.canvas.height) {
-			player.x = this.spawn.x;
-			player.y = this.spawn.y;
-			player.velocities = {
-				vx: 0,
-				vy: 0,
-			};
+			this.resetPlayer(player);
 		}
+	}
+	private resetPlayer(player: IPlayer): void {
+		player.x = this.spawn.x;
+		player.y = this.spawn.y;
+		player.velocities = {
+			vx: 0,
+			vy: 0,
+		};
+		player.checkpoint = 0;
 	}
 }

@@ -35,6 +35,7 @@ export class GameController {
 
 	private username: string;
 	private players: Array<IPlayer> = [];
+	private items: Array<IItems> = [];
 	private alreadyReceivePlayers = false;
 
 	private lastTime = 0;
@@ -77,7 +78,7 @@ export class GameController {
 
 	public start() {
 		this.listenWebSocket();
-		window.requestAnimationFrame(this.animate);
+		window.requestAnimationFrame((time) => this.animate(time));
 	}
 
 	private listenWebSocket() {
@@ -85,6 +86,7 @@ export class GameController {
 			this.websocketHandler.handleGameState(
 				e,
 				this.players,
+				this.items,
 				this.username
 			);
 			this.alreadyReceivePlayers = true;
@@ -100,37 +102,20 @@ export class GameController {
 			!this.mapController
 		) {
 			this.initMapController();
-			window.requestAnimationFrame(this.animate);
+			window.requestAnimationFrame((time) => this.animate(time));
 			return;
 		}
 		const durationOfLastExec = timestamp - this.lastTime;
 		if(durationOfLastExec < this.frameDuration) {
-			window.requestAnimationFrame(this.animate);
+			window.requestAnimationFrame((time) => this.animate(time));
 			return;
 		}
 
-		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		this.ctx.drawImage(
-			this.bkg,
-			0,
-			0,
-			this.canvas.width,
-			this.canvas.height
-		);
-		const playablePlayers = this.players.filter(
-			(p) => p.canControl === true
-		);
-		const entities = this.mapController.getEntities(playablePlayers);
-		for (const p of entities.players) {
-			this.players = this.players.map((player) => {
-				if (player.id === p.id) {
-					return p;
-				}
-				return player;
-			});
-		}
+		this.renderDefaultBkg();
+
+		this.mapController.makePrediction(this.players, this.items);
 		this.renderPlayers(this.players);
-		this.renderItems(entities.items);
+		this.renderItems(this.items);
 
 		if (this.debug) {
 			// this.gameDebug.makeHitBox(this.mapController.getWalls());
@@ -154,7 +139,18 @@ export class GameController {
 		}
 
 		this.lastTime = timestamp;
-		window.requestAnimationFrame(this.animate);
+		window.requestAnimationFrame((time) => this.animate(time));
+	}
+
+	private renderDefaultBkg(): void {
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.ctx.drawImage(
+			this.bkg!,
+			0,
+			0,
+			this.canvas.width,
+			this.canvas.height
+		);
 	}
 
 	private renderPlayers(players: Array<IPlayer>) {
@@ -269,7 +265,8 @@ export class GameController {
 					this.canvas,
 					this.websocketContext,
 					player,
-					this.roomID
+					this.roomID,
+					this.items
 				);
 			}
 		}
