@@ -42,6 +42,9 @@ export class GameController {
 	private fps = 60;
 	private frameDuration = 1000 / this.fps;
 
+	private fpsCounter = 0;
+	private timestampFPS = 0;
+
 	constructor(
 		canvas: HTMLCanvasElement,
 		websocketContext: WebSocketContextType,
@@ -106,7 +109,7 @@ export class GameController {
 			return;
 		}
 		const durationOfLastExec = timestamp - this.lastTime;
-		if(durationOfLastExec < this.frameDuration) {
+		if (durationOfLastExec < this.frameDuration) {
 			window.requestAnimationFrame((time) => this.animate(time));
 			return;
 		}
@@ -138,7 +141,7 @@ export class GameController {
 			// this.gameDebug.renderKeyInfo(this.mapController._getCarKeys());
 		}
 
-		this.lastTime = timestamp;
+		this.updateFPSInfo(timestamp);
 		window.requestAnimationFrame((time) => this.animate(time));
 	}
 
@@ -270,8 +273,33 @@ export class GameController {
 				);
 			}
 		}
-		if(this.players.length && this.alreadyReceivePlayers) {
-			console.error("for some reason, client receive players empty from backend.")
+		if (this.players.length && this.alreadyReceivePlayers) {
+			console.error(
+				"for some reason, client receive players empty from backend."
+			);
 		}
+	}
+
+	private updateFPSInfo(timestamp: DOMHighResTimeStamp) {
+		this.lastTime = timestamp;
+		this.fpsCounter += 1;
+		const timestampLimit = this.timestampFPS + 1000;
+		const now = Date.now();
+		if (timestampLimit < now) {
+			this.fpsCounter = 0;
+			this.timestampFPS = now;
+		}
+		if (this.debug) {
+			this.renderFPS();
+		}
+	}
+
+	private renderFPS() {
+		this.ctx.fillStyle = "black";
+		this.ctx.fillStyle = "white";
+		this.ctx.strokeStyle = "black";
+		this.ctx.lineWidth = 2;
+		this.ctx.strokeText(this.fpsCounter.toString(), 670, 10);
+		this.ctx.fillText(this.fpsCounter.toString(), 670, 10);
 	}
 }

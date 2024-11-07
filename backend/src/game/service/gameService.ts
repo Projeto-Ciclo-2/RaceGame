@@ -56,7 +56,9 @@ export class GameService {
 				this.players[i] = {
 					...entities.players[i],
 					carController: this.players[i].carController,
+					moveNumber: entities.players[i].moveNumber++,
 				};
+				// console.log("==moveNumber: " + this.players[i].moveNumber);
 			}
 		});
 

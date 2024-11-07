@@ -17,6 +17,25 @@ export class WebSocketHandler {
 				players.push(frontPlayer);
 			} else {
 				// este usuário
+				const { x, y, moveNumber } = players[i];
+				const {
+					x: clientX,
+					y: clientY,
+					moveNumber: clientMoveNumber,
+				} = frontPlayer;
+
+				// console.log("backend");
+				// console.log(x, y, moveNumber);
+				// console.log("backend");
+				// console.log(clientX, clientY, clientMoveNumber);
+				// console.log("");
+
+
+				if (moveNumber === clientMoveNumber) {
+					if (x !== clientX || y !== clientY) {
+						console.log("reconciliation");
+					}
+				}
 				players[i] = frontPlayer;
 			}
 		}
@@ -49,6 +68,7 @@ export class WebSocketHandler {
 			usingNitro: p.usingNitro,
 			nitroParticles: [],
 			//
+			moveNumber: p.moveNumber,
 			rotation: p.rotation,
 			velocities: p.velocities,
 			width: p.width,

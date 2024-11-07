@@ -91,11 +91,24 @@ export class MapController {
 
 	public makePrediction(players: Array<IPlayer>, items: Array<IItems>) {
 		this.items = items;
-		for (let p of players) {
-			p = this.updatePlayer(p);
-			this.updateCheckpointInPlayer(p);
-			this.checkPlayerFinishesLap(p);
-			this.checkPlayerGetsItem(p);
+		let changed = false;
+		const futurePlayers = players.map((p) => {
+			const futurePlayer = this.updatePlayer(p);
+			this.updateCheckpointInPlayer(futurePlayer);
+			this.checkPlayerFinishesLap(futurePlayer);
+			this.checkPlayerGetsItem(futurePlayer);
+
+			const {x, y} = p;
+			const {x: newX, y: newY} = futurePlayer;
+			const somethingChange = x !== newX || y !== newY;
+			if(somethingChange) {
+				changed = true
+				futurePlayer.moveNumber++;
+			}
+			return futurePlayer;
+		});
+		if(changed) {
+			players = futurePlayers;
 		}
 		items = this.items;
 	}

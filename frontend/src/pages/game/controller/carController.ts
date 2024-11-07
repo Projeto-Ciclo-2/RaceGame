@@ -82,6 +82,8 @@ export class CarController {
 		this.getFuturePosition(futurePlayer);
 		this.correctVelocities(futurePlayer, maxVelocity);
 
+		// futurePlayer.x = Math.floor(futurePlayer.x);
+		// futurePlayer.y = Math.floor(futurePlayer.y);
 		return futurePlayer;
 	}
 

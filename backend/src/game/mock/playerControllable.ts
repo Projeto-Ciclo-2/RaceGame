@@ -24,6 +24,8 @@ export function getPlayerControllable(
 			right: false,
 		},
 
+		moveNumber: 0,
+
 		rotation: 0,
 		x: 380,
 		y: 540,

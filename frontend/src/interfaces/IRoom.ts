@@ -25,6 +25,8 @@ export interface IPlayer extends IBox {
 		right: boolean;
 	};
 
+	moveNumber: number;
+
 	x: number;
 	y: number;
 
