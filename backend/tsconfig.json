@@ -8,7 +8,7 @@
 		"outDir": "./dist",
 		"esModuleInterop": true,
 		"removeComments": true,
-		"noEmitOnError": true,
+		// "noEmitOnError": true,
 
 		// Typing configs
 		"strict": true /* Enable all strict type-checking options. */,
