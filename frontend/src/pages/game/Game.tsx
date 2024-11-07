@@ -16,6 +16,7 @@ export default function Game() {
 			WebSocketContext.socket &&
 			WebSocketContext.username
 		) {
+			console.log("effect rodou")
 			gameController.current = new GameController(
 				canvas.current,
 				WebSocketContext,
