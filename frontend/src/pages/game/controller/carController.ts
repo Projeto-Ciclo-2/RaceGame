@@ -96,7 +96,6 @@ export class CarController {
 		}
 		if (player.velocities.vx < 0) {
 			const diference = player.velocities.vx + item.velocity_effect * -1;
-			console.log(diference);
 
 			if (diference > 0) {
 				player.velocities.vx = 0;
@@ -364,11 +363,15 @@ export class CarController {
 
 				if (key === "w" || key === "s" || key === "a" || key === "d") {
 					const newKey = otherKeys[key] as keyValid;
-					this.keys[newKey] = alive;
-					this.websocketContext.sendPlayerMove(message);
+					if (this.keys[newKey] !== alive) {
+						this.keys[newKey] = alive;
+						this.websocketContext.sendPlayerMove(message);
+					}
 				} else {
-					this.keys[key] = alive;
-					this.websocketContext.sendPlayerMove(message);
+					if (this.keys[key] !== alive) {
+						this.keys[key] = alive;
+						this.websocketContext.sendPlayerMove(message);
+					}
 				}
 			}
 		};
