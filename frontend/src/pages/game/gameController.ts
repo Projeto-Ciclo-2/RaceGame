@@ -35,6 +35,11 @@ export class GameController {
 
 	private username: string;
 	private players: Array<IPlayer> = [];
+	private alreadyReceivePlayers = false;
+
+	private lastTime = 0;
+	private fps = 60;
+	private frameDuration = 1000 / this.fps;
 
 	constructor(
 		canvas: HTMLCanvasElement,
@@ -72,7 +77,7 @@ export class GameController {
 
 	public start() {
 		this.listenWebSocket();
-		this.animate();
+		window.requestAnimationFrame(this.animate);
 	}
 
 	private listenWebSocket() {
@@ -82,10 +87,11 @@ export class GameController {
 				this.players,
 				this.username
 			);
+			this.alreadyReceivePlayers = true;
 		});
 	}
 
-	private animate() {
+	private animate(timestamp: DOMHighResTimeStamp) {
 		if (
 			!this.bkg ||
 			!this.carGreen ||
@@ -94,9 +100,15 @@ export class GameController {
 			!this.mapController
 		) {
 			this.initMapController();
-			window.requestAnimationFrame(() => this.animate());
+			window.requestAnimationFrame(this.animate);
 			return;
 		}
+		const durationOfLastExec = timestamp - this.lastTime;
+		if(durationOfLastExec < this.frameDuration) {
+			window.requestAnimationFrame(this.animate);
+			return;
+		}
+
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 		this.ctx.drawImage(
 			this.bkg,
@@ -141,7 +153,8 @@ export class GameController {
 			// this.gameDebug.renderKeyInfo(this.mapController._getCarKeys());
 		}
 
-		window.requestAnimationFrame(() => this.animate());
+		this.lastTime = timestamp;
+		window.requestAnimationFrame(this.animate);
 	}
 
 	private renderPlayers(players: Array<IPlayer>) {
@@ -259,6 +272,9 @@ export class GameController {
 					this.roomID
 				);
 			}
+		}
+		if(this.players.length && this.alreadyReceivePlayers) {
+			console.error("for some reason, client receive players empty from backend.")
 		}
 	}
 }
