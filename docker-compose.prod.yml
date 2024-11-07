@@ -38,7 +38,7 @@ services:
         ports:
             - "5000:5000"
         command: >
-            sh -c "npm run migrate-prod && npm run start"
+            sh -c "npx run migrate-prod && npm run start"
         restart: always
         networks:
             - copilot-network
