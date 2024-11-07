@@ -35,6 +35,7 @@ export interface WebSocketContextType {
 	latestMessage: string | null;
 	isConnected: React.MutableRefObject<boolean>;
 	username: string | undefined;
+	onConnectPromise: undefined | Promise<boolean>;
 
 	onReceiveAllRooms: (cbFn: (e: WsAllRooms) => any) => void;
 	onReceiveNewRoom: (cbFn: (e: WsNewRoom) => any) => void;
@@ -62,9 +63,9 @@ export interface WebSocketContextType {
 	sendPlayerArrives: (obj: WsPlayerArrives) => void;
 }
 
-const WebSocketContext = React.createContext<WebSocketContextType | undefined>(
-	undefined
-);
+export const WebSocketContext = React.createContext<
+	WebSocketContextType | undefined
+>(undefined);
 
 interface WebSocketProviderProps {
 	children: React.ReactNode;
@@ -130,6 +131,12 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 	const tryingToConnect = React.useRef(false);
 	const timeInterval = React.useRef<NodeJS.Timer | undefined>(undefined);
 
+	const onConnectPromise = React.useRef<undefined | Promise<boolean>>(
+		undefined
+	);
+	const resolvePromise = React.useRef<undefined | (() => void)>(undefined);
+	const rejectPromise = React.useRef<undefined | (() => void)>(undefined);
+
 	const [latestMessage, setLatestMessage] = React.useState<string | null>(
 		null
 	);
@@ -159,7 +166,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 		tryingToConnect.current = true;
 
 		let username = window.prompt("digite o nome de usuário");
-		while(!username) {
+		while (!username) {
 			username = window.prompt("insira um nome válido");
 		}
 		nameRef.current = username;
@@ -168,7 +175,16 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 		const tempWS = new WebSocket(wsURL);
 
 		socketRef.current = tempWS;
+
 		setSocket(tempWS);
+		onConnectPromise.current = new Promise((res, rej) => {
+			resolvePromise.current = () => {
+				res(true);
+			};
+			rejectPromise.current = () => {
+				rej();
+			};
+		});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [
 		canConnect.current,
@@ -197,6 +213,10 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 			tryingToConnect.current = false;
 			isConnected.current = true;
 			console.log("WebSocket connection established");
+			clearInterval(timeInterval.current);
+			if (resolvePromise.current) {
+				resolvePromise.current();
+			}
 		};
 
 		socket.onmessage = (event: MessageEvent) => {
@@ -230,6 +250,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 		};
 
 		socket.onclose = (e) => {
+			if (rejectPromise.current) {
+				rejectPromise.current();
+			}
 			tryingToConnect.current = false;
 			isConnected.current = false;
 			DebugConsole("WebSocket connection closed");
@@ -245,6 +268,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 			tryingToConnect.current = false;
 			isConnected.current = false;
 			console.error("WebSocket error:", error);
+			if (rejectPromise.current) {
+				rejectPromise.current();
+			}
 		};
 
 		return () => {
@@ -254,6 +280,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 			socket?.close();
 			clearInterval(timeInterval.current);
 			timeInterval.current = undefined;
+			if (rejectPromise.current) {
+				rejectPromise.current();
+			}
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [socket]);
@@ -281,6 +310,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 				latestMessage,
 				isConnected,
 				username: nameRef.current,
+				onConnectPromise: onConnectPromise.current,
 				// Receiving functions (callbacks for incoming WebSocket messages)
 				onReceiveAllRooms: (cbFn) =>
 					setCallback<WsAllRooms>("allRooms", cbFn),

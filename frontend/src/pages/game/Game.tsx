@@ -9,21 +9,35 @@ export default function Game() {
 	const canvas = React.useRef<null | HTMLCanvasElement>(null);
 
 	React.useEffect(() => {
-		if (
-			!gameController.current &&
-			canvas.current &&
-			WebSocketContext.isConnected.current &&
-			WebSocketContext.socket &&
-			WebSocketContext.username
-		) {
-			gameController.current = new GameController(
-				canvas.current,
-				WebSocketContext,
-				WebSocketContext.username
-			);
-			gameController.current.start();
+		if(!WebSocketContext.onConnectPromise) {
+			return;
 		}
-	}, [gameController, canvas, WebSocketContext]);
+		function gameInit() {
+			if (
+				!gameController.current &&
+				canvas.current &&
+				WebSocketContext.socket &&
+				WebSocketContext.socket.readyState === WebSocket.OPEN &&
+				WebSocketContext.username
+			) {
+				console.log("game init");
+				gameController.current = new GameController(
+					canvas.current,
+					WebSocketContext,
+					WebSocketContext.username
+				);
+				gameController.current.start();
+			}
+		}
+		WebSocketContext.onConnectPromise.then(gameInit);
+	}, [
+		gameController,
+		canvas,
+		WebSocketContext,
+		WebSocketContext.isConnected,
+		WebSocketContext.isConnected,
+		WebSocketContext.socket,
+	]);
 
 	return (
 		<div id="game">
