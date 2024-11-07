@@ -1,4 +1,5 @@
 import { IPlayerControllable, IRoomActive } from "../../interfaces/IRoom";
+import { WsUser } from "../../interfaces/IUser";
 import {
 	WsBroadcastPlayerMove,
 	WsGameState,
@@ -27,23 +28,46 @@ export class GameService {
 	}
 
 	/**
-	 *
 	 * @deprecated
 	 */
-	public _addPlayer(player: IPlayerControllable) {
+	public _addPlayer(player: IPlayerControllable, user: WsUser) {
 		this.players.push(player);
+		const entities = this.mapController.updateEntitiesState(this.players);
+		const message: WsGameState = {
+			type: "gameState",
+			entities: entities,
+		};
+		user.ws.send(JSON.stringify(message));
 	}
 
 	public gameLoop(selfRoom: IRoomActive) {
 		this.resolvePlayerMoveQueue();
-		const res = this.mapController.updateEntities(this.players);
+		let changes = false;
+		const newPlayers = this.players.map((p) => {
+			return p.carController.getFutureSelf(p);
+		});
+		const entities = this.mapController.updateEntitiesState(newPlayers);
+		this.players.forEach((p, i) => {
+			const { x, y } = p;
+			const { x: newX, y: newY } = entities.players[i];
+			const positionChanged = x !== newX || y !== newY;
+			if (positionChanged) {
+				changes = true;
+				this.players[i] = {
+					...entities.players[i],
+					carController: this.players[i].carController,
+				};
+			}
+		});
 
-		for (const user of selfRoom.WsPlayers) {
-			const message: WsGameState = {
-				type: "gameState",
-				entities: res,
-			};
-			user.ws.send(JSON.stringify(message));
+		if (changes) {
+			for (const user of selfRoom.WsPlayers) {
+				const message: WsGameState = {
+					type: "gameState",
+					entities: entities,
+				};
+				user.ws.send(JSON.stringify(message));
+			}
 		}
 	}
 
@@ -52,15 +76,15 @@ export class GameService {
 	}
 
 	public queuePlayerPickItem(action: WsPlayerPicksItem) {
-		this.pickItemQueue.push(action);
+		// this.pickItemQueue.push(action);
 	}
 
 	public queuePlayerUsesItem(action: WsPlayerUsesItem) {
-		this.useItemQueue.push(action);
+		// this.useItemQueue.push(action);
 	}
 
 	public queuePlayerArrives(action: WsPlayerArrives) {
-		this.arrivesQueue.push(action);
+		// this.arrivesQueue.push(action);
 	}
 
 	private resolvePlayerMoveQueue() {
@@ -68,7 +92,6 @@ export class GameService {
 			this.players = this.players.map((p) => {
 				if (move.player.id === p.id) {
 					p.carController.handleKeyPress(move.key, move.alive);
-					return p.carController.getFutureSelf(p);
 				}
 				return p;
 			});

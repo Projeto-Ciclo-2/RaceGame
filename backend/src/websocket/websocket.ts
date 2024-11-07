@@ -173,11 +173,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 				break;
 			case "playerMove":
 				try {
-
-					console.log("");
 					raceGame.queuePlayerMove(data as WsPlayerMove);
-					console.log("");
-					console.log("");
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
 					sendErr(ws);

@@ -40,8 +40,6 @@ export class CarController {
 
 	public handleKeyPress(key: string, alive: boolean) {
 		const handle = (thisKey: any) => {
-			console.log(thisKey);
-
 			if (this.options.includes(thisKey)) {
 				const key = thisKey as any as keyAccept;
 				const otherKeys = {
@@ -56,7 +54,6 @@ export class CarController {
 				} else {
 					this.keys[key] = alive;
 				}
-				console.log(JSON.stringify(this.keys));
 			}
 		};
 		handle(key);
@@ -101,7 +98,6 @@ export class CarController {
 		}
 		if (player.velocities.vx < 0) {
 			const diference = player.velocities.vx + item.velocity_effect * -1;
-			console.log(diference);
 
 			if (diference > 0) {
 				player.velocities.vx = 0;

@@ -28,7 +28,8 @@ export class RaceGame {
 				r.players.push(player);
 				r.WsPlayers.push(wsPlayer);
 				r.gameService._addPlayer(
-					getPlayerControllable(player.id, player.username)
+					getPlayerControllable(player.id, player.username),
+					wsPlayer
 				);
 			}
 			return r;

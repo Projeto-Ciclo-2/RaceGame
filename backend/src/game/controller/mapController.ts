@@ -154,7 +154,7 @@ export class MapController {
 		},
 	];
 
-	public updateEntities(players: Array<IPlayerControllable>): IEntities {
+	public updateEntitiesState(players: Array<IPlayerControllable>): IEntities {
 		this.updatePlayers(players);
 
 		this.updateCheckpointInPlayer(players);
