@@ -7,7 +7,7 @@
 		"build": "tsc",
 		"dev": "nodemon",
 		"migrate": "npx knex migrate:latest --knexfile knexfile.ts --cwd ./",
-		"migrate-prod": "ts-node -r tsconfig-paths/register node_modules/.bin/knex migrate:latest --knexfile knexfile.ts"
+		"migrateprod": "ts-node -r tsconfig-paths/register node_modules/.bin/knex migrate:latest --knexfile knexfile.ts"
 	},
 	"dependencies": {
 		"@langchain/core": "^0.3.11",
