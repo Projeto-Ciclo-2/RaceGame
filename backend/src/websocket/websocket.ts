@@ -45,7 +45,7 @@ raceGame.addRoom({
 
 export const wss = new WebSocket.Server({ noServer: true });
 
-wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
+wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 	const queryParams = url.parse(req.url!, true).query;
 	const username = queryParams["username"] as string;
 
@@ -64,6 +64,7 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 	const thisUser = { username: username, ws: ws };
 
 	users.add(thisUser);
+	ws.send(JSON.stringify(await roomService.allRooms()));
 	// raceGame._addPlayer(thisUser, getPlayer(randomUUID(), username), "1234");
 
 	ws.on("message", async (message) => {

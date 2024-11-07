@@ -25,6 +25,15 @@ export default class RoomService {
 		return newRoom;
 	}
 
+	async allRooms() {
+		try {
+			return this.roomRepository.allRooms();
+		} catch (error) {
+			console.log(error);
+			return []
+		}
+	}
+
 	async joinRoom(userID: string, roomID: string): Promise<IRoom> {
 		const user = await this.userRepository.getUserById(userID);
 		const room = await this.roomRepository.getOneRoom(roomID);
