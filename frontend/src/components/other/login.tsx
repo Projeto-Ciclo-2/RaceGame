@@ -1,5 +1,7 @@
 import { useGoogleLogin } from "@react-oauth/google";
 import React, { useEffect, useState } from "react";
+import GoogleIcon from "../icons/google";
+import Btn from "./button";
 
 export const Login = () => {
 	const [googleLoginAttempt, setGoogleLoginAttempt] = useState(false);
@@ -30,7 +32,7 @@ export const Login = () => {
 				);
 				console.log(apiResponse);
 				if (apiResponse.ok) {
-					//window.location.href = "/home";
+					window.location.href = "/home";
 				} else {
 					throw new Error(apiResponse.statusText);
 				}
@@ -51,10 +53,13 @@ export const Login = () => {
 	}, [googleLoginAttempt, handleGoogleLogin, setGoogleLoginAttempt]);
 
 	return (
-		<div>
-			<button onClick={() => setGoogleLoginAttempt(true)}>
-				Login with Google
-			</button>
-		</div>
+		<>
+			<Btn
+				type="button"
+				text={"Continue with Google"}
+				onClick={() => setGoogleLoginAttempt(true)}
+				icon={GoogleIcon}
+			/>
+		</>
 	);
 };

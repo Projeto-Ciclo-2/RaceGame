@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import "./landingpage.css";
-import Btn from "../../components/other/button";
-import GoogleIcon from "../../components/icons/google";
 import Car1 from "../../components/svg/car1";
 import F1 from "../../components/svg/f1";
+import { Login } from "../../components/other/login";
 
 const LandingPage = () => {
 	const [currentPage, setCurrentPage] = useState("welcome");
@@ -22,13 +21,10 @@ const LandingPage = () => {
 					<a onClick={showAboutUs}>About us</a>
 					<a onClick={showTeam}>Our team</a>
 				</div>
-				<div id="sign-in"></div>
-				<Btn
-					type="button"
-					text={"Continue with Google"}
-					icon={GoogleIcon}
-					id="google-btn"
-				/>
+				<div id="sign-in">
+				<Login/>
+				</div>
+				
 			</nav>
 			<div id="landing-content">
 				{currentPage === "welcome" && (

@@ -110,3 +110,29 @@
 		}
 	}
 }
+#ready{
+	padding: .8rem 2rem;
+	border-radius: .5rem;
+	border: none;
+	font-weight: bold;
+	color: var(--color-2);
+	cursor: pointer;
+	transition: .5s;
+	background-color: var(--color-1);
+	&:hover {
+		background-color: var(--color-1-hover);
+	}
+}
+#leave{
+	padding: .8rem 2rem;
+	border-radius: .5rem;
+	border: none;
+	font-weight: bold;
+	color: var(--color-2);
+	cursor: pointer;
+	transition: .5s;
+	background-color: rgb(240, 65, 65);
+	&:hover {
+		background-color: rgb(206, 40, 40);
+	}
+}

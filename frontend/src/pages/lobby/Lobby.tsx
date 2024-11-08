@@ -1,10 +1,12 @@
 import React from "react";
 import "./Lobby.css";
-import ButtonLobby from "../../components/buttonLobby/ButtonLobby";
 import InputEmojiComponent from "../../components/InputEmoji/InputEmoji";
+import { useNavigate } from "react-router-dom";
+import Btn from "../../components/other/button";
 
 const Lobby = () => {
 	const messages = ["Player1 entered", "the race!"];
+	const navigate = useNavigate()
 
 	return (
 		<section id="lobby">
@@ -23,11 +25,8 @@ const Lobby = () => {
 					<div id="last-div">
 						<hr />
 						<div>
-							<ButtonLobby content="I'm ready" type="ready" />
-							<ButtonLobby
-								content="Leave the game"
-								type="leave"
-							/>
+							<Btn type="button" text="I'm ready" id="ready" onClick={() => navigate("/loading")}/>
+							<Btn type="button" text="Leave the game" id="leave" onClick={() => navigate("/home")}/> 
 						</div>
 					</div>
 				</div>
