@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./leaderboard.css";
 import Trophy from "../../components/icons/trophy";
 import RaceFlags from "../../components/icons/raceFlags";
@@ -6,23 +6,56 @@ import UserRanking from "../../components/other/userRanking";
 import Car2 from "../../components/svg/car2";
 import BxsHome from "../../components/icons/home";
 import { useNavigate } from "react-router-dom";
+import { UserAPI } from "../../api/users";
 
+interface Player{
+	username: string;
+	wins: number;
+	picked_items: number;
+	played_games: number;
+}
 const LeaderBoard = () => {
+	const [order, setOrder] = useState<Player[]>([])
 	const navigate = useNavigate()
-	const mockRanking = [
-		{ driver: "player1", wins: 10, items: 10, games: 20 },
-		{ driver: "player2", wins: 9, items: 10, games: 15 },
-		{ driver: "player3", wins: 8, items: 10, games: 14 },
-		{ driver: "player4", wins: 7, items: 10, games: 14 },
-		{ driver: "player5", wins: 6, items: 10, games: 12 },
-		{ driver: "player6", wins: 5, items: 10, games: 11 },
-		{ driver: "player7", wins: 4, items: 10, games: 18 },
-		{ driver: "player8", wins: 3, items: 10, games: 19 },
-		{ driver: "player9", wins: 2, items: 10, games: 13 },
-	];
+	const apiUser = new UserAPI();
+
 	const home = () => {
 		navigate("/home")
 	}
+	function rankingPlayers(players: Player[]): Player[]{
+        return players.sort((a: Player, b: Player) => {
+            if(a.wins > b.wins) return -1;
+            if(a.wins < b.wins) return 1;
+           
+            if(a.picked_items > b.picked_items) return -1;
+            if(a.picked_items < b.picked_items) return 1;
+
+
+            if(a.played_games < b.played_games) return -1;
+            if(a.played_games > b.played_games) return 1;
+
+
+            return 0;
+        })
+    }
+	useEffect(() => {
+        async function fetchUsers() {
+            try{
+                const response = await apiUser.Ranking();
+                if(response.statusCode !== 200){
+					throw new Error("Ocorreu um erro ao buscar dados, tente mais tarde")
+                }
+                const data = response.data;
+                const sortedRanking = rankingPlayers(data)
+                const ranking = sortedRanking.slice(0, 9);
+                setOrder(ranking)
+            } catch(error) {
+                console.error("Erro: ", error)
+            }
+        }
+        fetchUsers();
+    }, [])
+
 	return (
 		<div id="ldb-content">
 			<div id="ldb-header">
@@ -46,10 +79,10 @@ const LeaderBoard = () => {
 						<h4>Games</h4>
 					</div>
 					<div id="ldb-board">
-						{mockRanking.map((user, index) => (
+						{order.map((player, index) => (
 							<UserRanking
 								key={index}
-								driver={user}
+								driver={player}
 								index={index}
 							/>
 						))}

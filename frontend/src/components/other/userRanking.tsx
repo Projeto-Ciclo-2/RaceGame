@@ -2,15 +2,15 @@ import React from "react";
 import RankIcon from "../icons/rankingOrder";
 
 
-interface User {
-	driver: string;
+interface Player {
+	username: string;
 	wins: number;
-	items: number;
-	games: number;
+	picked_items: number;
+	played_games: number;
 }
 
 interface UserRankingProps {
-	driver: User;
+	driver: Player;
 	index: number;
 
 }
@@ -31,10 +31,10 @@ const UserRanking: React.FC<UserRankingProps> = ({
 	return (
 		<div className="ranking-card" id={`${top3(index)}`}>
 			<RankIcon index={index}/>
-			<h3>{driver.driver}</h3>
+			<h3>{driver.username}</h3>
 			<h3>{driver.wins}</h3>
-			<h3>{driver.items}</h3>
-			<h3>{driver.games}</h3>
+			<h3>{driver.picked_items}</h3>
+            <h3>{driver.played_games}</h3>
 		</div>
 	)
 };
