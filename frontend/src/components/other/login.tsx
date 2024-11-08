@@ -32,7 +32,7 @@ export const Login = () => {
 				);
 				console.log(apiResponse);
 				if (apiResponse.ok) {
-					//window.location.href = "/home";
+					window.location.href = "/home";
 				} else {
 					throw new Error(apiResponse.statusText);
 				}
@@ -54,7 +54,12 @@ export const Login = () => {
 
 	return (
 		<>
-			<Btn type="button" text={"Continue with Google"} onClick={() =>setGoogleLoginAttempt(true)} icon={GoogleIcon}/>
+			<Btn
+				type="button"
+				text={"Continue with Google"}
+				onClick={() => setGoogleLoginAttempt(true)}
+				icon={GoogleIcon}
+			/>
 		</>
 	);
 };
