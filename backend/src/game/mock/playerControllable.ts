@@ -29,8 +29,8 @@ export function getPlayerControllable(
 		rotation: 0,
 		x: 380,
 		y: 540,
-		height: 25,
-		width: 35,
+		height: 30,
+		width: 30,
 		velocities: {
 			vx: 0,
 			vy: 0,

@@ -76,10 +76,6 @@ export interface IEntities {
 	items: Array<IItems>;
 }
 
-
-
-
-
 //
 //
 //
