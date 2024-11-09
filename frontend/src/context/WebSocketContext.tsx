@@ -23,6 +23,7 @@ import {
 	WsPlayerUsesItem,
 	WsPostMessage,
 	WsPublishItem,
+	WsRequestGameState,
 	WsRequestJoinRoom,
 	WsRoomInfo,
 } from "../interfaces/IWSMessages";
@@ -61,6 +62,7 @@ export interface WebSocketContextType {
 	sendPlayerPickItem: (obj: WsPlayerPicksItem) => void;
 	sendPlayerUsesItem: (obj: WsPlayerUsesItem) => void;
 	sendPlayerArrives: (obj: WsPlayerArrives) => void;
+	sendRequestGameState: (obj: WsRequestGameState) => void;
 }
 
 export const WebSocketContext = React.createContext<
@@ -367,6 +369,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 				sendPlayerPickItem: (obj) => sendMessage(JSON.stringify(obj)),
 				sendPlayerUsesItem: (obj) => sendMessage(JSON.stringify(obj)),
 				sendPlayerArrives: (obj) => sendMessage(JSON.stringify(obj)),
+				sendRequestGameState: (obj) => sendMessage(JSON.stringify(obj)),
 			}}
 		>
 			{children}
