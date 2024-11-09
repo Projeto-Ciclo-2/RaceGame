@@ -10,6 +10,7 @@ import carGreen from "./assets/carGreen.svg";
 import { loadImage } from "./tools/imgLoader";
 import { WebSocketContextType } from "../../context/WebSocketContext";
 import { WebSocketHandler } from "./websocket/websocketHandler";
+import { WsPlayerMove } from "../../interfaces/IWSMessages";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
@@ -37,6 +38,15 @@ export class GameController {
 	private players: Array<IPlayer> = [];
 	private items: Array<IItems> = [];
 	private alreadyReceivePlayers = false;
+	private myUser: IPlayer | undefined;
+
+	private lastKeys = {
+		ArrowLeft: false,
+		ArrowRight: false,
+		ArrowUp: false,
+		ArrowDown: false,
+		Space: false,
+	};
 
 	private lastTime = 0;
 	private fps = 60;
@@ -116,7 +126,13 @@ export class GameController {
 
 		this.renderDefaultBkg();
 
-		this.mapController.makePrediction(this.players, this.items);
+		this.sendMove();
+		const entities = this.mapController.makePrediction(
+			this.players,
+			this.items
+		);
+		this.players = entities.players;
+		this.items = entities.items;
 		this.renderPlayers(this.players);
 		this.renderItems(this.items);
 
@@ -143,6 +159,28 @@ export class GameController {
 
 		this.updateFPSInfo(timestamp);
 		window.requestAnimationFrame((time) => this.animate(time));
+	}
+
+	private sendMove() {
+		if (!this.myUser) {
+			this.myUser = this.players.find((u) => u.canControl);
+		}
+		if (this.myUser) {
+			const newKeys = this.mapController!._getCarKeys();
+
+			const message: WsPlayerMove = {
+				type: "playerMove",
+				roomID: this.roomID!,
+				player: this.myUser,
+				keys: newKeys,
+			};
+			this.websocketContext.sendPlayerMove(message);
+			this.lastKeys = newKeys;
+		} else {
+			console.error(
+				"not able to find the player of this user, dumb code."
+			);
+		}
 	}
 
 	private renderDefaultBkg(): void {
@@ -264,19 +302,21 @@ export class GameController {
 		if (!this.mapController && this.players.length > 0 && this.roomID) {
 			const player = this.players.find((p) => p.canControl);
 			if (player) {
-				this.mapController = new MapController(
-					this.canvas,
-					this.websocketContext,
-					player,
-					this.roomID,
-					this.items
-				);
+				this.mapController = new MapController(this.canvas, this.items);
+				return;
 			}
 		}
-		if (this.players.length && this.alreadyReceivePlayers) {
-			console.error(
-				"for some reason, client receive players empty from backend."
-			);
+		if (this.players.length <= 0 && this.alreadyReceivePlayers) {
+			if (this.websocketContext && this.roomID) {
+				this.websocketContext.sendRequestGameState({
+					roomID: this.roomID,
+					type: "requestGameState",
+				});
+			} else {
+				console.error(
+					"not was possible to request game state. roomID missing."
+				);
+			}
 		}
 	}
 

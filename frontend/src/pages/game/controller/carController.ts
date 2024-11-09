@@ -1,5 +1,3 @@
-import { WebSocketContextType } from "../../../context/WebSocketContext";
-import { WsPlayerMove } from "../../../interfaces/IWSMessages";
 import { IItems, IPlayer, rotation } from "../interfaces/gameInterfaces";
 
 type keyValid = "ArrowRight" | "ArrowLeft" | "ArrowUp" | "ArrowDown" | "Space";
@@ -37,20 +35,6 @@ export class CarController {
 	private nitroAcceleration = 0.1;
 	private nitroDuration = 2000;
 	private nitroMaxVelocity = 7;
-
-	private websocketContext: WebSocketContextType;
-	private player: IPlayer;
-	private roomID: string;
-
-	constructor(
-		websocketContext: WebSocketContextType,
-		player: IPlayer,
-		roomID: string
-	) {
-		this.websocketContext = websocketContext;
-		this.player = player;
-		this.roomID = roomID;
-	}
 
 	public _getKeys() {
 		return this.keys;
@@ -355,25 +339,13 @@ export class CarController {
 					a: "ArrowLeft",
 					d: "ArrowRight",
 				};
-				const message: WsPlayerMove = {
-					type: "playerMove",
-					roomID: this.roomID,
-					player: this.player,
-					alive: alive,
-					key: thisKey,
-				};
 
 				if (key === "w" || key === "s" || key === "a" || key === "d") {
 					const newKey = otherKeys[key] as keyValid;
-					if (this.keys[newKey] !== alive) {
-						this.keys[newKey] = alive;
-						this.websocketContext.sendPlayerMove(message);
-					}
+					this.keys[newKey] = alive;
+					// }
 				} else {
-					if (this.keys[key] !== alive) {
-						this.keys[key] = alive;
-						this.websocketContext.sendPlayerMove(message);
-					}
+					this.keys[key] = alive;
 				}
 			}
 		};

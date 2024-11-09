@@ -1,4 +1,3 @@
-import { WebSocketContextType } from "../../../context/WebSocketContext";
 import {
 	IBox,
 	ICheckPoint,
@@ -68,19 +67,9 @@ export class MapController {
 	];
 	private items: Array<IItems>;
 
-	constructor(
-		canvas: HTMLCanvasElement,
-		websocketContext: WebSocketContextType,
-		player: IPlayer,
-		roomID: string,
-		items: Array<IItems>
-	) {
+	constructor(canvas: HTMLCanvasElement, items: Array<IItems>) {
 		this.canvas = canvas;
-		this.carController = new CarController(
-			websocketContext,
-			player,
-			roomID
-		);
+		this.carController = new CarController();
 		this.carController.listen();
 		this.items = items;
 	}
@@ -93,24 +82,69 @@ export class MapController {
 		this.items = items;
 		let changed = false;
 		const futurePlayers = players.map((p) => {
-			const futurePlayer = this.updatePlayer(p);
-			this.updateCheckpointInPlayer(futurePlayer);
-			this.checkPlayerFinishesLap(futurePlayer);
-			this.checkPlayerGetsItem(futurePlayer);
+			while (p.conflictQueue.length > 0) {
+				console.log("deleting conflict queue");
 
-			const {x, y} = p;
-			const {x: newX, y: newY} = futurePlayer;
-			const somethingChange = x !== newX || y !== newY;
-			if(somethingChange) {
-				changed = true
-				futurePlayer.moveNumber++;
+				const futurePlayer = this.getFuturePlayer(p);
+				if (this.havePlayerChanged(p, futurePlayer)) {
+					p = futurePlayer;
+					this.applyMove(futurePlayer);
+				}
+				p.conflictQueue.pop();
+			}
+
+			if (!p.canControl) return p;
+
+			const futurePlayer = this.getFuturePlayer(p);
+			changed = this.havePlayerChanged(p, futurePlayer);
+
+			if (changed) {
+				this.applyMove(futurePlayer);
 			}
 			return futurePlayer;
 		});
-		if(changed) {
+		if (changed) {
 			players = futurePlayers;
 		}
 		items = this.items;
+		return {
+			players: players,
+			items: items,
+		};
+	}
+
+	private applyMove(player: IPlayer) {
+		const { vx, vy } = player.velocities;
+		player.moveNumber = player.moveNumber + 1;
+		player.moves.push({
+			move: player.moveNumber,
+			velocities: {
+				vx: vx,
+				vy: vy,
+			},
+			x: player.x,
+			y: player.y,
+		});
+	}
+
+	private havePlayerChanged(
+		oldPlayer: IPlayer,
+		futurePlayer: IPlayer
+	): boolean {
+		const { x, y, velocities: v } = oldPlayer;
+		const { x: newX, y: newY, velocities: newV } = futurePlayer;
+		const somethingChange = x !== newX || y !== newY;
+		const velocitiesChanged = v.vx !== newV.vx || v.vy !== newV.vy;
+
+		return somethingChange || velocitiesChanged;
+	}
+
+	private getFuturePlayer(p: IPlayer) {
+		const futurePlayer = this.updatePlayer(p);
+		this.updateCheckpointInPlayer(futurePlayer);
+		this.checkPlayerFinishesLap(futurePlayer);
+		this.checkPlayerGetsItem(futurePlayer);
+		return futurePlayer;
 	}
 
 	public getWalls(): Array<IBox> {

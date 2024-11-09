@@ -1,6 +1,11 @@
 import { WsGameState } from "../../../interfaces/IWSMessages";
-import { IPlayer as FrontIPlayer, IItems } from "../interfaces/gameInterfaces";
+import {
+	IPlayer as FrontIPlayer,
+	IItems,
+	IPlayer,
+} from "../interfaces/gameInterfaces";
 import { IPlayer as BackIPlayer } from "../../../interfaces/IRoom";
+import { ClientPrediction } from "../tools/clientPrediction";
 
 export class WebSocketHandler {
 	public handleGameState(
@@ -11,32 +16,57 @@ export class WebSocketHandler {
 	) {
 		for (const player of e.entities.players) {
 			const i = players.findIndex((p) => p.id === player.id);
-			const frontPlayer = this.playerConverter(player, username);
+			const clientPlayer: IPlayer | undefined = players[i];
+			const serverPlayer = this.playerConverter(
+				player,
+				clientPlayer,
+				username
+			);
 			if (i === -1) {
 				// outros usuários
-				players.push(frontPlayer);
+				console.log("[pushing players]: " + serverPlayer.username);
+				console.log(serverPlayer.moveNumber);
+				players.push(serverPlayer);
 			} else {
 				// este usuário
-				const { x, y, moveNumber } = players[i];
-				const {
-					x: clientX,
-					y: clientY,
-					moveNumber: clientMoveNumber,
-				} = frontPlayer;
+				// const { x, y, moveNumber } = serverPlayer;
+				// const {
+				// 	x: clientX,
+				// 	y: clientY,
+				// 	moveNumber: clientMoveNumber,
+				// } = clientPlayer;
 
-				// console.log("backend");
-				// console.log(x, y, moveNumber);
-				// console.log("backend");
-				// console.log(clientX, clientY, clientMoveNumber);
-				// console.log("");
+				const result = ClientPrediction.detectDiferences(
+					clientPlayer,
+					serverPlayer
+				);
 
+				if (result) {
+					console.log(
+						"need reconciliation - results greater than " +
+							result.move +
+							" will be in conflict queue"
+					);
+					console.log("have a see in moves array");
+					console.log(clientPlayer.moves);
 
-				if (moveNumber === clientMoveNumber) {
-					if (x !== clientX || y !== clientY) {
-						console.log("reconciliation");
-					}
+					clientPlayer.conflictQueue = clientPlayer.moves.filter(
+						(m) => m.move > result.move
+					);
+					clientPlayer.moves = [];
+					clientPlayer.x = result.x;
+					clientPlayer.y = result.y;
+					clientPlayer.velocities.vx = result.velocities.vx;
+					clientPlayer.velocities.vy = result.velocities.vy;
+					players[i] = clientPlayer;
+					console.log(players[i].conflictQueue);
+				} else {
+					players[i].moves = players[i].moves.filter(
+						(m) => serverPlayer.moveNumber !== m.move
+					);
+					// console.log("removed move " + serverPlayer.moveNumber);
+					// console.log(players[i].moves);
 				}
-				players[i] = frontPlayer;
 			}
 		}
 		for (const item of e.entities.items) {
@@ -49,7 +79,11 @@ export class WebSocketHandler {
 		}
 	}
 
-	private playerConverter(p: BackIPlayer, username: string): FrontIPlayer {
+	private playerConverter(
+		p: BackIPlayer,
+		previousPlayer: IPlayer,
+		username: string
+	): FrontIPlayer {
 		return {
 			id: p.id,
 			username: p.username,
@@ -66,9 +100,12 @@ export class WebSocketHandler {
 			nitroDirection: p.nitroDirection,
 			nitroUsedAt: p.nitroUsedAt,
 			usingNitro: p.usingNitro,
-			nitroParticles: [],
+			nitroParticles: previousPlayer ? previousPlayer.nitroParticles : [],
 			//
 			moveNumber: p.moveNumber,
+			moves: previousPlayer ? previousPlayer.moves : [],
+			conflictQueue: previousPlayer ? previousPlayer.conflictQueue : [],
+			//
 			rotation: p.rotation,
 			velocities: p.velocities,
 			width: p.width,

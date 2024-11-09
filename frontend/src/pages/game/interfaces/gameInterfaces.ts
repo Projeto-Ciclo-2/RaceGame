@@ -13,7 +13,7 @@ export interface IPlayer extends IBox {
 	username: string;
 	canControl: boolean;
 
-	color: "1" | "2" | "3"
+	color: "1" | "2" | "3";
 
 	ready: boolean;
 	done_laps: number;
@@ -33,6 +33,8 @@ export interface IPlayer extends IBox {
 	rotation: rotation | number;
 
 	moveNumber: number;
+	moves: Array<IMoves>;
+	conflictQueue: Array<IMoves>;
 
 	velocities: {
 		vx: number;
@@ -44,6 +46,16 @@ export interface IPlayer extends IBox {
 		down: boolean;
 		left: boolean;
 		right: boolean;
+	};
+}
+
+export interface IMoves {
+	move: number;
+	x: number;
+	y: number;
+	velocities: {
+		vx: number;
+		vy: number;
 	};
 }
 
