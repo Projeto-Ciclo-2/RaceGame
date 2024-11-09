@@ -13,6 +13,7 @@ import {
 	WsBroadcastPlayerReady,
 	WsBroadcastUseItem,
 	WsEndGame,
+	WsGameState,
 	WsNewRoom,
 	WsPlayerArrives,
 	WsPlayerMove,
@@ -174,6 +175,22 @@ wss.on("connection", (ws: WebSocket, req: IncomingMessage) => {
 			case "playerMove":
 				try {
 					raceGame.queuePlayerMove(data as WsPlayerMove);
+				} catch (error) {
+					if (error instanceof Error) return sendErr(ws, error);
+					sendErr(ws);
+				}
+				break;
+			case "requestGameState":
+				try {
+					const room = raceGame.getRoom(data.roomID);
+					if (room) {
+						const message: WsGameState = {
+							type: "gameState",
+							entities: room.gameService.getEntities(),
+						};
+						ws.send(JSON.stringify(message));
+					}
+					throw new Error(Message.ROOM_NOT_FOUND);
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
 					sendErr(ws);

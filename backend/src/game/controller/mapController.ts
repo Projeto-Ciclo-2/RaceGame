@@ -154,6 +154,13 @@ export class MapController {
 		},
 	];
 
+	public getEntities(players: Array<IPlayerControllable>): IEntities {
+		return {
+			players: players,
+			items: this.items,
+		};
+	}
+
 	public updateEntitiesState(players: Array<IPlayerControllable>): IEntities {
 		this.updatePlayers(players);
 
