@@ -1,4 +1,8 @@
-import { IPlayerControllable, IRoomActive } from "../../interfaces/IRoom";
+import {
+	IEntities,
+	IPlayerControllable,
+	IRoomActive,
+} from "../../interfaces/IRoom";
 import { WsUser } from "../../interfaces/IUser";
 import {
 	WsBroadcastPlayerMove,
@@ -19,6 +23,7 @@ export class GameService {
 
 	private mapController = new MapController();
 	private players: Array<IPlayerControllable> = [];
+	private selfRoom: IRoomActive | undefined;
 
 	constructor(players: Array<IPlayerControllable>) {
 		// if (players.length <= 0) {
@@ -41,36 +46,12 @@ export class GameService {
 	}
 
 	public gameLoop(selfRoom: IRoomActive) {
+		this.selfRoom = selfRoom;
 		this.resolvePlayerMoveQueue();
-		let changes = false;
-		const newPlayers = this.players.map((p) => {
-			return p.carController.getFutureSelf(p);
-		});
-		const entities = this.mapController.updateEntitiesState(newPlayers);
-		this.players.forEach((p, i) => {
-			const { x, y } = p;
-			const { x: newX, y: newY } = entities.players[i];
-			const positionChanged = x !== newX || y !== newY;
-			if (positionChanged) {
-				changes = true;
-				this.players[i] = {
-					...entities.players[i],
-					carController: this.players[i].carController,
-					moveNumber: entities.players[i].moveNumber++,
-				};
-				// console.log("==moveNumber: " + this.players[i].moveNumber);
-			}
-		});
+	}
 
-		if (changes) {
-			for (const user of selfRoom.WsPlayers) {
-				const message: WsGameState = {
-					type: "gameState",
-					entities: entities,
-				};
-				user.ws.send(JSON.stringify(message));
-			}
-		}
+	public getEntities() {
+		return this.mapController.getEntities(this.players);
 	}
 
 	public queuePlayerMove(action: WsPlayerMove) {
@@ -89,14 +70,61 @@ export class GameService {
 		// this.arrivesQueue.push(action);
 	}
 
+	private broadcastGameState(entities: IEntities) {
+		if (this.selfRoom) {
+			for (const user of this.selfRoom.WsPlayers) {
+				const message: WsGameState = {
+					type: "gameState",
+					entities: entities,
+				};
+				user.ws.send(JSON.stringify(message));
+			}
+		}
+	}
+
 	private resolvePlayerMoveQueue() {
 		for (const move of this.moveQueue) {
-			this.players = this.players.map((p) => {
-				if (move.player.id === p.id) {
-					p.carController.handleKeyPress(move.key, move.alive);
+			const pIndex = this.players.findIndex(
+				(p) => move.player.id === p.id
+			);
+			if (pIndex !== -1) {
+				const oldPlayer = this.players[pIndex];
+				oldPlayer.carController.setKeys(move.keys);
+
+				this.players[pIndex] =
+					oldPlayer.carController.getFutureSelf(oldPlayer);
+
+				const entities = this.mapController.updateEntitiesState(
+					this.players
+				);
+
+				const { x, y, velocities: v } = oldPlayer;
+				const {
+					x: newX,
+					y: newY,
+					velocities: newV,
+				} = entities.players[pIndex];
+
+				const positionChanged = x !== newX || y !== newY;
+				const velocitiesChanged = v.vx !== newV.vx || v.vy !== newV.vy;
+
+				if (positionChanged || velocitiesChanged) {
+					this.players[pIndex].moveNumber =
+						this.players[pIndex].moveNumber + 1;
+
+					const { vx, vy } = newV;
+					console.log("(new velocity)");
+					console.log(
+						`(${this.players[pIndex].moveNumber}) [x, y] [${newX} ${newY}] | [vx, vy] [${vx}, ${vy}]`
+					);
+					console.log("______________");
+					this.broadcastGameState(entities);
 				}
-				return p;
-			});
+			} else {
+				console.error(
+					"error! um movimento foi atribuído à um player não encontrado."
+				);
+			}
 			this.moveQueue.delete(move);
 		}
 	}

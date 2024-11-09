@@ -38,25 +38,14 @@ export class CarController {
 	private nitroDuration = 2000;
 	private nitroMaxVelocity = 7;
 
-	public handleKeyPress(key: string, alive: boolean) {
-		const handle = (thisKey: any) => {
-			if (this.options.includes(thisKey)) {
-				const key = thisKey as any as keyAccept;
-				const otherKeys = {
-					w: "ArrowUp",
-					s: "ArrowDown",
-					a: "ArrowLeft",
-					d: "ArrowRight",
-				};
-				if (key === "w" || key === "s" || key === "a" || key === "d") {
-					const newKey = otherKeys[key] as keyValid;
-					this.keys[newKey] = alive;
-				} else {
-					this.keys[key] = alive;
-				}
-			}
-		};
-		handle(key);
+	public setKeys(keys: {
+		ArrowLeft: boolean;
+		ArrowRight: boolean;
+		ArrowUp: boolean;
+		ArrowDown: boolean;
+		Space: boolean;
+	}) {
+		this.keys = keys;
 	}
 
 	public getFutureSelf(player: IPlayerControllable): IPlayerControllable {
