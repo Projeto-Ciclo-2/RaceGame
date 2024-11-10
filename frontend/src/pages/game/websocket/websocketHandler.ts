@@ -25,17 +25,15 @@ export class WebSocketHandler {
 			if (i === -1) {
 				// outros usuários
 				console.log("[pushing players]: " + serverPlayer.username);
-				console.log(serverPlayer.moveNumber);
 				players.push(serverPlayer);
+				//
+			} else if (
+				!clientPlayer.canControl ||
+				clientPlayer.username !== username
+			) {
+				// todo: others players interpolation
+				players[i] = serverPlayer;
 			} else {
-				// este usuário
-				// const { x, y, moveNumber } = serverPlayer;
-				// const {
-				// 	x: clientX,
-				// 	y: clientY,
-				// 	moveNumber: clientMoveNumber,
-				// } = clientPlayer;
-
 				const result = ClientPrediction.detectDiferences(
 					clientPlayer,
 					serverPlayer
@@ -48,35 +46,55 @@ export class WebSocketHandler {
 							" will be in conflict queue"
 					);
 					console.log("have a see in moves array");
-					console.log(clientPlayer.moves);
+					console.log(JSON.stringify(clientPlayer.moves));
 
 					clientPlayer.conflictQueue = clientPlayer.moves.filter(
-						(m) => m.move > result.move
+						(m) => {
+							if (m.move > result.move) {
+								return m;
+							}
+							return undefined;
+						}
 					);
 					clientPlayer.moves = [];
 					clientPlayer.x = result.x;
 					clientPlayer.y = result.y;
 					clientPlayer.velocities.vx = result.velocities.vx;
 					clientPlayer.velocities.vy = result.velocities.vy;
+					clientPlayer.moveNumber = result.move;
 					players[i] = clientPlayer;
-					console.log(players[i].conflictQueue);
-				} else {
-					players[i].moves = players[i].moves.filter(
-						(m) => serverPlayer.moveNumber !== m.move
+					console.log("after reconciliation");
+					console.log(
+						players[i].moveNumber,
+						players[i].x,
+						players[i].y,
+						players[i].velocities.vx,
+						players[i].velocities.vy
 					);
-					// console.log("removed move " + serverPlayer.moveNumber);
-					// console.log(players[i].moves);
+				} else {
+					// console.log("else case, trying to delete move");
+					if (players[i].moves.length > 1) {
+						players[i].moves = players[i].moves.filter(
+							(m) => serverPlayer.moveNumber <= m.move
+						);
+						// console.log("removed move " + serverPlayer.moveNumber);
+						// console.log(players[i].moves);
+					}
 				}
 			}
+		}
+		if (e.entities.items.length !== items.length) {
+			items = [];
 		}
 		for (const item of e.entities.items) {
 			const index = items.findIndex((i) => i.id === item.id);
 			if (index === -1) {
-				items.push(item);
-				return;
+				items[items.length] = item;
+			} else {
+				items[index] = item;
 			}
-			items[index] = item;
 		}
+		return items;
 	}
 
 	private playerConverter(

@@ -5,7 +5,10 @@ export class ClientPrediction {
 	static createMoveObj(serverPlayer: BackIPlayer): IMoves {
 		return {
 			move: serverPlayer.moveNumber,
-			velocities: serverPlayer.velocities,
+			velocities: {
+				vx: serverPlayer.velocities.vx,
+				vy: serverPlayer.velocities.vy,
+			},
 			x: serverPlayer.x,
 			y: serverPlayer.y,
 		};
@@ -38,8 +41,6 @@ export class ClientPrediction {
 				) {
 					console.log("[different] move nº" + move.move);
 					if (!diferences) {
-						diferences =
-							ClientPrediction.createMoveObj(serverPlayer);
 						console.log("(client)");
 						console.log(
 							move.move,
@@ -50,12 +51,14 @@ export class ClientPrediction {
 						);
 						console.log("(server)");
 						console.log(
-							diferences.move,
-							diferences.x,
-							diferences.y,
-							diferences.velocities.vx,
-							diferences.velocities.vy
+							serverPlayer.moveNumber,
+							serverPlayer.x,
+							serverPlayer.y,
+							serverPlayer.velocities.vx,
+							serverPlayer.velocities.vy
 						);
+						diferences =
+							ClientPrediction.createMoveObj(serverPlayer);
 					}
 				}
 			}

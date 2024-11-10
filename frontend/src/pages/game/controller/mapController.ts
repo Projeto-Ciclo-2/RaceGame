@@ -65,13 +65,11 @@ export class MapController {
 		{ order: 4, x: 640, y: 300, width: 80, height: 20 },
 		{ order: 5, x: 420, y: 500, width: 20, height: 80 },
 	];
-	private items: Array<IItems>;
 
-	constructor(canvas: HTMLCanvasElement, items: Array<IItems>) {
+	constructor(canvas: HTMLCanvasElement) {
 		this.canvas = canvas;
 		this.carController = new CarController();
 		this.carController.listen();
-		this.items = items;
 	}
 
 	public _getCarKeys() {
@@ -79,13 +77,16 @@ export class MapController {
 	}
 
 	public makePrediction(players: Array<IPlayer>, items: Array<IItems>) {
-		this.items = items;
 		let changed = false;
 		const futurePlayers = players.map((p) => {
+			if(p.conflictQueue.length > 0) {
+				console.log("p.conflictQueue");
+				console.log(JSON.stringify(p.conflictQueue))
+			}
 			while (p.conflictQueue.length > 0) {
-				console.log("deleting conflict queue");
+				// console.log("deleting conflict queue");
 
-				const futurePlayer = this.getFuturePlayer(p);
+				const futurePlayer = this.getFuturePlayer(p, items);
 				if (this.havePlayerChanged(p, futurePlayer)) {
 					p = futurePlayer;
 					this.applyMove(futurePlayer);
@@ -95,7 +96,7 @@ export class MapController {
 
 			if (!p.canControl) return p;
 
-			const futurePlayer = this.getFuturePlayer(p);
+			const futurePlayer = this.getFuturePlayer(p, items);
 			changed = this.havePlayerChanged(p, futurePlayer);
 
 			if (changed) {
@@ -106,7 +107,6 @@ export class MapController {
 		if (changed) {
 			players = futurePlayers;
 		}
-		items = this.items;
 		return {
 			players: players,
 			items: items,
@@ -139,11 +139,11 @@ export class MapController {
 		return somethingChange || velocitiesChanged;
 	}
 
-	private getFuturePlayer(p: IPlayer) {
+	private getFuturePlayer(p: IPlayer, items: Array<IItems>) {
 		const futurePlayer = this.updatePlayer(p);
 		this.updateCheckpointInPlayer(futurePlayer);
 		this.checkPlayerFinishesLap(futurePlayer);
-		this.checkPlayerGetsItem(futurePlayer);
+		this.checkPlayerGetsItem(futurePlayer, items);
 		return futurePlayer;
 	}
 
@@ -247,8 +247,8 @@ export class MapController {
 		}
 	}
 
-	private checkPlayerGetsItem(p: IPlayer) {
-		const collidedItems = this.collisionDetector.detect(p, this.items) as
+	private checkPlayerGetsItem(p: IPlayer, items: Array<IItems>) {
+		const collidedItems = this.collisionDetector.detect(p, items) as
 			| boolean
 			| Array<IItems>;
 		if (typeof collidedItems !== "boolean") {
@@ -262,8 +262,8 @@ export class MapController {
 			}
 
 			if (itemAdded) {
-				const index = this.items.findIndex((i) => i.id === item.id);
-				this.items.splice(index, 1);
+				const index = items.findIndex((i) => i.id === item.id);
+				items.splice(index, 1);
 				this.scheduleRespawnForItem(item);
 			}
 		}
@@ -271,7 +271,7 @@ export class MapController {
 
 	private scheduleRespawnForItem(item: IItems): void {
 		setTimeout(() => {
-			this.items.push(item);
+			// this.items.push(item);
 		}, this.itemRespawnTime);
 	}
 

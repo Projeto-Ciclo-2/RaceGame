@@ -96,12 +96,16 @@ export class GameController {
 
 	private listenWebSocket() {
 		this.websocketContext.onReceiveGameState((e) => {
-			this.websocketHandler.handleGameState(
+			const items = this.websocketHandler.handleGameState(
 				e,
 				this.players,
 				this.items,
 				this.username
 			);
+			this.items = items;
+			console.log("this.items");
+			console.log(this.items);
+
 			this.alreadyReceivePlayers = true;
 		});
 	}
@@ -162,6 +166,12 @@ export class GameController {
 	}
 
 	private sendMove() {
+		if (
+			!this.websocketContext.isConnected ||
+			this.websocketContext.socket?.readyState !== WebSocket.OPEN
+		) {
+			return;
+		}
 		if (!this.myUser) {
 			this.myUser = this.players.find((u) => u.canControl);
 		}
@@ -302,7 +312,7 @@ export class GameController {
 		if (!this.mapController && this.players.length > 0 && this.roomID) {
 			const player = this.players.find((p) => p.canControl);
 			if (player) {
-				this.mapController = new MapController(this.canvas, this.items);
+				this.mapController = new MapController(this.canvas);
 				return;
 			}
 		}
