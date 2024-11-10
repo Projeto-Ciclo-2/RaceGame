@@ -51,7 +51,7 @@ services:
             dockerfile: Dockerfile
         depends_on:
             - backend
-        command: npx serve -s build
+        command: npm run start
         restart: always
         ports:
             - "3000:3000"
