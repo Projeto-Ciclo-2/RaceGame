@@ -19,7 +19,7 @@ export const Login = () => {
 				);
 
 				const data = await result.json();
-				console.log(data);
+
 				const apiResponse = await fetch(
 					"http://localhost:5000/api/login",
 					{
@@ -30,7 +30,7 @@ export const Login = () => {
 						body: JSON.stringify(data),
 					}
 				);
-				console.log(apiResponse);
+
 				if (apiResponse.ok) {
 					window.location.href = "/home";
 				} else {
