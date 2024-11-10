@@ -4,7 +4,7 @@ import { UserService } from "../services/userService";
 import HttpResponse from "../utils/HttpResponse";
 import { Message } from "../utils/Message";
 import { BadRequestException } from "../utils/Exception";
-//import { IUserEntity } from "../entities/userEntity";
+import { IUser } from "../interfaces/IUser";
 
 export default class UserController {
 	private userService: UserService;
@@ -14,11 +14,12 @@ export default class UserController {
 
 	public async getMyUser(req: Request, res: Response): Promise<void> {
 		try {
-			// const response = new HttpResponse({
-			// 	status: 200,
-			// 	data: req.authUser,
-			// });
-			//res.status(response.status).json(response);
+			const response = new HttpResponse({
+				status: 200,
+				data: req.authUser,
+			});
+			console.log(response);
+			res.status(response.status).json(response);
 		} catch (error: any) {
 			const response = new HttpResponse({
 				status: error.statusCode,
@@ -45,15 +46,13 @@ export default class UserController {
 				);
 			}
 
-			// const user: IUserEntity = req.body;
-			// const result = await this.userService.createUser(user);
-
-			// const response = new HttpResponse({
-			// 	status: 201,
-			// 	data: result,
-			// });
-
-			// res.status(response.status).json(response);
+			const user: IUser = req.body;
+			const result = await this.userService.createUser(user);
+			const response = new HttpResponse({
+				status: 201,
+				data: result,
+			});
+			res.status(response.status).json(response);
 		} catch (error: any) {
 			const response = new HttpResponse({
 				status: error.statusCode,
