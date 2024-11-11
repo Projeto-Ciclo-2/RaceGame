@@ -20,7 +20,7 @@ export default class AuthController {
 			res.cookie("token", token, {
 				maxAge: 8 * 60 * 60 * 1000,
 				httpOnly: true,
-				sameSite: "lax",
+				sameSite: "strict",
 				secure: false,
 			});
 
