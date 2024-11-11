@@ -5,7 +5,7 @@ export function getPlayer(id: string, username: string): IPlayer {
 		id: id,
 		username: username,
 
-		ready: true,
+		ready: false,
 		checkpoint: 0,
 		done_laps: 0,
 
