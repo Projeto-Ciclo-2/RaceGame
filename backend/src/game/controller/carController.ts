@@ -87,7 +87,6 @@ export class CarController {
 		}
 		if (player.velocities.vx < 0) {
 			const diference = player.velocities.vx + item.velocity_effect * -1;
-
 			if (diference > 0) {
 				player.velocities.vx = 0;
 			} else {

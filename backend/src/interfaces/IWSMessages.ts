@@ -13,6 +13,7 @@ export interface WsAllRooms {
 export interface WsNewRoom {
 	type: "newRoom";
 	room: IRoom;
+	creatorUserID: string;
 }
 
 export interface WsRoomInfo {

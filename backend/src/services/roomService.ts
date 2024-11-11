@@ -6,6 +6,7 @@ import RoomRepository from "../repositories/roomRepository";
 import UserRepository from "../repositories/userRepository";
 import { NotFoundException } from "../utils/Exception";
 import { Message } from "../utils/Message";
+import redisClient from "../database/redisClient";
 
 export default class RoomService {
 	private userRepository: UserRepository;
@@ -23,6 +24,15 @@ export default class RoomService {
 		const newRoom = await this.roomRepository.createRoom(user);
 
 		return newRoom;
+	}
+
+	async allRooms() {
+		try {
+			return this.roomRepository.allRooms();
+		} catch (error) {
+			console.log(error);
+			return [];
+		}
 	}
 
 	async joinRoom(userID: string, roomID: string): Promise<IRoom> {
@@ -44,6 +54,22 @@ export default class RoomService {
 		const player: IPlayer = getPlayer(user.id, user.username);
 
 		room.players.push(player);
+
+		// Salvar alteração no redis
+		await redisClient.set(`room:${room.id}`, JSON.stringify(room))
+
 		return room;
+	}
+
+	async getIdRoomUserWasIn(playerId: string): Promise<IRoom | null> {
+		const rooms = await this.allRooms();
+
+		for (const room of rooms) {
+			const playerFound = room.players.some(player => player.id === playerId);
+			if (playerFound) {
+				return room; // Retorna o ID da sala se o jogador estiver nela
+			}
+		}
+		return null; // Retorna null se o jogador não estiver em nenhuma sala
 	}
 }

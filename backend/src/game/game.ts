@@ -79,7 +79,6 @@ export class RaceGame {
 	private triggerGameLoop() {
 		for (const room of this.gameRooms) {
 			room.gameService.gameLoop(room);
-
 			if (!room.gameService.alive) {
 				const index = this.gameRooms.findIndex((r) => r.id === room.id);
 				if (index === -1) {

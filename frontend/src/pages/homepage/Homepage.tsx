@@ -1,41 +1,54 @@
-import React from "react";
-import Helmet from "../../assets/icons/Helmet";
+import React, { useContext, useEffect } from "react";
 import SpeedDialComponent from "../../components/speed-dial/SpeedDial";
 import "./Homepage.css";
+import RoomList from "../../components/roomList/RoomList";
+import { UserContext } from "../../context/UserContext";
 import { useNavigate } from "react-router-dom";
+import { UserAPI } from "../../api/users";
+import { useRoom } from "../../context/RoomContext";
 
 const Homepage = () => {
-	const rooms = [
-		{
-			id: "dad23gg2",
-			status: "waiting",
-			playersOn: 2,
-			totalPlayers: 4,
-			labs: 4,
-		},
-		{
-			id: "dad23gg2",
-			status: "racing",
-			playersOn: 2,
-			totalPlayers: 4,
-			labs: 4,
-		},
-		{
-			id: "dad23gg2",
-			status: "waiting",
-			playersOn: 2,
-			totalPlayers: 4,
-			labs: 4,
-		},
-		{
-			id: "dad23gg2",
-			status: "racing",
-			playersOn: 2,
-			totalPlayers: 4,
-			labs: 4,
-		},
-	];
-	const navigate = useNavigate()
+	const userContext = useContext(UserContext);
+	const roomContext = useRoom();
+
+	const navigate = useNavigate();
+
+	function createRace() {
+		navigate("/loading");
+	}
+
+	useEffect(() => {
+		async function fetchUser() {
+			try {
+				const userApi = new UserAPI();
+				const result = await userApi.getMyUser();
+				console.log(result);
+
+				if (userContext) {
+					if (!userContext.user.current) {
+						userContext.user.current = result.data;
+					}
+				}
+
+				if (result.statusCode !== 200) {
+					navigate("/");
+				}
+			} catch (error) {
+				navigate("/");
+				console.log(error);
+			}
+		}
+
+		fetchUser();
+
+		// Usuário já está participando de um jogo?
+		if (roomContext.playerInRoom) {
+			navigate("/game");
+		}
+
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
+
 	return (
 		<section id="homepage">
 			<section id="content-homepage">
@@ -44,44 +57,9 @@ const Homepage = () => {
 					<h2>It’s Racing Time!</h2>
 					<p>Grab your helmet and fast your seatbelt!</p>
 				</div>
-				<div id="content-table">
-					<table>
-						<thead>
-							<tr>
-								<th>id</th>
-								<th>status</th>
-								<th>players</th>
-								<th>labs</th>
-								<th></th>
-							</tr>
-						</thead>
-						<tbody>
-							{rooms.map((room, index) => (
-								<tr key={index}>
-									<td>{room.id}</td>
-									{room.status === "waiting" ? (
-										<td className="waiting">
-											{room.status}
-										</td>
-									) : (
-										<td>{room.status}</td>
-									)}
-									<td>{`${room.playersOn}/${room.totalPlayers}`}</td>
-									<td>{room.labs}</td>
-									{room.status === "waiting" ? (
-										<td>
-											<button>join</button>
-										</td>
-									) : (
-										<td>
-											<Helmet />
-										</td>
-									)}
-								</tr>
-							))}
-						</tbody>
-					</table>
-					<button onClick={() => navigate('/lobby')}>Create Race</button>
+				<div id="content-rooms">
+					<RoomList />
+					<button onClick={createRace}>Create Race</button>
 				</div>
 			</section>
 		</section>

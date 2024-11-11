@@ -28,6 +28,7 @@ export function getPlayer(id: string, username: string): IPlayer {
 		y: 540,
 		height: 30,
 		width: 30,
+
 		velocities: {
 			vx: 0,
 			vy: 0,
