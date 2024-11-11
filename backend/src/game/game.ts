@@ -6,12 +6,14 @@ import {
 	WsPlayerPicksItem,
 	WsPlayerUsesItem,
 } from "../interfaces/IWSMessages";
+import RoomService from "../services/roomService";
 import { CarController } from "./controller/carController";
 import { getPlayerControllable } from "./mock/playerControllable";
 
 export class RaceGame {
 	private gameRooms: Array<IRoomActive> = [];
 	private interval = 1000 / 60;
+	private roomService = new RoomService();
 
 	constructor() {
 		setInterval(() => {
@@ -28,7 +30,7 @@ export class RaceGame {
 				r.players.push(player);
 				r.WsPlayers.push(wsPlayer);
 				r.gameService._addPlayer(
-					getPlayerControllable(player.id, player.username),
+					getPlayerControllable(player.id, player.username, true),
 					r
 				);
 			}
@@ -38,6 +40,13 @@ export class RaceGame {
 
 	public addRoom(room: IRoomActive) {
 		this.gameRooms.push(room);
+		console.log("room add to gameLoop." + room.id);
+		console.log(
+			"room infos: [players] " +
+				room.players.length +
+				". [wsPlayers] " +
+				room.WsPlayers.length
+		);
 	}
 
 	public getRoom(id: string) {
@@ -76,7 +85,7 @@ export class RaceGame {
 		}
 	}
 
-	private triggerGameLoop() {
+	private async triggerGameLoop() {
 		for (const room of this.gameRooms) {
 			room.gameService.gameLoop(room);
 			if (!room.gameService.alive) {
@@ -90,6 +99,10 @@ export class RaceGame {
 					this.gameRooms.splice(index, 1);
 					console.log("room deleted");
 				}
+				await this.roomService.deleteRoom(room.id);
+				console.log("roomservice deleted room. [id] " + room.id);
+				const rooms = await this.roomService.allRooms();
+				console.log(rooms);
 			}
 		}
 	}

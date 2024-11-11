@@ -15,7 +15,7 @@ export default class RoomRepository {
 	}
 
 	async createRoom(user: IUser): Promise<IRoom> {
-		const player= getPlayer(user.id, user.username);
+		const player= getPlayer(user.id, user.username, false);
 
 		const room: IRoom = {
 			id: randomUUID(),

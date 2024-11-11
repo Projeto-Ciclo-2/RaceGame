@@ -27,6 +27,7 @@ import { RaceGame } from "../game/game";
 import { GameService } from "../game/service/gameService";
 import { LobbySevice } from "../services/lobbyService";
 import { IRoom } from "../interfaces/IRoom";
+import { getPlayerControllable } from "../game/mock/playerControllable";
 
 const userService = new UserService();
 const roomService = new RoomService();
@@ -34,16 +35,6 @@ const users = new Set<WsUser>();
 const lobbyService = new LobbySevice();
 
 const raceGame = new RaceGame();
-raceGame.addRoom({
-	gameService: new GameService([]),
-	id: "1234",
-	laps: 4,
-	map: 1,
-	messages: [],
-	players: [],
-	WsPlayers: [],
-	gameInit: false
-});
 
 export const wss = new WebSocket.Server({ noServer: true });
 
@@ -72,7 +63,6 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 			rooms: await roomService.allRooms(),
 		})
 	);
-	// raceGame._addPlayer(thisUser, getPlayer(randomUUID(), username), "1234");
 
 	ws.on("message", async (message) => {
 		const data = JSON.parse(message.toString());
@@ -141,13 +131,13 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 					);
 
 					// Percorrer players para saber se todos estão prontos
-					const initGame = updateRoom.players.every(
+					const gameCanInit = updateRoom.players.every(
 						(player) => player.ready === true
 					); // retorna true(se todos estão prontos) e retorna false(se pelo menos um player não estiver pronto)
 					const numberPlayers = updateRoom.players.length;
 
 					// Inciar jogo
-					if (initGame && numberPlayers > 1) {
+					if (gameCanInit && numberPlayers > 1) {
 						// Enviar mensagem específica para o usuário que saiu
 						const messageExit: WsBroadcastPlayerLeft = {
 							type: "broadcastPlayerLeft",
@@ -165,7 +155,9 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 						// Retornar room com gameIniti Atualizado
 						const room_with_gameInit = updateRoom;
 						room_with_gameInit.gameInit = true;
-						await lobbyService.saveRedisGameInit(room_with_gameInit) // salvar no redis
+						await lobbyService.saveRedisGameInit(
+							room_with_gameInit
+						); // salvar no redis
 
 						// Atualização front (geral)
 						const messageUp: WsRoomInfo = {
@@ -181,10 +173,11 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 							started_at: Date.now(),
 						};
 						broadcast(JSON.stringify(message));
+						initGame(room_with_gameInit);
 					}
 
 					// Game não iniciado
-					if (!initGame) {
+					if (!gameCanInit) {
 						// Atualização do front (looby)
 						const message: WsBroadcastPlayerLeft = {
 							type: "broadcastPlayerLeft",
@@ -258,19 +251,21 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 					);
 
 					// Percorrer players para saber se todos estão prontos
-					const initGame = updateRoom.players.every(
+					const gameCanInit = updateRoom.players.every(
 						(player) => player.ready === true
 					); // retorna true(se todos estão prontos) e retorna false(se pelo menos um player não estiver pronto)
 					const numberPlayers = updateRoom.players.length;
 
 					// Inciar jogo
-					if (initGame && numberPlayers > 1) {
-						console.log(`user ${dataWs.userID} ficou pronto!`);
+					if (gameCanInit && numberPlayers > 1) {
+						// console.log(`user ${dataWs.userID} ficou pronto!`);
 
 						// Retornar room com gameIniti Atualizado
 						const room_with_gameInit = updateRoom;
 						room_with_gameInit.gameInit = true;
-						await lobbyService.saveRedisGameInit(room_with_gameInit) // salvar no redis
+						await lobbyService.saveRedisGameInit(
+							room_with_gameInit
+						); // salvar no redis
 
 						// Atualização front (geral)
 						const messageUp: WsRoomInfo = {
@@ -285,10 +280,11 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 							started_at: Date.now(),
 						};
 						broadcast(JSON.stringify(message));
+						initGame(room_with_gameInit)
 					}
 
 					// Jogo não inciado
-					if (!initGame) {
+					if (!gameCanInit) {
 						// Atualizar informações no front
 						const message: WsBroadcastPlayerReady = {
 							type: "broadcastPlayerReady",
@@ -347,28 +343,10 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 				}
 				break;
 			case "playerPicksItem":
-				try {
-					raceGame.queuePlayerPickItem(data as WsPlayerPicksItem);
-				} catch (error) {
-					if (error instanceof Error) return sendErr(ws, error);
-					sendErr(ws);
-				}
 				break;
 			case "playerUsesItem":
-				try {
-					raceGame.queuePlayerUsesItem(data as WsPlayerUsesItem);
-				} catch (error) {
-					if (error instanceof Error) return sendErr(ws, error);
-					sendErr(ws);
-				}
 				break;
 			case "playerArrives":
-				try {
-					raceGame.queuePlayerArrives(data as WsPlayerArrives);
-				} catch (error) {
-					if (error instanceof Error) return sendErr(ws, error);
-					sendErr(ws);
-				}
 				break;
 			default:
 				throw new BadRequestException(Message.INVALID_TYPE);
@@ -405,7 +383,9 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 						// Retornar room com gameIniti Atualizado
 						const room_with_gameInit = room;
 						room_with_gameInit.gameInit = true;
-						await lobbyService.saveRedisGameInit(room_with_gameInit) // salvar no redis
+						await lobbyService.saveRedisGameInit(
+							room_with_gameInit
+						); // salvar no redis
 
 						// Atualização front (geral)
 						const messageUp: WsRoomInfo = {
@@ -466,4 +446,30 @@ function broadcast(data: string): void {
 	for (const user of users) {
 		user.ws.send(data);
 	}
+}
+
+function initGame(room: IRoom) {
+	console.log("-initGame-")
+	const controllablePlayers = room.players.map((p) =>
+		getPlayerControllable(p.id, p.username, p.ready)
+	);
+	const wsPlayers: WsUser[] = [];
+	for (const user of users) {
+		const index = room.players.findIndex(
+			(p) => p.username === user.username
+		);
+		if (index !== -1) {
+			wsPlayers.push(user);
+		}
+	}
+	raceGame.addRoom({
+		gameService: new GameService(controllablePlayers),
+		id: room.id,
+		laps: room.laps,
+		map: room.map,
+		messages: room.messages,
+		players: room.players,
+		WsPlayers: wsPlayers,
+		gameInit: true,
+	});
 }
