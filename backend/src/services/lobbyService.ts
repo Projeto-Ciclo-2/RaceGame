@@ -7,6 +7,7 @@ import {
 	WsPostMessage,
 	WsRequestJoinRoom,
 } from "../interfaces/IWSMessages";
+import { getPlayer } from "../game/mock/players";
 
 export class LobbySevice {
 	public async postMessage(data: WsPostMessage): Promise<IRoom> {
@@ -103,5 +104,11 @@ export class LobbySevice {
 			console.error("Error searching for room in Redis: ", error);
 			throw error;
 		}
+	}
+
+	private createBasicPlayer(id: string, username: string): IPlayer {
+		const newPlayer: IPlayer = getPlayer(id, username);
+
+		return newPlayer;
 	}
 }

@@ -1,10 +1,15 @@
 import { IPlayerControllable } from "../../interfaces/IRoom";
 import { CarController } from "../controller/carController";
 
-export function getPlayerControllable(id: string, username: string): IPlayerControllable {
+export function getPlayerControllable(
+	id: string,
+	username: string
+): IPlayerControllable {
 	return {
 		id: id,
 		username: username,
+		alive: true,
+		lastMessageAt: undefined,
 
 		carController: new CarController(),
 		ready: true,
@@ -21,11 +26,13 @@ export function getPlayerControllable(id: string, username: string): IPlayerCont
 			right: false,
 		},
 
+		moveNumber: 0,
+
 		rotation: 0,
 		x: 380,
 		y: 540,
-		height: 25,
-		width: 35,
+		height: 30,
+		width: 30,
 		velocities: {
 			vx: 0,
 			vy: 0,

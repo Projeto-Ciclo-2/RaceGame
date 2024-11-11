@@ -9,6 +9,8 @@ export interface IBox {
 export interface IPlayer extends IBox {
 	id: string;
 	username: string;
+	alive: boolean;
+	lastMessageAt: undefined | number; //timestamp
 
 	ready: boolean;
 
@@ -24,6 +26,8 @@ export interface IPlayer extends IBox {
 		left: boolean;
 		right: boolean;
 	};
+
+	moveNumber: number;
 
 	x: number;
 	y: number;
@@ -71,6 +75,7 @@ export interface IMessage {
 	username: string;
 	userID: string;
 	typeMessageChat: "message" | "userJoined" | "userLeft" | "userReady";
+
 }
 
 export interface IRoom {

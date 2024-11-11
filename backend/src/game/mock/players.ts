@@ -4,8 +4,10 @@ export function getPlayer(id: string, username: string): IPlayer {
 	return {
 		id: id,
 		username: username,
+		alive: true,
+		lastMessageAt: undefined,
 
-		ready: false,
+		ready: true,
 		checkpoint: 0,
 		done_laps: 0,
 
@@ -19,11 +21,14 @@ export function getPlayer(id: string, username: string): IPlayer {
 			right: false,
 		},
 
+		moveNumber: 0,
+
 		rotation: 0,
 		x: 380,
 		y: 540,
-		height: 25,
-		width: 35,
+		height: 30,
+		width: 30,
+
 		velocities: {
 			vx: 0,
 			vy: 0,

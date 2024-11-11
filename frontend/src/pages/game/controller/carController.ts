@@ -25,16 +25,16 @@ export class CarController {
 	private width = 30;
 	private height = 30;
 
-	private maxVelocity = 5.5;
-	private acceleration = 0.06;
+	private maxVelocity = 3.5;
+	private acceleration = 0.04;
 	private decelerationRate = 0.01;
-	private maxDecelerationRate = 0.05;
+	private maxDecelerationRate = 0.03;
 
 	private maxItems = 3;
 
 	private nitroAcceleration = 0.1;
-	private nitroDuration = 2000;
-	private nitroMaxVelocity = 7;
+	private nitroDuration = 2500;
+	private nitroMaxVelocity = 4.5;
 
 	public _getKeys() {
 		return this.keys;
@@ -66,6 +66,8 @@ export class CarController {
 		this.getFuturePosition(futurePlayer);
 		this.correctVelocities(futurePlayer, maxVelocity);
 
+		// futurePlayer.x = Math.floor(futurePlayer.x);
+		// futurePlayer.y = Math.floor(futurePlayer.y);
 		return futurePlayer;
 	}
 
@@ -80,7 +82,6 @@ export class CarController {
 		}
 		if (player.velocities.vx < 0) {
 			const diference = player.velocities.vx + item.velocity_effect * -1;
-			console.log(diference);
 
 			if (diference > 0) {
 				player.velocities.vx = 0;
@@ -176,17 +177,17 @@ export class CarController {
 	}
 
 	private applyNitro(player: IPlayer) {
-		const {down, left, right, up} = player.nitroDirection;
-		if(up) {
+		const { down, left, right, up } = player.nitroDirection;
+		if (up) {
 			player.velocities.vy -= this.nitroAcceleration;
 		}
-		if(down) {
+		if (down) {
 			player.velocities.vy += this.nitroAcceleration;
 		}
-		if(left) {
+		if (left) {
 			player.velocities.vx -= this.nitroAcceleration;
 		}
-		if(right) {
+		if (right) {
 			player.velocities.vx += this.nitroAcceleration;
 		}
 	}
@@ -338,9 +339,11 @@ export class CarController {
 					a: "ArrowLeft",
 					d: "ArrowRight",
 				};
+
 				if (key === "w" || key === "s" || key === "a" || key === "d") {
 					const newKey = otherKeys[key] as keyValid;
 					this.keys[newKey] = alive;
+					// }
 				} else {
 					this.keys[key] = alive;
 				}

@@ -1,4 +1,4 @@
-import { IItems, IPlayer } from "../../interfaces/IRoom";
+import { IItems, IPlayer, IPlayerControllable } from "../../interfaces/IRoom";
 
 type keyValid = "ArrowRight" | "ArrowLeft" | "ArrowUp" | "ArrowDown" | "Space";
 type keyAccept = keyValid | "w" | "s" | "d" | "a";
@@ -27,37 +27,34 @@ export class CarController {
 	private width = 30;
 	private height = 30;
 
-	private maxVelocity = 5.5;
-	private acceleration = 0.06;
+	private maxVelocity = 3.5;
+	private acceleration = 0.04;
 	private decelerationRate = 0.01;
-	private maxDecelerationRate = 0.05;
+	private maxDecelerationRate = 0.03;
 
 	private maxItems = 3;
 
 	private nitroAcceleration = 0.1;
-	private nitroDuration = 2000;
-	private nitroMaxVelocity = 7;
+	private nitroDuration = 2500;
+	private nitroMaxVelocity = 4.5;
 
-	public handleKeyPress(e: KeyboardEvent, alive: boolean) {
-		const handle = (thisKey: any) => {
-			if (this.options.includes(thisKey)) {
-				const key = thisKey as any as keyAccept;
-				const otherKeys = {
-					w: "ArrowUp",
-					s: "ArrowDown",
-					a: "ArrowLeft",
-					d: "ArrowRight",
-				};
-				if (key === "w" || key === "s" || key === "a" || key === "d") {
-					const newKey = otherKeys[key] as keyValid;
-					this.keys[newKey] = alive;
-				} else {
-					this.keys[key] = alive;
-				}
-			}
+	public setKeys(keys: {
+		ArrowLeft: boolean;
+		ArrowRight: boolean;
+		ArrowUp: boolean;
+		ArrowDown: boolean;
+		Space: boolean;
+	}) {
+		this.keys = keys;
+	}
+
+	public getFutureSelf(player: IPlayerControllable): IPlayerControllable {
+		const futurePlayer = this.getFutureCarPosition(player);
+		const futurePlayerControllable: IPlayerControllable = {
+			...futurePlayer,
+			carController: player.carController,
 		};
-		handle(e.key);
-		handle(e.code);
+		return futurePlayerControllable;
 	}
 
 	public getFutureCarPosition(player: IPlayer): IPlayer {
@@ -90,8 +87,6 @@ export class CarController {
 		}
 		if (player.velocities.vx < 0) {
 			const diference = player.velocities.vx + item.velocity_effect * -1;
-			console.log(diference);
-
 			if (diference > 0) {
 				player.velocities.vx = 0;
 			} else {
@@ -186,17 +181,17 @@ export class CarController {
 	}
 
 	private applyNitro(player: IPlayer) {
-		const {down, left, right, up} = player.nitroDirection;
-		if(up) {
+		const { down, left, right, up } = player.nitroDirection;
+		if (up) {
 			player.velocities.vy -= this.nitroAcceleration;
 		}
-		if(down) {
+		if (down) {
 			player.velocities.vy += this.nitroAcceleration;
 		}
-		if(left) {
+		if (left) {
 			player.velocities.vx -= this.nitroAcceleration;
 		}
-		if(right) {
+		if (right) {
 			player.velocities.vx += this.nitroAcceleration;
 		}
 	}

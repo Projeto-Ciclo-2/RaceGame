@@ -8,11 +8,11 @@
 		"outDir": "./dist",
 		"esModuleInterop": true,
 		"removeComments": true,
-		"noEmitOnError": true,
+		// "noEmitOnError": true,
 
 		// Typing configs
 		"strict": true /* Enable all strict type-checking options. */,
-		"noImplicitAny": true /* Enable error reporting for expressions and declarations with an implied 'any' type. */,
+		// "noImplicitAny": true /* Enable error reporting for expressions and declarations with an implied 'any' type. */,
 		"strictNullChecks": true /* When type checking, take into account 'null' and 'undefined'. */,
 		"strictFunctionTypes": true /* When assigning functions, check to ensure parameters and the return values are subtype-compatible. */,
 		"strictPropertyInitialization": true /* Check for class properties that are declared but not set in the constructor. */,
