@@ -31,6 +31,9 @@ export class GameService {
 	private durationTime = 5 * 60 * 1000;
 	public alive: boolean = true;
 
+	// 1 minute is the limit for a player stay without make move
+	private maxTimeWithoutMove = 1 * 60 * 1000;
+
 	constructor(players: Array<IPlayerControllable>) {
 		// if (players.length <= 0) {
 		// 	throw new Error("Game service receive invalid players.");
@@ -42,19 +45,16 @@ export class GameService {
 	/**
 	 * @deprecated
 	 */
-	public _addPlayer(player: IPlayerControllable, user: WsUser) {
+	public _addPlayer(player: IPlayerControllable, selfRoom: IRoomActive) {
 		this.players.push(player);
 		const entities = this.mapController.updateEntitiesState(this.players);
-		const message: WsGameState = {
-			type: "gameState",
-			entities: entities,
-		};
-		user.ws.send(JSON.stringify(message));
+		this.broadcastGameState(entities);
 	}
 
 	public gameLoop(selfRoom: IRoomActive) {
 		this.selfRoom = selfRoom;
 		this.resolvePlayerMoveQueue();
+		this.softDisableInactivePlayers();
 		this.checkIfSomeoneWins();
 		this.checkGameEndByTimeout();
 	}
@@ -81,10 +81,14 @@ export class GameService {
 
 	private broadcastGameState(entities: IEntities) {
 		if (this.selfRoom) {
+			const filteredPlayer = entities.players.filter((p) => p.alive);
 			for (const user of this.selfRoom.WsPlayers) {
 				const message: WsGameState = {
 					type: "gameState",
-					entities: entities,
+					entities: {
+						items: entities.items,
+						players: filteredPlayer,
+					},
 				};
 				user.ws.send(JSON.stringify(message));
 			}
@@ -104,11 +108,17 @@ export class GameService {
 	}
 
 	private resolvePlayerMoveQueue() {
+		const now = Date.now();
 		for (const move of this.moveQueue) {
 			const pIndex = this.players.findIndex(
 				(p) => move.player.id === p.id
 			);
 			if (pIndex !== -1) {
+				if (!this.players[pIndex].alive) {
+					this.players[pIndex].alive = true;
+				}
+				this.players[pIndex].lastMessageAt = now;
+
 				const oldPlayer = this.players[pIndex];
 				oldPlayer.carController.setKeys(move.keys);
 
@@ -132,13 +142,6 @@ export class GameService {
 				if (positionChanged || velocitiesChanged) {
 					this.players[pIndex].moveNumber =
 						this.players[pIndex].moveNumber + 1;
-
-					const { vx, vy } = newV;
-					console.log("(new velocity)");
-					console.log(
-						`(${this.players[pIndex].moveNumber}) [x, y] [${newX} ${newY}] | [vx, vy] [${vx}, ${vy}]`
-					);
-					console.log("______________");
 					this.broadcastGameState(entities);
 				}
 			} else {
@@ -201,6 +204,19 @@ export class GameService {
 				this.broadcastGameEnd("Nobody.");
 			}
 		}
+	}
+
+	private softDisableInactivePlayers() {
+		const now = Date.now();
+		this.players = this.players.map((p) => {
+			if (p.lastMessageAt) {
+				const endDate = p.lastMessageAt + this.maxTimeWithoutMove;
+				if (now >= endDate) {
+					p.alive = false;
+				}
+			}
+			return p;
+		});
 	}
 
 	private resolvePlayerPickItemQueue() {}

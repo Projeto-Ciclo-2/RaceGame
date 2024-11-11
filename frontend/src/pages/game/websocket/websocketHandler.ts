@@ -14,6 +14,22 @@ export class WebSocketHandler {
 		items: Array<IItems>,
 		username: string
 	) {
+		if (players.length > e.entities.players.length) {
+			console.log("removing no active players");
+			const removeIndexes = [];
+			for (let index = 0; index < players.length; index++) {
+				const thisUser = players[index];
+				const foundIndex = e.entities.players.findIndex(
+					(p) => p.id === thisUser.id
+				);
+				if (foundIndex === -1) {
+					removeIndexes.push(index);
+				}
+			}
+			for (const i of removeIndexes) {
+				players.splice(i, 1);
+			}
+		}
 		for (const player of e.entities.players) {
 			const i = players.findIndex((p) => p.id === player.id);
 			const clientPlayer: IPlayer | undefined = players[i];
@@ -23,17 +39,28 @@ export class WebSocketHandler {
 				username
 			);
 			if (i === -1) {
-				// outros usuários
+				// É UM NOVO USUÁRIO, AINDA NÃO FOI RENDERIZADO NENHUMA VEZ.
 				console.log("[pushing players]: " + serverPlayer.username);
 				players.push(serverPlayer);
 				//
 			} else if (
-				!clientPlayer.canControl ||
-				clientPlayer.username !== username
+				!serverPlayer.canControl ||
+				serverPlayer.username !== username
 			) {
-				// todo: others players interpolation
-				players[i] = serverPlayer;
+				if (serverPlayer.alive) {
+					// todo: others players interpolation
+					players[i] = serverPlayer;
+				} else {
+					// player is not alive, removing...
+					const pIndex = players.findIndex(
+						(p) => p.id === serverPlayer.id
+					);
+					if (pIndex !== -1) {
+						players.splice(pIndex, 1);
+					}
+				}
 			} else {
+				// CONTROLLABLE USER
 				const result = ClientPrediction.detectDiferences(
 					clientPlayer,
 					serverPlayer
@@ -45,8 +72,6 @@ export class WebSocketHandler {
 							result.move +
 							" will be in conflict queue"
 					);
-					console.log("have a see in moves array");
-					console.log(JSON.stringify(clientPlayer.moves));
 
 					clientPlayer.conflictQueue = clientPlayer.moves.filter(
 						(m) => {
@@ -72,13 +97,10 @@ export class WebSocketHandler {
 						players[i].velocities.vy
 					);
 				} else {
-					// console.log("else case, trying to delete move");
 					if (players[i].moves.length > 1) {
 						players[i].moves = players[i].moves.filter(
 							(m) => serverPlayer.moveNumber <= m.move
 						);
-						// console.log("removed move " + serverPlayer.moveNumber);
-						// console.log(players[i].moves);
 					}
 				}
 			}
@@ -107,6 +129,9 @@ export class WebSocketHandler {
 			username: p.username,
 			canControl: p.username === username,
 			ready: p.ready,
+			//
+			alive: p.alive,
+			lastMessageAt: p.lastMessageAt,
 			//
 			color: p.username === username ? "1" : "3",
 			//

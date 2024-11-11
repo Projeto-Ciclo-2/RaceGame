@@ -13,6 +13,9 @@ export interface IPlayer extends IBox {
 	username: string;
 	canControl: boolean;
 
+	alive: boolean;
+	lastMessageAt: undefined | number; //timestamp
+
 	color: "1" | "2" | "3";
 
 	ready: boolean;
