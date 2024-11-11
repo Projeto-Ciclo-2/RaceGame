@@ -72,7 +72,7 @@
 		justify-content: space-between;
 
 		& #chat {
-			background-color: rgba(0,0,0,.05);
+			background-color: rgba(0, 0, 0, 0.05);
 			border-radius: 0.5rem;
 			height: 90%;
 			padding: 0.5rem;
@@ -80,6 +80,7 @@
 			flex-direction: column;
 			gap: 0.5rem;
 			overflow: auto;
+			scroll-behavior: smooth;
 			box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.15);
 
 			& p {
@@ -95,6 +96,54 @@
 					border-radius: 0.2rem;
 					color: var(--color-3);
 				}
+
+				& .user-joined {
+					width: 100%;
+					text-align: center;
+					margin-top: 1rem;
+
+					& span {
+						color: white;
+						padding: 0.2rem 1rem;
+						border-radius: 1rem;
+						font-weight: 700;
+						letter-spacing: 0.75px;
+						background: rgb(26, 169, 26);
+						width: fit-content;
+					}
+				}
+
+				& .user-left {
+					width: 100%;
+					text-align: center;
+					margin-top: 1rem;
+
+					& span {
+						color: rgb(216, 62, 35);
+						padding: 0.2rem 1rem;
+						border-radius: 1rem;
+						font-weight: 700;
+						letter-spacing: 0.75px;
+						/* background: rgb(216, 62, 35); */
+						width: fit-content;
+					}
+				}
+
+				& .user-ready {
+					width: 100%;
+					text-align: center;
+					margin-top: 1rem;
+
+					& span {
+						color: white;
+						padding: 0.2rem 1rem;
+						border-radius: 1rem;
+						font-weight: 700;
+						letter-spacing: 0.75px;
+						background: var(--color-1);
+						width: fit-content;
+					}
+				}
 			}
 		}
 
@@ -106,33 +155,38 @@
 		& .react-emoji {
 			margin-left: -10px;
 			border-radius: 1rem;
-			box-shadow: 5px 5px 10px rgba(0,0,0,.2);
+			box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.2);
 		}
 	}
 }
-#ready{
-	padding: .8rem 2rem;
-	border-radius: .5rem;
+#ready {
+	padding: 0.8rem 2rem;
+	border-radius: 0.5rem;
 	border: none;
 	font-weight: bold;
 	color: var(--color-2);
 	cursor: pointer;
-	transition: .5s;
+	transition: 0.5s;
 	background-color: var(--color-1);
 	&:hover {
 		background-color: var(--color-1-hover);
 	}
 }
-#leave{
-	padding: .8rem 2rem;
-	border-radius: .5rem;
+#leave {
+	padding: 0.8rem 2rem;
+	border-radius: 0.5rem;
 	border: none;
 	font-weight: bold;
 	color: var(--color-2);
 	cursor: pointer;
-	transition: .5s;
+	transition: 0.5s;
 	background-color: rgb(240, 65, 65);
 	&:hover {
 		background-color: rgb(206, 40, 40);
 	}
+}
+
+.ready-disabled {
+	background-color: rgb(209, 200, 200) !important;
+	color: rgb(173, 151, 151) !important;
 }
