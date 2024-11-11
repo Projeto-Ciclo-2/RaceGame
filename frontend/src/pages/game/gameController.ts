@@ -103,8 +103,6 @@ export class GameController {
 				this.username
 			);
 			this.items = items;
-			console.log("this.items");
-			console.log(this.items);
 
 			this.alreadyReceivePlayers = true;
 		});

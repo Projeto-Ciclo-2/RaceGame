@@ -6,6 +6,7 @@ import {
 import { WsUser } from "../../interfaces/IUser";
 import {
 	WsBroadcastPlayerMove,
+	WsEndGame,
 	WsGameState,
 	WsPlayerArrives,
 	WsPlayerMove,
@@ -25,11 +26,17 @@ export class GameService {
 	private players: Array<IPlayerControllable> = [];
 	private selfRoom: IRoomActive | undefined;
 
+	private stated_at: number;
+	// 5 minutes of duration
+	private durationTime = 5 * 60 * 1000;
+	public alive: boolean = true;
+
 	constructor(players: Array<IPlayerControllable>) {
 		// if (players.length <= 0) {
 		// 	throw new Error("Game service receive invalid players.");
 		// }
 		this.players = players;
+		this.stated_at = Date.now();
 	}
 
 	/**
@@ -48,6 +55,8 @@ export class GameService {
 	public gameLoop(selfRoom: IRoomActive) {
 		this.selfRoom = selfRoom;
 		this.resolvePlayerMoveQueue();
+		this.checkIfSomeoneWins();
+		this.checkGameEndByTimeout();
 	}
 
 	public getEntities() {
@@ -79,6 +88,18 @@ export class GameService {
 				};
 				user.ws.send(JSON.stringify(message));
 			}
+		}
+	}
+
+	private broadcastGameEnd(winner: string) {
+		const msg: WsEndGame = {
+			type: "endGame",
+			players: this.players,
+			roomID: this.selfRoom!.id,
+			winner: winner,
+		};
+		for (const p of this.selfRoom!.WsPlayers) {
+			p.ws.send(JSON.stringify(msg));
 		}
 	}
 
@@ -126,6 +147,59 @@ export class GameService {
 				);
 			}
 			this.moveQueue.delete(move);
+		}
+	}
+
+	private checkIfSomeoneWins() {
+		if (this.selfRoom) {
+			let betterPlayer: IPlayerControllable | undefined;
+			for (const player of this.players) {
+				if (player.done_laps >= this.selfRoom.laps) {
+					console.log(
+						"have a look, this bro ends the game: " +
+							player.username
+					);
+					this.alive = false;
+					betterPlayer = player;
+				}
+			}
+			if (!this.alive) {
+				if (betterPlayer) {
+					this.broadcastGameEnd(betterPlayer.username);
+				} else {
+					this.broadcastGameEnd("Nobody.");
+				}
+			}
+		}
+	}
+
+	private sortPlayers(): Array<IPlayerControllable> {
+		return this.players.sort((a, b) => {
+			if (a.done_laps > b.done_laps) return 1;
+
+			if (b.done_laps > a.done_laps) return -1;
+
+			if (a.checkpoint > b.checkpoint) return 1;
+
+			if (b.checkpoint > a.checkpoint) return -1;
+
+			return 0;
+		});
+	}
+
+	private checkGameEndByTimeout() {
+		const now = Date.now();
+		const endDate = this.stated_at + this.durationTime;
+		if (now >= endDate) {
+			console.log("end by timeout");
+			this.alive = false;
+			const sortedPlayers = this.sortPlayers();
+			const betterPlayer = sortedPlayers[sortedPlayers.length - 1];
+			if (betterPlayer) {
+				this.broadcastGameEnd(betterPlayer.username);
+			} else {
+				this.broadcastGameEnd("Nobody.");
+			}
 		}
 	}
 

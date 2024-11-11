@@ -79,6 +79,19 @@ export class RaceGame {
 	private triggerGameLoop() {
 		for (const room of this.gameRooms) {
 			room.gameService.gameLoop(room);
+
+			if (!room.gameService.alive) {
+				const index = this.gameRooms.findIndex((r) => r.id === room.id);
+				if (index === -1) {
+					console.error("dude, something get really wrong.");
+					console.log(
+						"was not possible to remove a room from game rooms."
+					);
+				} else {
+					this.gameRooms.splice(index, 1);
+					console.log("room deleted");
+				}
+			}
 		}
 	}
 }
