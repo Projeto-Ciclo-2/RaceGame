@@ -19,10 +19,11 @@ export default class RoomRepository {
 
 		const room: IRoom = {
 			id: randomUUID(),
-			laps: 0,
+			laps: 3,
 			map: 1,
 			players: [player],
 			messages: [],
+			gameInit: false
 		};
 
 		await this.redis.set(`room:${room.id}`, JSON.stringify(room));

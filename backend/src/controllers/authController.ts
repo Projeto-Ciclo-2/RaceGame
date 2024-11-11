@@ -16,6 +16,7 @@ export default class AuthController {
 			const googleProfile: IGoogleProfile = req.body;
 
 			const token = await this.authService.login(googleProfile);
+
 			res.cookie("token", token, {
 				maxAge: 8 * 60 * 60 * 1000,
 				httpOnly: true,

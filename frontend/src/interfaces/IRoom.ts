@@ -74,6 +74,8 @@ export interface IMessage {
 	content: string;
 	username: string;
 	userID: string;
+	typeMessageChat: "message" | "userJoined" | "userLeft" | "userReady";
+
 }
 
 export interface IRoom {
@@ -82,4 +84,5 @@ export interface IRoom {
 	map: 1;
 	players: Array<IPlayer>
 	messages: Array<IMessage>
+	gameInit: boolean
 }

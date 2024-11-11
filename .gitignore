@@ -2,6 +2,6 @@
 node_modules
 .docker
 dist
-# build
+build
 cert/www
 cert/conf
