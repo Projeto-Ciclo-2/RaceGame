@@ -49,7 +49,7 @@ export interface WsBroadcastPlayerReady {
 export interface WsGameInit {
 	type: "gameInit";
 	roomID: string;
-	started_at: string;
+	started_at: number;
 }
 
 export interface WsBroadcastPlayerMove {
