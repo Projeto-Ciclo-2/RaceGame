@@ -8,30 +8,23 @@ import {
 	WsBroadcastJoinGame,
 	WsBroadcastNewMessage,
 	WsBroadcastPlayerLeft,
-	WsBroadcastPlayerMove,
-	WsBroadcastPlayerPickItem,
 	WsBroadcastPlayerReady,
-	WsBroadcastUseItem,
-	WsEndGame,
-	WsGameInit,
-	WsNewRoom,
+	WsGameState,
 	WsPlayerArrives,
 	WsPlayerMove,
 	WsPlayerPicksItem,
 	WsPlayerUsesItem,
+	WsGameInit,
+	WsNewRoom,
 	WsPlayerLeft,
 	WsPlayerReady,
 	WsPostMessage,
-	WsRequestJoinRoom,
 	WsRoomInfo,
 } from "../interfaces/IWSMessages";
 import RoomService from "../services/roomService";
 import { WsUser } from "../interfaces/IUser";
 import { RaceGame } from "../game/game";
 import { GameService } from "../game/service/gameService";
-import { getPlayer } from "../game/mock/players";
-import { randomUUID } from "crypto";
-import { IUser } from "../interfaces/IUser";
 import { LobbySevice } from "../services/lobbyService";
 import { IRoom } from "../interfaces/IRoom";
 
@@ -332,6 +325,22 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 			case "playerMove":
 				try {
 					raceGame.queuePlayerMove(data as WsPlayerMove);
+				} catch (error) {
+					if (error instanceof Error) return sendErr(ws, error);
+					sendErr(ws);
+				}
+				break;
+			case "requestGameState":
+				try {
+					const room = raceGame.getRoom(data.roomID);
+					if (room) {
+						const message: WsGameState = {
+							type: "gameState",
+							entities: room.gameService.getEntities(),
+						};
+						ws.send(JSON.stringify(message));
+					}
+					throw new Error(Message.ROOM_NOT_FOUND);
 				} catch (error) {
 					if (error instanceof Error) return sendErr(ws, error);
 					sendErr(ws);

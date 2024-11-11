@@ -93,7 +93,7 @@ export class GameDebug {
 		this.ctx.strokeStyle = "black";
 		this.ctx.lineWidth = 2;
 
-		const items = JSON.stringify(player.items.map((i) => i.id));
+		const items = player.items.map((i) => i.id);
 
 		const debugText = [
 			`player: ${player.username}`,
@@ -105,7 +105,7 @@ export class GameDebug {
 			// `rotation: ${player.rotation}`,
 			// `id: ${player.id}`,
 			// `username: ${player.username}`,
-			`items: ${items}`,
+			`items: ${JSON.stringify(items)}`,
 			`using nitro: ${player.usingNitro}`,
 			`nitro used at: ${player.nitroUsedAt}`,
 		];
