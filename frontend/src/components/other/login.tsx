@@ -1,10 +1,18 @@
 import { useGoogleLogin } from "@react-oauth/google";
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import GoogleIcon from "../icons/google";
 import Btn from "./button";
+import { UserAPI } from "../../api/users";
+import { UserContext } from "../../context/UserContext";
+import { useNavigate } from "react-router-dom";
 
 export const Login = () => {
 	const [googleLoginAttempt, setGoogleLoginAttempt] = useState(false);
+
+	const userContext = useContext(UserContext);
+
+	const navigate = useNavigate();
+
 	const handleGoogleLogin = useGoogleLogin({
 		onSuccess: async (response) => {
 			try {
@@ -27,12 +35,21 @@ export const Login = () => {
 						headers: {
 							"Content-Type": "application/json",
 						},
+						credentials: "include",
 						body: JSON.stringify(data),
 					}
 				);
 
 				if (apiResponse.ok) {
-					window.location.href = "/home";
+					const userApi = new UserAPI();
+
+					const user = await userApi.getMyUser();
+					
+					if (userContext) {
+						userContext.user.current = user.data;
+					}
+
+					navigate("/home");
 				} else {
 					throw new Error(apiResponse.statusText);
 				}
