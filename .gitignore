@@ -2,7 +2,6 @@
 node_modules
 .docker
 dist
-build
-mock
+# build
 cert/www
 cert/conf

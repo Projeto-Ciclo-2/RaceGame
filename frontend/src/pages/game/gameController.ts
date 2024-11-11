@@ -8,13 +8,19 @@ import carBlue from "./assets/carBlue.svg";
 import carYellow from "./assets/carYellow.svg";
 import carGreen from "./assets/carGreen.svg";
 import { loadImage } from "./tools/imgLoader";
-import { players } from "./mock/players";
+import { WebSocketContextType } from "../../context/WebSocketContext";
+import { WebSocketHandler } from "./websocket/websocketHandler";
+import { WsPlayerMove } from "../../interfaces/IWSMessages";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
 	private ctx: CanvasRenderingContext2D;
 
-	private mapController: MapController;
+	private mapController: MapController | undefined;
+	private websocketContext: WebSocketContextType;
+	private websocketHandler = new WebSocketHandler();
+
+	private roomID: string | undefined = "1234";
 
 	private gameDebug: GameDebug;
 
@@ -28,15 +34,40 @@ export class GameController {
 
 	private debug = true || config.DEBUG_MODE;
 
-	private players: Array<IPlayer> = players;
+	private username: string;
+	private players: Array<IPlayer> = [];
+	private items: Array<IItems> = [];
+	private alreadyReceivePlayers = false;
+	private myUser: IPlayer | undefined;
 
-	constructor(canvas: HTMLCanvasElement) {
+	private lastKeys = {
+		ArrowLeft: false,
+		ArrowRight: false,
+		ArrowUp: false,
+		ArrowDown: false,
+		Space: false,
+	};
+
+	private lastTime = 0;
+	private fps = 60;
+	private frameDuration = 1000 / this.fps;
+
+	private fpsCounter = 0;
+	private timestampFPS = 0;
+
+	constructor(
+		canvas: HTMLCanvasElement,
+		websocketContext: WebSocketContextType,
+		username: string
+	) {
 		this.canvas = canvas;
 		const ctx = this.canvas.getContext("2d");
 		if (ctx) {
+			this.username = username;
 			this.ctx = ctx;
 			this.gameDebug = new GameDebug(this.ctx);
-			this.mapController = new MapController(this.canvas, this.players);
+
+			this.websocketContext = websocketContext;
 
 			Promise.all([
 				loadImage(bkg),
@@ -59,32 +90,62 @@ export class GameController {
 	}
 
 	public start() {
-		this.animate();
+		this.listenWebSocket();
+		window.requestAnimationFrame((time) => this.animate(time));
 	}
 
-	private animate() {
-		if (!this.bkg || !this.carGreen || !this.carBlue || !this.carYellow) {
-			window.requestAnimationFrame(() => this.animate());
+	private listenWebSocket() {
+		this.websocketContext.onReceiveGameState((e) => {
+			const items = this.websocketHandler.handleGameState(
+				e,
+				this.players,
+				this.items,
+				this.username
+			);
+			this.items = items;
+			console.log("this.items");
+			console.log(this.items);
+
+			this.alreadyReceivePlayers = true;
+		});
+	}
+
+	private animate(timestamp: DOMHighResTimeStamp) {
+		if (
+			!this.bkg ||
+			!this.carGreen ||
+			!this.carBlue ||
+			!this.carYellow ||
+			!this.mapController
+		) {
+			this.initMapController();
+			window.requestAnimationFrame((time) => this.animate(time));
 			return;
 		}
-		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-		this.ctx.drawImage(
-			this.bkg,
-			0,
-			0,
-			this.canvas.width,
-			this.canvas.height
+		const durationOfLastExec = timestamp - this.lastTime;
+		if (durationOfLastExec < this.frameDuration) {
+			window.requestAnimationFrame((time) => this.animate(time));
+			return;
+		}
+
+		this.renderDefaultBkg();
+
+		this.sendMove();
+		const entities = this.mapController.makePrediction(
+			this.players,
+			this.items
 		);
-		const entities = this.mapController.getEntities();
-		this.renderPlayers(entities.players);
-		this.renderItems(entities.items);
+		this.players = entities.players;
+		this.items = entities.items;
+		this.renderPlayers(this.players);
+		this.renderItems(this.items);
 
 		if (this.debug) {
 			// this.gameDebug.makeHitBox(this.mapController.getWalls());
 			// this.gameDebug.makeGrid();
 			// .forEach((p, i) => {
 			// });
-			this.gameDebug.renderDebugInfo(entities.players[0], 10 );
+			// this.gameDebug.renderDebugInfo(entities.players[0], 10);
 			// this.gameDebug.renderCollidedBoxes(
 			// 	this.mapController.getWallsCollided()
 			// );
@@ -100,7 +161,47 @@ export class GameController {
 			// this.gameDebug.renderKeyInfo(this.mapController._getCarKeys());
 		}
 
-		window.requestAnimationFrame(() => this.animate());
+		this.updateFPSInfo(timestamp);
+		window.requestAnimationFrame((time) => this.animate(time));
+	}
+
+	private sendMove() {
+		if (
+			!this.websocketContext.isConnected ||
+			this.websocketContext.socket?.readyState !== WebSocket.OPEN
+		) {
+			return;
+		}
+		if (!this.myUser) {
+			this.myUser = this.players.find((u) => u.canControl);
+		}
+		if (this.myUser) {
+			const newKeys = this.mapController!._getCarKeys();
+
+			const message: WsPlayerMove = {
+				type: "playerMove",
+				roomID: this.roomID!,
+				player: this.myUser,
+				keys: newKeys,
+			};
+			this.websocketContext.sendPlayerMove(message);
+			this.lastKeys = newKeys;
+		} else {
+			console.error(
+				"not able to find the player of this user, dumb code."
+			);
+		}
+	}
+
+	private renderDefaultBkg(): void {
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		this.ctx.drawImage(
+			this.bkg!,
+			0,
+			0,
+			this.canvas.width,
+			this.canvas.height
+		);
 	}
 
 	private renderPlayers(players: Array<IPlayer>) {
@@ -128,10 +229,10 @@ export class GameController {
 
 			this.ctx.drawImage(
 				img,
-				-p.defaultWidth / 2,
-				-p.defaultHeight / 2,
-				p.defaultWidth,
-				p.defaultHeight
+				-p.width / 2,
+				-p.height / 2,
+				p.width,
+				p.height
 			);
 
 			this.ctx.restore();
@@ -205,5 +306,50 @@ export class GameController {
 		const y = player.y + player.height + 15;
 		this.ctx.strokeText(player.username.slice(0, 15), x, y);
 		this.ctx.fillText(player.username.slice(0, 15), x, y);
+	}
+
+	private initMapController() {
+		if (!this.mapController && this.players.length > 0 && this.roomID) {
+			const player = this.players.find((p) => p.canControl);
+			if (player) {
+				this.mapController = new MapController(this.canvas);
+				return;
+			}
+		}
+		if (this.players.length <= 0 && this.alreadyReceivePlayers) {
+			if (this.websocketContext && this.roomID) {
+				this.websocketContext.sendRequestGameState({
+					roomID: this.roomID,
+					type: "requestGameState",
+				});
+			} else {
+				console.error(
+					"not was possible to request game state. roomID missing."
+				);
+			}
+		}
+	}
+
+	private updateFPSInfo(timestamp: DOMHighResTimeStamp) {
+		this.lastTime = timestamp;
+		this.fpsCounter += 1;
+		const timestampLimit = this.timestampFPS + 1000;
+		const now = Date.now();
+		if (timestampLimit < now) {
+			this.fpsCounter = 0;
+			this.timestampFPS = now;
+		}
+		if (this.debug) {
+			this.renderFPS();
+		}
+	}
+
+	private renderFPS() {
+		this.ctx.fillStyle = "black";
+		this.ctx.fillStyle = "white";
+		this.ctx.strokeStyle = "black";
+		this.ctx.lineWidth = 2;
+		this.ctx.strokeText(this.fpsCounter.toString(), 670, 10);
+		this.ctx.fillText(this.fpsCounter.toString(), 670, 10);
 	}
 }

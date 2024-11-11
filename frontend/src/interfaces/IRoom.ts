@@ -1,7 +1,3 @@
-import { CarController } from "../game/controller/carController";
-import { GameService } from "../game/service/gameService";
-import { WsUser } from "./IUser";
-
 type checkPointOrder = 1 | 2 | 3 | 4 | 5;
 
 export interface IBox {
@@ -10,7 +6,6 @@ export interface IBox {
 	width: number;
 	height: number;
 }
-
 export interface IPlayer extends IBox {
 	id: string;
 	username: string;
@@ -53,10 +48,6 @@ export interface IPlayer extends IBox {
 	};
 }
 
-export interface IPlayerControllable extends IPlayer {
-	carController: CarController;
-}
-
 export interface ICheckPoint extends IBox {
 	order: checkPointOrder;
 }
@@ -76,9 +67,6 @@ export interface IEntities {
 	items: Array<IItems>;
 }
 
-//
-//
-//
 
 export interface IMessage {
 	content: string;
@@ -90,11 +78,6 @@ export interface IRoom {
 	id: string;
 	laps: number;
 	map: 1;
-	players: Array<IPlayer>;
-	messages: Array<IMessage>;
-}
-
-export interface IRoomActive extends IRoom {
-	WsPlayers: Array<WsUser>;
-	gameService: GameService;
+	players: Array<IPlayer>
+	messages: Array<IMessage>
 }

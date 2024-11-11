@@ -1,4 +1,4 @@
-import { IMessage, IPlayer, IRoom } from "./IRoom";
+import { IEntities, IMessage, IPlayer, IRoom } from "./IRoom";
 
 /**
  * |===============================|
@@ -87,6 +87,11 @@ export interface WsEndGame {
 	winner: string; //username
 }
 
+export interface WsGameState {
+	type: "gameState";
+	entities: IEntities;
+}
+
 /***********************************
  * |===============================|
  * | FRONT END WEB SOCKET MESSAGES |
@@ -127,6 +132,13 @@ export interface WsPlayerMove {
 	type: "playerMove";
 	roomID: string;
 	player: IPlayer;
+	keys: {
+		ArrowLeft: boolean;
+		ArrowRight: boolean;
+		ArrowUp: boolean;
+		ArrowDown: boolean;
+		Space: boolean;
+	};
 }
 
 export interface WsPlayerPicksItem {
@@ -147,4 +159,9 @@ export interface WsPlayerArrives {
 	type: "playerArrives";
 	roomID: string;
 	userID: string;
+}
+
+export interface WsRequestGameState {
+	type: "requestGameState";
+	roomID: string;
 }

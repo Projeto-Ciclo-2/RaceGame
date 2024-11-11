@@ -1,7 +1,9 @@
-import { IItems, IPlayer, rotation } from "../interfaces/gameInterfaces";
+import { IItems, IPlayer, IPlayerControllable } from "../../interfaces/IRoom";
 
 type keyValid = "ArrowRight" | "ArrowLeft" | "ArrowUp" | "ArrowDown" | "Space";
 type keyAccept = keyValid | "w" | "s" | "d" | "a";
+type rotation = 0 | 45 | 90 | 135 | 180 | 235 | 270 | 315;
+
 export class CarController {
 	private options: Array<keyAccept> = [
 		"ArrowRight",
@@ -36,17 +38,23 @@ export class CarController {
 	private nitroDuration = 2000;
 	private nitroMaxVelocity = 7;
 
-	public _getKeys() {
-		return this.keys;
+	public setKeys(keys: {
+		ArrowLeft: boolean;
+		ArrowRight: boolean;
+		ArrowUp: boolean;
+		ArrowDown: boolean;
+		Space: boolean;
+	}) {
+		this.keys = keys;
 	}
 
-	public listen() {
-		document.addEventListener("keydown", (e) =>
-			this.handleKeyPress(e, true)
-		);
-		document.addEventListener("keyup", (e) =>
-			this.handleKeyPress(e, false)
-		);
+	public getFutureSelf(player: IPlayerControllable): IPlayerControllable {
+		const futurePlayer = this.getFutureCarPosition(player);
+		const futurePlayerControllable: IPlayerControllable = {
+			...futurePlayer,
+			carController: player.carController,
+		};
+		return futurePlayerControllable;
 	}
 
 	public getFutureCarPosition(player: IPlayer): IPlayer {
@@ -60,14 +68,11 @@ export class CarController {
 			: this.maxVelocity;
 
 		this.defineRotation(futurePlayer);
-		this.updateHitBox(futurePlayer);
 		this.decreaseVelocityOverTime(futurePlayer, maxVelocity);
 
 		this.getFuturePosition(futurePlayer);
 		this.correctVelocities(futurePlayer, maxVelocity);
 
-		// futurePlayer.x = Math.floor(futurePlayer.x);
-		// futurePlayer.y = Math.floor(futurePlayer.y);
 		return futurePlayer;
 	}
 
@@ -249,20 +254,6 @@ export class CarController {
 		player.rotation = rotationMap[pressedKey] ?? player.rotation;
 	}
 
-	private updateHitBox(player: IPlayer) {
-		const verticalRotations = [90, 270];
-		// const leftDiagonalRotations = [45, 235];
-		// const rightDiagonalRotations = [135, 315];
-
-		if (verticalRotations.includes(player.rotation)) {
-			player.height = this.width;
-			player.width = this.height;
-			return;
-		}
-		player.height = this.height;
-		player.width = this.width;
-	}
-
 	private correctVelocities(player: IPlayer, maxVelocity: number) {
 		const { vx, vy } = player.velocities;
 		const negativeMaxVelocity = maxVelocity * -1;
@@ -327,29 +318,5 @@ export class CarController {
 		} else {
 			this.decelerationRate = 0.01;
 		}
-	}
-
-	private handleKeyPress(e: KeyboardEvent, alive: boolean) {
-		const handle = (thisKey: any) => {
-			if (this.options.includes(thisKey)) {
-				const key = thisKey as any as keyAccept;
-				const otherKeys = {
-					w: "ArrowUp",
-					s: "ArrowDown",
-					a: "ArrowLeft",
-					d: "ArrowRight",
-				};
-
-				if (key === "w" || key === "s" || key === "a" || key === "d") {
-					const newKey = otherKeys[key] as keyValid;
-					this.keys[newKey] = alive;
-					// }
-				} else {
-					this.keys[key] = alive;
-				}
-			}
-		};
-		handle(e.key);
-		handle(e.code);
 	}
 }

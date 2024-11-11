@@ -1,3 +1,5 @@
+import { use } from "passport";
+import { getPlayer } from "../game/mock/players";
 import { IPlayer, IRoom } from "../interfaces/IRoom";
 
 import RoomRepository from "../repositories/roomRepository";
@@ -39,22 +41,7 @@ export default class RoomService {
 			throw new NotFoundException(Message.ROOM_FULL);
 		}
 
-		const player: IPlayer = {
-			id: user.id,
-			username: user.username,
-			ready: false,
-			x: 0,
-			y: 0,
-			width: 0,
-			height: 0,
-			done_laps: 0,
-			done_checkpoints: 0,
-			velocities: {
-				vx: 0,
-				vy: 0,
-			},
-			items: [],
-		};
+		const player: IPlayer = getPlayer(user.id, user.username);
 
 		room.players.push(player);
 		return room;

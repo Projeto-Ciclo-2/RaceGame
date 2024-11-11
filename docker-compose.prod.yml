@@ -6,13 +6,13 @@ services:
             - "5432:5432"
         restart: always
         environment:
-            POSTGRES_DB: copilot
-            POSTGRES_USER: copilot
-            POSTGRES_PASSWORD: copilotPass123
+            POSTGRES_DB: racegame
+            POSTGRES_USER: racegame
+            POSTGRES_PASSWORD: racegamePass123
         networks:
             - copilot-network
         healthcheck:
-            test: ["CMD", "pg_isready", "-U", "copilot"]
+            test: ["CMD", "pg_isready", "-U", "racegame"]
             interval: 10s
             retries: 5
 
@@ -31,7 +31,7 @@ services:
     backend:
         build:
             context: ./backend
-            dockerfile: Dockerfile.dev
+            dockerfile: Dockerfile
         depends_on:
             - postgres
             - redis
