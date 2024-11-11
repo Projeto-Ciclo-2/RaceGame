@@ -27,16 +27,16 @@ export class CarController {
 	private width = 30;
 	private height = 30;
 
-	private maxVelocity = 5.5;
-	private acceleration = 0.06;
+	private maxVelocity = 3.5;
+	private acceleration = 0.04;
 	private decelerationRate = 0.01;
-	private maxDecelerationRate = 0.05;
+	private maxDecelerationRate = 0.03;
 
 	private maxItems = 3;
 
 	private nitroAcceleration = 0.1;
-	private nitroDuration = 2000;
-	private nitroMaxVelocity = 7;
+	private nitroDuration = 2500;
+	private nitroMaxVelocity = 4.5;
 
 	public setKeys(keys: {
 		ArrowLeft: boolean;
