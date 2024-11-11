@@ -2,14 +2,33 @@ import React from "react";
 import { GameController } from "./gameController";
 import "./game.css";
 import { useWebSocket } from "../../context/WebSocketContext";
+import { useRoom } from "../../context/RoomContext";
+import { useNavigate } from "react-router-dom";
 
 export default function Game() {
 	const WebSocketContext = useWebSocket();
+	const RoomsContext = useRoom();
+	const navigate = useNavigate();
+
 	const gameController = React.useRef<null | GameController>(null);
 	const canvas = React.useRef<null | HTMLCanvasElement>(null);
 
 	React.useEffect(() => {
-		if(!WebSocketContext.onConnectPromise) {
+		const can =
+			WebSocketContext &&
+			WebSocketContext.socket &&
+			WebSocketContext.socket.readyState === WebSocket.OPEN;
+
+		const roomCorrect =
+			RoomsContext.currentRoom && RoomsContext.currentRoom.id;
+
+		if (!roomCorrect) {
+			console.error("there is a error while getting the roomID. sorry.");
+			navigate("/home");
+			return;
+		}
+
+		if (!can && !WebSocketContext.onConnectPromise) {
 			return;
 		}
 		function gameInit() {
@@ -24,12 +43,18 @@ export default function Game() {
 				gameController.current = new GameController(
 					canvas.current,
 					WebSocketContext,
-					WebSocketContext.username
+					WebSocketContext.username,
+					RoomsContext.currentRoom!.id
 				);
 				gameController.current.start();
 			}
 		}
-		WebSocketContext.onConnectPromise.then(gameInit);
+		if (WebSocketContext.onConnectPromise && !can) {
+			WebSocketContext.onConnectPromise.then(gameInit);
+		} else if (can) {
+			gameInit();
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [
 		gameController,
 		canvas,

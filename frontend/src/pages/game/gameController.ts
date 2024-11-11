@@ -20,7 +20,7 @@ export class GameController {
 	private websocketContext: WebSocketContextType;
 	private websocketHandler = new WebSocketHandler();
 
-	private roomID: string | undefined = "1234";
+	private roomID: string | undefined;
 
 	private gameDebug: GameDebug;
 
@@ -58,14 +58,17 @@ export class GameController {
 	constructor(
 		canvas: HTMLCanvasElement,
 		websocketContext: WebSocketContextType,
-		username: string
+		username: string,
+		roomID: string
 	) {
 		this.canvas = canvas;
 		const ctx = this.canvas.getContext("2d");
 		if (ctx) {
-			this.username = username;
 			this.ctx = ctx;
 			this.gameDebug = new GameDebug(this.ctx);
+
+			this.username = username;
+			this.roomID = roomID;
 
 			this.websocketContext = websocketContext;
 
@@ -314,7 +317,7 @@ export class GameController {
 				return;
 			}
 		}
-		if (this.players.length <= 0 && this.alreadyReceivePlayers) {
+		if (this.players.length <= 0 && !this.alreadyReceivePlayers) {
 			if (this.websocketContext && this.roomID) {
 				this.websocketContext.sendRequestGameState({
 					roomID: this.roomID,

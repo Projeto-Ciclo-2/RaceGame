@@ -173,8 +173,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 		DebugConsole("!ws allowed to connect. Trying to connect!");
 
 		tryingToConnect.current = true;
-
-		const wsURL = config.WS_URL + `?username=${userContext!.user!.current!.username}`;
+		const username = userContext!.user!.current!.username;
+		const wsURL = config.WS_URL + `?username=${username}`;
+		nameRef.current = username;
 		const tempWS = new WebSocket(wsURL);
 
 		socketRef.current = tempWS;

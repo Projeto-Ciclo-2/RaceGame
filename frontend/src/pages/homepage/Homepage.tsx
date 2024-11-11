@@ -39,7 +39,9 @@ const Homepage = () => {
 			}
 		}
 
-		fetchUser();
+		if (userContext && !userContext.user.current) {
+			fetchUser();
+		}
 
 		// Usuário já está participando de um jogo?
 		if (roomContext.playerInRoom) {
