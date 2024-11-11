@@ -7,6 +7,7 @@ import {
 	WsPostMessage,
 	WsRequestJoinRoom,
 } from "../interfaces/IWSMessages";
+import { getPlayer } from "../game/mock/players";
 
 export class LobbySevice {
 	public async postMessage(data: WsPostMessage) {
@@ -133,22 +134,7 @@ export class LobbySevice {
 	}
 
 	private createBasicPlayer(id: string, username: string): IPlayer {
-		const newPlayer: IPlayer = {
-			id: id,
-			username: username,
-			ready: false,
-			x: 0,
-			y: 0,
-			width: 50,
-			height: 50,
-			done_laps: 0,
-			done_checkpoints: 0,
-			velocities: {
-				vx: 0,
-				vy: 0,
-			},
-			items: [],
-		};
+		const newPlayer: IPlayer = getPlayer(id, username);
 
 		return newPlayer;
 	}
