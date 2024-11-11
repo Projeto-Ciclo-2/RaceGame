@@ -83,7 +83,7 @@ export class MapController {
 		{
 			id: "b",
 			type: 1,
-			x: 100,
+			x: 90,
 			y: 250,
 			width: 20,
 			height: 20,
