@@ -4,6 +4,8 @@ export function getPlayer(id: string, username: string): IPlayer {
 	return {
 		id: id,
 		username: username,
+		alive: true,
+		lastMessageAt: undefined,
 
 		ready: true,
 		checkpoint: 0,

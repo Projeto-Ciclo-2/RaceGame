@@ -8,6 +8,8 @@ export function getPlayerControllable(
 	return {
 		id: id,
 		username: username,
+		alive: true,
+		lastMessageAt: undefined,
 
 		carController: new CarController(),
 		ready: true,

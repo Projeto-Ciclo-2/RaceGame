@@ -14,6 +14,8 @@ export interface IBox {
 export interface IPlayer extends IBox {
 	id: string;
 	username: string;
+	alive: boolean;
+	lastMessageAt: undefined | number; //timestamp
 
 	ready: boolean;
 
