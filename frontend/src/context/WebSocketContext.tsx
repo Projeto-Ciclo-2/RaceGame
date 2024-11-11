@@ -124,8 +124,9 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 }) => {
 	const userContext = React.useContext(UserContext);
 
+
 	const isConnected = React.useRef(false);
-	const canConnect = React.useRef(window.location.pathname === "/game");
+	const canConnect = React.useRef(window.location.pathname === "/home");
 	const tryingToConnect = React.useRef(false);
 	const timeInterval = React.useRef<NodeJS.Timer | undefined>(undefined);
 
@@ -142,21 +143,27 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 		if (socketRef.current) return;
 
 		const currentPath = window.location.pathname;
-		const pathAuth = currentPath === "/game";
+		const pathAuth = currentPath === "/home";
 		const allowed = canConnect.current || !isConnected.current;
-		// const userCorrect =
-		// 	userContext && userContext.user && userContext.user.name;
-		const can = true && pathAuth;
+		const userCorrect =
+
+		userContext && userContext.user && userContext.user.current  && userContext.user.current.name;
+		const can = true && pathAuth && userCorrect;
+
+		console.log(userContext?.user);
+
 
 		if (!allowed || tryingToConnect.current || !can) {
 			DebugConsole("-ws blocked-");
 			return;
 		}
+		console.log(userContext?.user?.current?.username);
+
 		DebugConsole("!ws allowed to connect. Trying to connect!");
 
 		tryingToConnect.current = true;
 
-		const wsURL = config.WS_URL + "?username=carlos";
+		const wsURL = config.WS_URL + `?username=${userContext!.user!.current!.username}`;
 		const tempWS = new WebSocket(wsURL);
 
 		socketRef.current = tempWS;
@@ -175,7 +182,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 			if (isConnected.current) return;
 
 			const currentPath = window.location.pathname;
-			const can = currentPath === "/game";
+			const can = currentPath === "/home";
 			canConnect.current = can;
 			connectSocket();
 			// eslint-disable-next-line react-hooks/exhaustive-deps
