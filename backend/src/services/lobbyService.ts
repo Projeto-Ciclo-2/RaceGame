@@ -9,7 +9,7 @@ import {
 } from "../interfaces/IWSMessages";
 
 export class LobbySevice {
-	public async postMessage(data: WsPostMessage) {
+	public async postMessage(data: WsPostMessage): Promise<IRoom> {
 		try {
 			const room: IRoom = await this.getRoomID(data.roomID);
 
@@ -19,42 +19,10 @@ export class LobbySevice {
 			// Armazenar novas mensages
 			await redisClient.set(`room:${data.roomID}`, JSON.stringify(room));
 			console.log(`Mensagens da room:${data.roomID} atualizadas...`);
-		} catch (error) {
-			console.log("erro ao atualizar mensagens...", error);
-		}
-	}
-
-	public async joinRoom(
-		data: WsRequestJoinRoom,
-		username: string
-	): Promise<IRoom> {
-		try {
-			const room: IRoom = await this.getRoomID(data.roomID);
-
-			let playersID = [];
-
-			for (let i = 0; i < room.players.length; i++) {
-				playersID.push(room.players[i].id);
-			}
-
-			if (playersID.includes(data.userID)) {
-				console.log(`usuário ${username} já está no lobby!`);
-			}
-
-			if (!playersID.includes(data.userID)) {
-				const newPlayer = this.createBasicPlayer(data.userID, username);
-				// adicionar player
-				room.players.push(newPlayer);
-
-				// armazenar no redis
-				await redisClient.set(
-					`room:${data.roomID}`,
-					JSON.stringify(room)
-				);
-			}
 
 			return room;
 		} catch (error) {
+			console.log("erro ao atualizar mensagens...", error);
 			throw error;
 		}
 	}
@@ -82,6 +50,7 @@ export class LobbySevice {
 				content: `${username} is ready!`,
 				userID: data.userID,
 				username: username,
+				typeMessageChat: "userReady"
 			});
 
 			// Salvar alteração no redis
@@ -118,6 +87,10 @@ export class LobbySevice {
 		}
 	}
 
+	public async saveRedisGameInit(room: IRoom) {
+		await redisClient.set(`room:${room.id}`, JSON.stringify(room));
+	}
+
 	private async getRoomID(roomID: string) {
 		try {
 			const roomKey = `room:${roomID}`;
@@ -130,26 +103,5 @@ export class LobbySevice {
 			console.error("Error searching for room in Redis: ", error);
 			throw error;
 		}
-	}
-
-	private createBasicPlayer(id: string, username: string): IPlayer {
-		const newPlayer: IPlayer = {
-			id: id,
-			username: username,
-			ready: false,
-			x: 0,
-			y: 0,
-			width: 50,
-			height: 50,
-			done_laps: 0,
-			done_checkpoints: 0,
-			velocities: {
-				vx: 0,
-				vy: 0,
-			},
-			items: [],
-		};
-
-		return newPlayer;
 	}
 }
