@@ -79,9 +79,9 @@ export class MapController {
 	public makePrediction(players: Array<IPlayer>, items: Array<IItems>) {
 		let changed = false;
 		const futurePlayers = players.map((p) => {
-			if(p.conflictQueue.length > 0) {
+			if (p.conflictQueue.length > 0) {
 				console.log("p.conflictQueue");
-				console.log(JSON.stringify(p.conflictQueue))
+				console.log(JSON.stringify(p.conflictQueue));
 			}
 			while (p.conflictQueue.length > 0) {
 				// console.log("deleting conflict queue");
@@ -110,6 +110,7 @@ export class MapController {
 		return {
 			players: players,
 			items: items,
+			changed: changed,
 		};
 	}
 

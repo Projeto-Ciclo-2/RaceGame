@@ -40,6 +40,7 @@ export class GameController {
 	private items: Array<IItems> = [];
 	private alreadyReceivePlayers = false;
 	private myUser: IPlayer | undefined;
+	private myUserChanged = false;
 
 	private lastKeys = {
 		ArrowLeft: false,
@@ -151,11 +152,14 @@ export class GameController {
 
 		this.renderDefaultBkg();
 
-		this.sendMove();
+		if (this.myUserChanged) {
+			this.sendMove();
+		}
 		const entities = this.mapController.makePrediction(
 			this.players,
 			this.items
 		);
+		this.myUserChanged = entities.changed;
 		this.players = entities.players;
 		this.items = entities.items;
 		this.renderPlayers(this.players);
