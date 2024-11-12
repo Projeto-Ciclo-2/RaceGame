@@ -8,6 +8,7 @@ import Btn from "../../components/other/button";
 import { useWebSocket } from "../../context/WebSocketContext";
 import { WsPlayerLeft, WsPlayerReady } from "../../interfaces/IWSMessages";
 import { UserContext } from "../../context/UserContext";
+import { IRoom } from "../../interfaces/IRoom";
 
 const Lobby = () => {
 	const userContext = useContext(UserContext);
@@ -42,6 +43,10 @@ const Lobby = () => {
 			navigate("/home");
 		}
 	}, []);
+
+	useEffect(() => {
+		console.log('current room update');
+	}, [RoomsContext.currentRoom])
 
 	function isReady() {
 		const message: WsPlayerReady = {
@@ -79,7 +84,7 @@ const Lobby = () => {
 							Players Ready:{" "}
 							<span>
 								{RoomsContext.playersReady.length} /{" "}
-								{RoomsContext.players.length}
+								{RoomsContext.players.length < 3 ? "2" : RoomsContext.players.length}
 							</span>
 						</p>
 					</div>
