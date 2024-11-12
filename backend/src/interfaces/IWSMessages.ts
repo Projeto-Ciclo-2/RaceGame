@@ -5,6 +5,10 @@ import { IEntities, IMessage, IPlayer, IRoom } from "./IRoom";
  * | BACK END WEB SOCKET MESSAGES  |
  * |===============================|
  */
+export interface WsPong {
+	type: "pong";
+}
+
 export interface WsAllRooms {
 	type: "allRooms";
 	rooms: Array<IRoom>;
@@ -98,6 +102,9 @@ export interface WsGameState {
  * | FRONT END WEB SOCKET MESSAGES |
  * |===============================|
  ***********************************/
+export interface WsPing {
+	type: "ping";
+}
 
 export interface WsCreateRoom {
 	type: "createRoom";
@@ -133,7 +140,7 @@ export interface WsPlayerMove {
 	type: "playerMove";
 	roomID: string;
 	player: {
-		id: string
+		id: string;
 	};
 	keys: {
 		ArrowLeft: boolean;

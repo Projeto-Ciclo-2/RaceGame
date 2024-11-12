@@ -20,6 +20,7 @@ import {
 	WsPlayerReady,
 	WsPostMessage,
 	WsRoomInfo,
+	WsPong,
 } from "../interfaces/IWSMessages";
 import RoomService from "../services/roomService";
 import { WsUser } from "../interfaces/IUser";
@@ -68,6 +69,12 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 		const data = JSON.parse(message.toString());
 
 		switch (data.type) {
+			case "ping":
+				const msg: WsPong = {
+					type: "pong",
+				};
+				ws.send(JSON.stringify(msg));
+				break;
 			case "createRoom":
 				try {
 					const room = await roomService.createRoom(data.userID);
@@ -280,7 +287,7 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 							started_at: Date.now(),
 						};
 						broadcast(JSON.stringify(message));
-						initGame(room_with_gameInit)
+						initGame(room_with_gameInit);
 					}
 
 					// Jogo não inciado
@@ -449,7 +456,7 @@ function broadcast(data: string): void {
 }
 
 function initGame(room: IRoom) {
-	console.log("-initGame-")
+	console.log("-initGame-");
 	const controllablePlayers = room.players.map((p) =>
 		getPlayerControllable(p.id, p.username, p.ready)
 	);
