@@ -1,5 +1,6 @@
 import {
 	IEntities,
+	IPlayer,
 	IPlayerControllable,
 	IRoomActive,
 } from "../../interfaces/IRoom";
@@ -81,7 +82,31 @@ export class GameService {
 
 	private broadcastGameState(entities: IEntities) {
 		if (this.selfRoom) {
-			const filteredPlayer = entities.players.filter((p) => p.alive);
+			const filteredPlayer: Array<IPlayer> = entities.players
+				.filter((p) => p.alive)
+				.map((p) => {
+					return {
+						alive: p.alive,
+						checkpoint: p.checkpoint,
+						disableArrow: p.disableArrow,
+						done_laps: p.done_laps,
+						height: p.height,
+						id: p.id,
+						items: p.items,
+						lastMessageAt: p.lastMessageAt,
+						moveNumber: p.moveNumber,
+						nitroDirection: p.nitroDirection,
+						nitroUsedAt: p.nitroUsedAt,
+						ready: p.ready,
+						rotation: p.rotation,
+						username: p.username,
+						usingNitro: p.usingNitro,
+						velocities: p.velocities,
+						width: p.width,
+						x: p.x,
+						y: p.y,
+					};
+				});
 			for (const user of this.selfRoom.WsPlayers) {
 				const message: WsGameState = {
 					type: "gameState",
@@ -109,6 +134,8 @@ export class GameService {
 
 	private resolvePlayerMoveQueue() {
 		const now = Date.now();
+		let changed = false;
+		let entitiesToSend: null | IEntities = null;
 		for (const move of this.moveQueue) {
 			const pIndex = this.players.findIndex(
 				(p) => move.player.id === p.id
@@ -142,7 +169,8 @@ export class GameService {
 				if (positionChanged || velocitiesChanged) {
 					this.players[pIndex].moveNumber =
 						this.players[pIndex].moveNumber + 1;
-					this.broadcastGameState(entities);
+					changed = true;
+					entitiesToSend = entities;
 				}
 			} else {
 				console.error(
@@ -150,6 +178,9 @@ export class GameService {
 				);
 			}
 			this.moveQueue.delete(move);
+		}
+		if (changed && entitiesToSend) {
+			this.broadcastGameState(entitiesToSend);
 		}
 	}
 
