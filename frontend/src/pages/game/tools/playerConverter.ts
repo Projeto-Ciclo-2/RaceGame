@@ -1,11 +1,27 @@
 import { IPlayer as BackIPlayer } from "../../../interfaces/IRoom";
-import { IPlayer as FrontIPlayer } from "../interfaces/gameInterfaces";
+import {
+	IPlayer as FrontIPlayer,
+	IMoves,
+	IOtherPlayer,
+} from "../interfaces/gameInterfaces";
 
 export function playerConverter(
 	p: BackIPlayer,
-	previousPlayer: FrontIPlayer | undefined,
+	previousPlayer: FrontIPlayer | IOtherPlayer | undefined,
 	username: string
 ): FrontIPlayer {
+	let conflictQueue: Array<IMoves> = [];
+	let moves: Array<IMoves> = [];
+	if (previousPlayer) {
+		const keys = Object.keys(previousPlayer);
+		const x = previousPlayer as FrontIPlayer;
+		if (keys.includes("moves")) {
+			moves = x.moves;
+		}
+		if (keys.includes("conflictQueue")) {
+			conflictQueue = x.conflictQueue;
+		}
+	}
 	return {
 		id: p.id,
 		username: p.username,
@@ -28,8 +44,8 @@ export function playerConverter(
 		nitroParticles: previousPlayer ? previousPlayer.nitroParticles : [],
 		//
 		moveNumber: p.moveNumber,
-		moves: previousPlayer ? previousPlayer.moves : [],
-		conflictQueue: previousPlayer ? previousPlayer.conflictQueue : [],
+		moves: moves,
+		conflictQueue: conflictQueue,
 		//
 		rotation: p.rotation,
 		velocities: p.velocities,
@@ -37,5 +53,31 @@ export function playerConverter(
 		height: p.height,
 		x: p.x,
 		y: p.y,
+	};
+}
+
+export function otherPlayerConverter(
+	player: FrontIPlayer,
+	toX: number,
+	toY: number
+): IOtherPlayer {
+	return {
+		alive: player.alive,
+		canControl: player.canControl,
+		checkpoint: player.checkpoint,
+		color: player.color,
+		done_laps: player.done_laps,
+		id: player.id,
+		nitroDirection: player.nitroDirection,
+		nitroParticles: player.nitroParticles,
+		rotation: player.rotation,
+		username: player.username,
+		usingNitro: player.usingNitro,
+		x: player.x,
+		y: player.y,
+		toX: toX,
+		toY: toY,
+		height: player.height,
+		width: player.width
 	};
 }

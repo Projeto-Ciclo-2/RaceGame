@@ -2,15 +2,20 @@ import { WsGameState } from "../../../interfaces/IWSMessages";
 import {
 	IPlayer as FrontIPlayer,
 	IItems,
+	IOtherPlayer,
 	IPlayer,
 } from "../interfaces/gameInterfaces";
 import { ClientPrediction } from "../tools/clientPrediction";
-import { playerConverter } from "../tools/playerConverter";
+import {
+	otherPlayerConverter,
+	playerConverter,
+} from "../tools/playerConverter";
+import { InterpolateHandler } from "../tools/playerInterpolater";
 
 export class WebSocketHandler {
 	public handleGameState(
 		e: WsGameState,
-		players: Array<FrontIPlayer>,
+		players: Array<FrontIPlayer | IOtherPlayer>,
 		items: Array<IItems>,
 		username: string
 	) {
@@ -32,7 +37,7 @@ export class WebSocketHandler {
 		}
 		for (const player of e.entities.players) {
 			const i = players.findIndex((p) => p.id === player.id);
-			const clientPlayer: IPlayer | undefined = players[i];
+			const clientPlayer: IPlayer | IOtherPlayer | undefined = players[i];
 			const serverPlayer = playerConverter(
 				player,
 				clientPlayer,
@@ -41,7 +46,17 @@ export class WebSocketHandler {
 			if (i === -1) {
 				// É UM NOVO USUÁRIO, AINDA NÃO FOI RENDERIZADO NENHUMA VEZ.
 				console.log("[pushing players]: " + serverPlayer.username);
-				players.push(serverPlayer);
+				if (serverPlayer.canControl) {
+					players.push(serverPlayer);
+				} else {
+					players.push(
+						otherPlayerConverter(
+							serverPlayer,
+							serverPlayer.x,
+							serverPlayer.y
+						)
+					);
+				}
 				//
 			} else if (
 				!serverPlayer.canControl ||
@@ -49,7 +64,13 @@ export class WebSocketHandler {
 			) {
 				if (serverPlayer.alive) {
 					// todo: others players interpolation
-					players[i] = serverPlayer;
+
+					const otherP = players[i] as IOtherPlayer;
+
+					InterpolateHandler.update(otherP, serverPlayer);
+					InterpolateHandler.interpolate(otherP, 0.5);
+
+					players[i] = otherP;
 				} else {
 					// player is not alive, removing...
 					const pIndex = players.findIndex(
@@ -61,8 +82,11 @@ export class WebSocketHandler {
 				}
 			} else {
 				// CONTROLLABLE USER
+
+				const frontP = clientPlayer as FrontIPlayer;
+				console.log(frontP);
 				const result = ClientPrediction.detectDiferences(
-					clientPlayer,
+					frontP,
 					serverPlayer
 				);
 
@@ -73,34 +97,33 @@ export class WebSocketHandler {
 							" will be in conflict queue"
 					);
 
-					clientPlayer.conflictQueue = clientPlayer.moves.filter(
-						(m) => {
-							if (m.move > result.move) {
-								return m;
-							}
-							return undefined;
+					frontP.conflictQueue = frontP.moves.filter((m) => {
+						if (m.move > result.move) {
+							return m;
 						}
-					);
-					clientPlayer.moves = [];
-					clientPlayer.x = result.x;
-					clientPlayer.y = result.y;
-					clientPlayer.velocities.vx = result.velocities.vx;
-					clientPlayer.velocities.vy = result.velocities.vy;
-					clientPlayer.moveNumber = result.move;
-					players[i] = clientPlayer;
+						return undefined;
+					});
+					frontP.moves = [];
+					frontP.x = result.x;
+					frontP.y = result.y;
+					frontP.velocities.vx = result.velocities.vx;
+					frontP.velocities.vy = result.velocities.vy;
+					frontP.moveNumber = result.move;
+					players[i] = frontP;
 					console.log("after reconciliation");
 					console.log(
-						players[i].moveNumber,
-						players[i].x,
-						players[i].y,
-						players[i].velocities.vx,
-						players[i].velocities.vy
+						frontP.moveNumber,
+						frontP.x,
+						frontP.y,
+						frontP.velocities.vx,
+						frontP.velocities.vy
 					);
 				} else {
-					if (players[i].moves.length > 1) {
-						players[i].moves = players[i].moves.filter(
+					if (frontP.moves.length > 1) {
+						frontP.moves = frontP.moves.filter(
 							(m) => serverPlayer.moveNumber <= m.move
 						);
+						players[i] = frontP;
 					}
 				}
 			}

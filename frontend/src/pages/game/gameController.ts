@@ -1,7 +1,12 @@
 import { config } from "../../config/config";
 import { MapController } from "./controller/mapController";
 import { GameDebug } from "./debug/gameDebug";
-import { IItems, IParticle, IPlayer } from "./interfaces/gameInterfaces";
+import {
+	IItems,
+	IOtherPlayer,
+	IParticle,
+	IPlayer,
+} from "./interfaces/gameInterfaces";
 
 import { loadImage } from "./tools/imgLoader";
 import { WebSocketContextType } from "../../context/WebSocketContext";
@@ -45,7 +50,7 @@ export class GameController {
 	private myUser: IPlayer | undefined;
 	private myUserChanged = false;
 
-	private players: Array<IPlayer> = [];
+	private players: Array<IPlayer | IOtherPlayer> = [];
 	private items: Array<IItems> = [];
 	private alreadyReceivePlayers = false;
 	private winner: string | undefined;
@@ -235,7 +240,7 @@ export class GameController {
 			return;
 		}
 		if (!this.myUser) {
-			this.myUser = this.players.find((u) => u.canControl);
+			this.myUser = this.players.find((u) => u.canControl) as IPlayer;
 		}
 		if (this.myUser) {
 			const newKeys = this.mapController!._getCarKeys();
@@ -268,7 +273,7 @@ export class GameController {
 		);
 	}
 
-	private renderPlayers(players: Array<IPlayer>) {
+	private renderPlayers(players: Array<IPlayer | IOtherPlayer>) {
 		this.ctx.fillStyle = "red";
 		for (const p of players) {
 			this.ctx.save();
@@ -315,7 +320,7 @@ export class GameController {
 		}
 	}
 
-	private drawNitroParticles(player: IPlayer) {
+	private drawNitroParticles(player: IPlayer | IOtherPlayer) {
 		if (player.usingNitro) {
 			player.nitroParticles.push(this.getParticle(player));
 			player.nitroParticles.push(this.getParticle(player));
@@ -341,7 +346,7 @@ export class GameController {
 		this.ctx.globalAlpha = 1;
 	}
 
-	private getParticle(player: IPlayer): IParticle {
+	private getParticle(player: IPlayer | IOtherPlayer): IParticle {
 		return {
 			x: player.x + Math.floor(Math.random() * 10),
 			y: player.y + Math.floor(Math.random() * 10),
@@ -356,7 +361,7 @@ export class GameController {
 		};
 	}
 
-	private drawnUsername(player: IPlayer) {
+	private drawnUsername(player: IPlayer | IOtherPlayer) {
 		this.ctx.font = "Press Start 2P 16px bold";
 		this.ctx.fillStyle = "white";
 		this.ctx.strokeStyle = "black";

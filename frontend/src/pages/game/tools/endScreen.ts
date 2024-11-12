@@ -1,10 +1,10 @@
-import { IPlayer } from "../interfaces/gameInterfaces";
+import { IOtherPlayer, IPlayer } from "../interfaces/gameInterfaces";
 
 export class EndScreen {
 	private canvas: HTMLCanvasElement;
 	private ctx: CanvasRenderingContext2D;
 	private wheelImage: HTMLImageElement | undefined;
-	private players: IPlayer[] | undefined;
+	private players: Array<IPlayer | IOtherPlayer> | undefined;
 	private winnerName: string | undefined;
 	private angle: number = 0;
 	private isSpinning: boolean = true;
@@ -22,7 +22,7 @@ export class EndScreen {
 
 	public start(
 		wheelSvg: HTMLImageElement | undefined,
-		players: IPlayer[],
+		players: Array<IPlayer | IOtherPlayer>,
 		winnerName: string
 	) {
 		this.wheelImage = wheelSvg;

@@ -3,6 +3,7 @@ import {
 	ICheckPoint,
 	IFinishLine,
 	IItems,
+	IOtherPlayer,
 	IPlayer,
 } from "../interfaces/gameInterfaces";
 import { CollisionDetector } from "../tools/collisionDetect";
@@ -76,28 +77,32 @@ export class MapController {
 		return this.carController._getKeys();
 	}
 
-	public makePrediction(players: Array<IPlayer>, items: Array<IItems>) {
+	public makePrediction(
+		players: Array<IPlayer | IOtherPlayer>,
+		items: Array<IItems>
+	) {
 		let changed = false;
 		const futurePlayers = players.map((p) => {
-			if (p.conflictQueue.length > 0) {
-				console.log("p.conflictQueue");
-				console.log(JSON.stringify(p.conflictQueue));
+			if (!p.canControl) return p;
+			let tempP = p as IPlayer;
+
+			if (tempP.conflictQueue.length > 0) {
+				console.log("tempP.conflictQueue");
+				console.log(JSON.stringify(tempP.conflictQueue));
 			}
-			while (p.conflictQueue.length > 0) {
+			while (tempP.conflictQueue.length > 0) {
 				// console.log("deleting conflict queue");
 
-				const futurePlayer = this.getFuturePlayer(p, items);
-				if (this.havePlayerChanged(p, futurePlayer)) {
-					p = futurePlayer;
+				const futurePlayer = this.getFuturePlayer(tempP, items);
+				if (this.havePlayerChanged(tempP, futurePlayer)) {
+					tempP = futurePlayer;
 					this.applyMove(futurePlayer);
 				}
-				p.conflictQueue.pop();
+				tempP.conflictQueue.pop();
 			}
 
-			if (!p.canControl) return p;
-
-			const futurePlayer = this.getFuturePlayer(p, items);
-			changed = this.havePlayerChanged(p, futurePlayer);
+			const futurePlayer = this.getFuturePlayer(tempP, items);
+			changed = this.havePlayerChanged(tempP, futurePlayer);
 
 			if (changed) {
 				this.applyMove(futurePlayer);
