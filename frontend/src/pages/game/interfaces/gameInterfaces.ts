@@ -52,6 +52,11 @@ export interface IPlayer extends IBox {
 	};
 }
 
+export interface IOtherPlayer extends IPlayer {
+	toX: number,
+	toY: number
+}
+
 export interface IMoves {
 	move: number;
 	x: number;
