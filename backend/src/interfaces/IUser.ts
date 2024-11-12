@@ -10,6 +10,7 @@ export interface IUser {
 	messages_send: number;
 	picked_items: number;
 	played_games: number;
+	picture: string;
 }
 
 export interface IGoogleProfile {
