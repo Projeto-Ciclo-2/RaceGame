@@ -4,11 +4,15 @@ import "./game.css";
 import { useWebSocket } from "../../context/WebSocketContext";
 import { useRoom } from "../../context/RoomContext";
 import { useNavigate } from "react-router-dom";
+import { IPlayer } from "../../interfaces/IRoom";
+import GameStatus from "./status/GameStatus";
 
 export default function Game() {
 	const WebSocketContext = useWebSocket();
 	const RoomsContext = useRoom();
 	const navigate = useNavigate();
+
+	const [playersStatus, setPlayerStatus] = React.useState<Array<IPlayer>>([]);
 
 	const gameController = React.useRef<null | GameController>(null);
 	const canvas = React.useRef<null | HTMLCanvasElement>(null);
@@ -44,7 +48,8 @@ export default function Game() {
 					canvas.current,
 					WebSocketContext,
 					WebSocketContext.username,
-					RoomsContext.currentRoom!.id
+					RoomsContext.currentRoom!.id,
+					setPlayerStatus
 				);
 				gameController.current.start();
 			}
@@ -66,6 +71,11 @@ export default function Game() {
 
 	return (
 		<div id="game">
+			<GameStatus
+				players={playersStatus}
+				username={WebSocketContext.username}
+				laps={RoomsContext.currentRoom?.laps}
+			/>
 			<canvas ref={canvas} width={760} height={600}></canvas>
 		</div>
 	);

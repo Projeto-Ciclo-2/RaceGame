@@ -5,7 +5,7 @@ import {
 	IItems,
 	IOtherPlayer,
 	IParticle,
-	IPlayer,
+	IPlayer as FrontPlayer,
 } from "./interfaces/gameInterfaces";
 
 import { loadImage } from "./tools/imgLoader";
@@ -15,6 +15,7 @@ import { WsPlayerMove } from "../../interfaces/IWSMessages";
 import { src } from "../../assets/enum/enumSrc";
 import { playerConverter } from "./tools/playerConverter";
 import { EndScreen } from "./tools/endScreen";
+import { IPlayer } from "../../interfaces/IRoom";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
@@ -47,13 +48,14 @@ export class GameController {
 	private debug = true || config.DEBUG_MODE;
 
 	private username: string;
-	private myUser: IPlayer | undefined;
+	private myUser: FrontPlayer | undefined;
 	private myUserChanged = false;
 
-	private players: Array<IPlayer | IOtherPlayer> = [];
+	private players: Array<FrontPlayer | IOtherPlayer> = [];
 	private items: Array<IItems> = [];
 	private alreadyReceivePlayers = false;
 	private winner: string | undefined;
+	private setPlayersStatus: React.Dispatch<React.SetStateAction<IPlayer[]>>;
 
 	private lastKeys = {
 		ArrowLeft: false,
@@ -74,7 +76,8 @@ export class GameController {
 		canvas: HTMLCanvasElement,
 		websocketContext: WebSocketContextType,
 		username: string,
-		roomID: string
+		roomID: string,
+		setPlayersStatus: React.Dispatch<React.SetStateAction<IPlayer[]>>
 	) {
 		this.canvas = canvas;
 		const ctx = this.canvas.getContext("2d");
@@ -82,6 +85,7 @@ export class GameController {
 			this.ctx = ctx;
 			this.gameDebug = new GameDebug(this.ctx);
 			this.gameEndScreen = new EndScreen(canvas);
+			this.setPlayersStatus = setPlayersStatus;
 
 			this.username = username;
 			this.roomID = roomID;
@@ -142,6 +146,7 @@ export class GameController {
 			);
 			this.items = items;
 
+			this.setPlayersStatus(e.entities.players);
 			this.alreadyReceivePlayers = true;
 		});
 		this.websocketContext.onReceiveEndGame((e) => {
@@ -154,6 +159,7 @@ export class GameController {
 					return playerConverter(p, previousPlayer, this.username);
 				});
 				this.winner = e.winner;
+				this.setPlayersStatus(e.players);
 			}
 		});
 	}
@@ -240,7 +246,7 @@ export class GameController {
 			return;
 		}
 		if (!this.myUser) {
-			this.myUser = this.players.find((u) => u.canControl) as IPlayer;
+			this.myUser = this.players.find((u) => u.canControl) as FrontPlayer;
 		}
 		if (this.myUser) {
 			const newKeys = this.mapController!._getCarKeys();
@@ -273,7 +279,7 @@ export class GameController {
 		);
 	}
 
-	private renderPlayers(players: Array<IPlayer | IOtherPlayer>) {
+	private renderPlayers(players: Array<FrontPlayer | IOtherPlayer>) {
 		this.ctx.fillStyle = "red";
 		for (const p of players) {
 			this.ctx.save();
@@ -320,7 +326,7 @@ export class GameController {
 		}
 	}
 
-	private drawNitroParticles(player: IPlayer | IOtherPlayer) {
+	private drawNitroParticles(player: FrontPlayer | IOtherPlayer) {
 		if (player.usingNitro) {
 			player.nitroParticles.push(this.getParticle(player));
 			player.nitroParticles.push(this.getParticle(player));
@@ -346,7 +352,7 @@ export class GameController {
 		this.ctx.globalAlpha = 1;
 	}
 
-	private getParticle(player: IPlayer | IOtherPlayer): IParticle {
+	private getParticle(player: FrontPlayer | IOtherPlayer): IParticle {
 		return {
 			x: player.x + Math.floor(Math.random() * 10),
 			y: player.y + Math.floor(Math.random() * 10),
@@ -361,7 +367,7 @@ export class GameController {
 		};
 	}
 
-	private drawnUsername(player: IPlayer | IOtherPlayer) {
+	private drawnUsername(player: FrontPlayer | IOtherPlayer) {
 		this.ctx.font = "Press Start 2P 16px bold";
 		this.ctx.fillStyle = "white";
 		this.ctx.strokeStyle = "black";

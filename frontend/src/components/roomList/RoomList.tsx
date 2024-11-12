@@ -45,6 +45,7 @@ const RoomList = () => {
 				<li className="button-space"></li>
 			</ul>
 			<ul id="body-list">
+				{RoomsContext.rooms.length <= 0 && <p>nenhuma sala criada, crie uma!</p>}
 				{RoomsContext.rooms.map((room, index) => (
 					<li key={index} className={room.gameInit ? 'room-game-init' : 'room-waiting'}>
 						<p className="room-id">{room.id}</p>
