@@ -132,7 +132,9 @@ export interface WsPlayerReady {
 export interface WsPlayerMove {
 	type: "playerMove";
 	roomID: string;
-	player: IPlayer;
+	player: {
+		id: string;
+	};
 	keys: {
 		ArrowLeft: boolean;
 		ArrowRight: boolean;

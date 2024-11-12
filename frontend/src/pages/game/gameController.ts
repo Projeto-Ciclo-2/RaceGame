@@ -243,7 +243,9 @@ export class GameController {
 			const message: WsPlayerMove = {
 				type: "playerMove",
 				roomID: this.roomID!,
-				player: this.myUser,
+				player: {
+					id: this.myUser.id,
+				},
 				keys: newKeys,
 			};
 			this.websocketContext.sendPlayerMove(message);
