@@ -22,6 +22,7 @@ export default class AuthService {
 				username: googleProfile.email.split("@")[0],
 				name: googleProfile.name,
 				google_id: googleProfile.sub,
+				picture: googleProfile.picture,
 			});
 		}
 
