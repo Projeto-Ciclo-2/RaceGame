@@ -8,14 +8,19 @@ import { WebSocketContextType } from "../../context/WebSocketContext";
 import { WebSocketHandler } from "./websocket/websocketHandler";
 import { WsPlayerMove } from "../../interfaces/IWSMessages";
 import { src } from "../../assets/enum/enumSrc";
+import { playerConverter } from "./tools/playerConverter";
+import { EndScreen } from "./tools/endScreen";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
 	private ctx: CanvasRenderingContext2D;
 
+	private gameAlive = true;
+
 	private mapController: MapController | undefined;
 	private websocketContext: WebSocketContextType;
 	private websocketHandler = new WebSocketHandler();
+	private gameEndScreen: EndScreen;
 
 	private roomID: string | undefined;
 
@@ -29,6 +34,7 @@ export class GameController {
 	private nitro: CanvasImageSource | undefined;
 	private tree_log: CanvasImageSource | undefined;
 	private barrel: CanvasImageSource | undefined;
+	private wheel: HTMLImageElement | undefined;
 
 	private particleColors = ["red", "orange", "white", "crimson"];
 	private particlesLimit = 50;
@@ -36,11 +42,13 @@ export class GameController {
 	private debug = true || config.DEBUG_MODE;
 
 	private username: string;
+	private myUser: IPlayer | undefined;
+	private myUserChanged = false;
+
 	private players: Array<IPlayer> = [];
 	private items: Array<IItems> = [];
 	private alreadyReceivePlayers = false;
-	private myUser: IPlayer | undefined;
-	private myUserChanged = false;
+	private winner: string | undefined;
 
 	private lastKeys = {
 		ArrowLeft: false,
@@ -68,6 +76,7 @@ export class GameController {
 		if (ctx) {
 			this.ctx = ctx;
 			this.gameDebug = new GameDebug(this.ctx);
+			this.gameEndScreen = new EndScreen(canvas);
 
 			this.username = username;
 			this.roomID = roomID;
@@ -82,6 +91,7 @@ export class GameController {
 				loadImage(src.nitro),
 				loadImage(src.tree_log),
 				loadImage(src.barrel),
+				loadImage(src.wheel),
 			])
 				.then(
 					([
@@ -92,6 +102,7 @@ export class GameController {
 						nitro,
 						tree_log,
 						barrel,
+						wheel,
 					]) => {
 						this.bkg = bkgImg;
 						this.carBlue = carBlue;
@@ -100,6 +111,7 @@ export class GameController {
 						this.nitro = nitro;
 						this.tree_log = tree_log;
 						this.barrel = barrel;
+						this.wheel = wheel;
 					}
 				)
 				.catch((error) => {
@@ -127,9 +139,21 @@ export class GameController {
 
 			this.alreadyReceivePlayers = true;
 		});
+		this.websocketContext.onReceiveEndGame((e) => {
+			if (e.roomID === this.roomID) {
+				this.gameAlive = false;
+				this.players = e.players.map((p) => {
+					const previousPlayer = this.players.find(
+						(oldP) => oldP.id === p.id
+					);
+					return playerConverter(p, previousPlayer, this.username);
+				});
+				this.winner = e.winner;
+			}
+		});
 	}
 
-	private animate(timestamp: DOMHighResTimeStamp) {
+	private animate(timestamp: DOMHighResTimeStamp): void {
 		if (
 			!this.bkg ||
 			!this.carGreen ||
@@ -142,6 +166,19 @@ export class GameController {
 		) {
 			this.initMapController();
 			window.requestAnimationFrame((time) => this.animate(time));
+			return;
+		}
+		if (!this.gameAlive) {
+			this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+			if (!this.wheel) {
+				window.requestAnimationFrame((time) => this.animate(time));
+				return;
+			}
+			if (!this.winner) {
+				console.error("winner name not provided.");
+				return;
+			}
+			this.gameEndScreen.start(this.wheel, this.players, this.winner);
 			return;
 		}
 		const durationOfLastExec = timestamp - this.lastTime;
