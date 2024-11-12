@@ -12,6 +12,7 @@ export async function up(knex: Knex): Promise<void> {
 		table.integer("messages_send").defaultTo(0);
 		table.integer("picked_items").defaultTo(0);
 		table.integer("played_games").defaultTo(0);
+		table.string("picture").notNullable();
 	});
 }
 
