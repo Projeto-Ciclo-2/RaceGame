@@ -39,7 +39,7 @@ const Lobby = () => {
 			RoomsContext.updateRoomLobby(RoomsContext.currentRoom);
 		}
 		if (!userContext?.user.current) {
-			navigate('/home')
+			navigate("/home");
 		}
 	}, []);
 
@@ -120,13 +120,27 @@ const Lobby = () => {
 					<div id="chat" ref={chatRef}>
 						{RoomsContext.messages.map((message, index) => (
 							<p key={index}>
-								{/* Mensagem simples */}
+								{/* Verifica se é uma mensagem simples */}
 								{message.typeMessageChat === "message" && (
 									<>
-										<span className="name-user">
-											{message.username}
-										</span>
-										{message.content}
+										{/* Verifica se o usuário atual é o autor da mensagem */}
+										{userContext?.user?.current?.id ===
+										message.userID ? (
+											<>
+												<span className="author-message">
+													<span>
+														{message.content}
+													</span>
+												</span>
+											</>
+										) : (
+											<>
+												<span className="name-user">
+													{message.username}
+												</span>
+												{message.content}
+											</>
+										)}
 									</>
 								)}
 
