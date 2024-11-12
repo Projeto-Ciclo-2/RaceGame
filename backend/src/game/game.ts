@@ -40,13 +40,6 @@ export class RaceGame {
 
 	public addRoom(room: IRoomActive) {
 		this.gameRooms.push(room);
-		console.log("room add to gameLoop." + room.id);
-		console.log(
-			"room infos: [players] " +
-				room.players.length +
-				". [wsPlayers] " +
-				room.WsPlayers.length
-		);
 	}
 
 	public getRoom(id: string) {
@@ -97,12 +90,10 @@ export class RaceGame {
 					);
 				} else {
 					this.gameRooms.splice(index, 1);
-					console.log("room deleted");
 				}
 				await this.roomService.deleteRoom(room.id);
 				console.log("roomservice deleted room. [id] " + room.id);
 				const rooms = await this.roomService.allRooms();
-				console.log(rooms);
 			}
 		}
 	}
