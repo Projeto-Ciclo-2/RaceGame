@@ -51,12 +51,12 @@ export default class RoomService {
 			throw new NotFoundException(Message.ROOM_FULL);
 		}
 
-		const player: IPlayer = getPlayer(user.id, user.username);
+		const player: IPlayer = getPlayer(user.id, user.username, false);
 
 		room.players.push(player);
 
 		// Salvar alteração no redis
-		await redisClient.set(`room:${room.id}`, JSON.stringify(room))
+		await redisClient.set(`room:${room.id}`, JSON.stringify(room));
 
 		return room;
 	}
@@ -65,11 +65,17 @@ export default class RoomService {
 		const rooms = await this.allRooms();
 
 		for (const room of rooms) {
-			const playerFound = room.players.some(player => player.id === playerId);
+			const playerFound = room.players.some(
+				(player) => player.id === playerId
+			);
 			if (playerFound) {
 				return room; // Retorna o ID da sala se o jogador estiver nela
 			}
 		}
 		return null; // Retorna null se o jogador não estiver em nenhuma sala
+	}
+
+	public async deleteRoom(roomID: string) {
+		this.roomRepository.deleteRoom(roomID);
 	}
 }

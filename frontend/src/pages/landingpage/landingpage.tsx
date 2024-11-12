@@ -1,8 +1,12 @@
+/* eslint-disable jsx-a11y/anchor-is-valid */
 import React, { useState } from "react";
 import "./landingpage.css";
 import Car1 from "../../components/svg/car1";
 import F1 from "../../components/svg/f1";
 import { Login } from "../../components/other/login";
+import { UserAPI } from "../../api/users";
+import { UserContext } from "../../context/UserContext";
+import { useNavigate } from "react-router-dom";
 
 const LandingPage = () => {
 	const [currentPage, setCurrentPage] = useState("welcome");
@@ -10,6 +14,35 @@ const LandingPage = () => {
 	const showWelcome = () => setCurrentPage("welcome");
 	const showAboutUs = () => setCurrentPage("about");
 	const showTeam = () => setCurrentPage("team");
+
+	const userContext = React.useContext(UserContext);
+	const navigate = useNavigate();
+
+	React.useEffect(() => {
+		async function fetchUser() {
+			try {
+				const userApi = new UserAPI();
+				const result = await userApi.getMyUser();
+				console.log(result);
+
+				if (userContext) {
+					if (!userContext.user.current) {
+						userContext.user.current = result.data;
+					}
+				}
+
+				if (result.statusCode === 200) {
+					navigate("/home");
+				}
+			} catch (error) {
+				console.log(error);
+			}
+		}
+
+		if (userContext && !userContext.user.current) {
+			fetchUser();
+		}
+	});
 
 	return (
 		<div id="landing-page">
@@ -22,9 +55,8 @@ const LandingPage = () => {
 					<a onClick={showTeam}>Our team</a>
 				</div>
 				<div id="sign-in">
-				<Login/>
+					<Login />
 				</div>
-				
 			</nav>
 			<div id="landing-content">
 				{currentPage === "welcome" && (

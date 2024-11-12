@@ -107,7 +107,7 @@ export class LobbySevice {
 	}
 
 	private createBasicPlayer(id: string, username: string): IPlayer {
-		const newPlayer: IPlayer = getPlayer(id, username);
+		const newPlayer: IPlayer = getPlayer(id, username, false);
 
 		return newPlayer;
 	}

@@ -1,26 +1,33 @@
 import { config } from "../../config/config";
 import { MapController } from "./controller/mapController";
 import { GameDebug } from "./debug/gameDebug";
-import { IItems, IParticle, IPlayer } from "./interfaces/gameInterfaces";
+import {
+	IItems,
+	IOtherPlayer,
+	IParticle,
+	IPlayer,
+} from "./interfaces/gameInterfaces";
 
-import bkg from "./assets/map1.svg";
-import carBlue from "./assets/carBlue.svg";
-import carYellow from "./assets/carYellow.svg";
-import carGreen from "./assets/carGreen.svg";
 import { loadImage } from "./tools/imgLoader";
 import { WebSocketContextType } from "../../context/WebSocketContext";
 import { WebSocketHandler } from "./websocket/websocketHandler";
 import { WsPlayerMove } from "../../interfaces/IWSMessages";
+import { src } from "../../assets/enum/enumSrc";
+import { playerConverter } from "./tools/playerConverter";
+import { EndScreen } from "./tools/endScreen";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
 	private ctx: CanvasRenderingContext2D;
 
+	private gameAlive = true;
+
 	private mapController: MapController | undefined;
 	private websocketContext: WebSocketContextType;
 	private websocketHandler = new WebSocketHandler();
+	private gameEndScreen: EndScreen;
 
-	private roomID: string | undefined = "1234";
+	private roomID: string | undefined;
 
 	private gameDebug: GameDebug;
 
@@ -29,16 +36,24 @@ export class GameController {
 	private carYellow: CanvasImageSource | undefined;
 	private carGreen: CanvasImageSource | undefined;
 
+	private nitro: CanvasImageSource | undefined;
+	private tree_log: CanvasImageSource | undefined;
+	private barrel: CanvasImageSource | undefined;
+	private wheel: HTMLImageElement | undefined;
+
 	private particleColors = ["red", "orange", "white", "crimson"];
 	private particlesLimit = 50;
 
 	private debug = true || config.DEBUG_MODE;
 
 	private username: string;
-	private players: Array<IPlayer> = [];
+	private myUser: IPlayer | undefined;
+	private myUserChanged = false;
+
+	private players: Array<IPlayer | IOtherPlayer> = [];
 	private items: Array<IItems> = [];
 	private alreadyReceivePlayers = false;
-	private myUser: IPlayer | undefined;
+	private winner: string | undefined;
 
 	private lastKeys = {
 		ArrowLeft: false,
@@ -58,29 +73,52 @@ export class GameController {
 	constructor(
 		canvas: HTMLCanvasElement,
 		websocketContext: WebSocketContextType,
-		username: string
+		username: string,
+		roomID: string
 	) {
 		this.canvas = canvas;
 		const ctx = this.canvas.getContext("2d");
 		if (ctx) {
-			this.username = username;
 			this.ctx = ctx;
 			this.gameDebug = new GameDebug(this.ctx);
+			this.gameEndScreen = new EndScreen(canvas);
+
+			this.username = username;
+			this.roomID = roomID;
 
 			this.websocketContext = websocketContext;
 
 			Promise.all([
-				loadImage(bkg),
-				loadImage(carBlue),
-				loadImage(carYellow),
-				loadImage(carGreen),
+				loadImage(src.map1),
+				loadImage(src.carBlue),
+				loadImage(src.carYellow),
+				loadImage(src.carGreen),
+				loadImage(src.nitro),
+				loadImage(src.tree_log),
+				loadImage(src.barrel),
+				loadImage(src.wheel),
 			])
-				.then(([bkgImg, carBlue, carYellow, carGreen]) => {
-					this.bkg = bkgImg;
-					this.carBlue = carBlue;
-					this.carYellow = carYellow;
-					this.carGreen = carGreen;
-				})
+				.then(
+					([
+						bkgImg,
+						carBlue,
+						carYellow,
+						carGreen,
+						nitro,
+						tree_log,
+						barrel,
+						wheel,
+					]) => {
+						this.bkg = bkgImg;
+						this.carBlue = carBlue;
+						this.carYellow = carYellow;
+						this.carGreen = carGreen;
+						this.nitro = nitro;
+						this.tree_log = tree_log;
+						this.barrel = barrel;
+						this.wheel = wheel;
+					}
+				)
 				.catch((error) => {
 					console.error("Failed to load images:", error);
 				});
@@ -106,18 +144,46 @@ export class GameController {
 
 			this.alreadyReceivePlayers = true;
 		});
+		this.websocketContext.onReceiveEndGame((e) => {
+			if (e.roomID === this.roomID) {
+				this.gameAlive = false;
+				this.players = e.players.map((p) => {
+					const previousPlayer = this.players.find(
+						(oldP) => oldP.id === p.id
+					);
+					return playerConverter(p, previousPlayer, this.username);
+				});
+				this.winner = e.winner;
+			}
+		});
 	}
 
-	private animate(timestamp: DOMHighResTimeStamp) {
+	private animate(timestamp: DOMHighResTimeStamp): void {
 		if (
 			!this.bkg ||
 			!this.carGreen ||
 			!this.carBlue ||
 			!this.carYellow ||
-			!this.mapController
+			!this.mapController ||
+			!this.barrel ||
+			!this.nitro ||
+			!this.tree_log
 		) {
 			this.initMapController();
 			window.requestAnimationFrame((time) => this.animate(time));
+			return;
+		}
+		if (!this.gameAlive) {
+			this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+			if (!this.wheel) {
+				window.requestAnimationFrame((time) => this.animate(time));
+				return;
+			}
+			if (!this.winner) {
+				console.error("winner name not provided.");
+				return;
+			}
+			this.gameEndScreen.start(this.wheel, this.players, this.winner);
 			return;
 		}
 		const durationOfLastExec = timestamp - this.lastTime;
@@ -128,11 +194,14 @@ export class GameController {
 
 		this.renderDefaultBkg();
 
-		this.sendMove();
+		if (this.myUserChanged) {
+			this.sendMove();
+		}
 		const entities = this.mapController.makePrediction(
 			this.players,
 			this.items
 		);
+		this.myUserChanged = entities.changed;
 		this.players = entities.players;
 		this.items = entities.items;
 		this.renderPlayers(this.players);
@@ -171,7 +240,7 @@ export class GameController {
 			return;
 		}
 		if (!this.myUser) {
-			this.myUser = this.players.find((u) => u.canControl);
+			this.myUser = this.players.find((u) => u.canControl) as IPlayer;
 		}
 		if (this.myUser) {
 			const newKeys = this.mapController!._getCarKeys();
@@ -179,7 +248,9 @@ export class GameController {
 			const message: WsPlayerMove = {
 				type: "playerMove",
 				roomID: this.roomID!,
-				player: this.myUser,
+				player: {
+					id: this.myUser.id,
+				},
 				keys: newKeys,
 			};
 			this.websocketContext.sendPlayerMove(message);
@@ -202,7 +273,7 @@ export class GameController {
 		);
 	}
 
-	private renderPlayers(players: Array<IPlayer>) {
+	private renderPlayers(players: Array<IPlayer | IOtherPlayer>) {
 		this.ctx.fillStyle = "red";
 		for (const p of players) {
 			this.ctx.save();
@@ -238,19 +309,18 @@ export class GameController {
 	}
 
 	private renderItems(items: Array<IItems>) {
+		const imgs = {
+			1: this.nitro!,
+			2: this.barrel!,
+			3: this.tree_log!,
+		};
 		for (const item of items) {
-			this.ctx.fillStyle = "#ff4455AA";
-			if (item.type === 1) {
-				this.ctx.fillStyle = "#0044ff99";
-			}
-			if (item.type === 3) {
-				this.ctx.fillStyle = "#AA44FF99";
-			}
-			this.ctx.fillRect(item.x, item.y, item.width, item.height);
+			const img = imgs[item.type];
+			this.ctx.drawImage(img, item.x, item.y, item.width, item.height);
 		}
 	}
 
-	private drawNitroParticles(player: IPlayer) {
+	private drawNitroParticles(player: IPlayer | IOtherPlayer) {
 		if (player.usingNitro) {
 			player.nitroParticles.push(this.getParticle(player));
 			player.nitroParticles.push(this.getParticle(player));
@@ -276,7 +346,7 @@ export class GameController {
 		this.ctx.globalAlpha = 1;
 	}
 
-	private getParticle(player: IPlayer): IParticle {
+	private getParticle(player: IPlayer | IOtherPlayer): IParticle {
 		return {
 			x: player.x + Math.floor(Math.random() * 10),
 			y: player.y + Math.floor(Math.random() * 10),
@@ -291,7 +361,7 @@ export class GameController {
 		};
 	}
 
-	private drawnUsername(player: IPlayer) {
+	private drawnUsername(player: IPlayer | IOtherPlayer) {
 		this.ctx.font = "Press Start 2P 16px bold";
 		this.ctx.fillStyle = "white";
 		this.ctx.strokeStyle = "black";
@@ -314,7 +384,7 @@ export class GameController {
 				return;
 			}
 		}
-		if (this.players.length <= 0 && this.alreadyReceivePlayers) {
+		if (this.players.length <= 0 && !this.alreadyReceivePlayers) {
 			if (this.websocketContext && this.roomID) {
 				this.websocketContext.sendRequestGameState({
 					roomID: this.roomID,

@@ -1,13 +1,13 @@
 import { IPlayer } from "../../interfaces/IRoom";
 
-export function getPlayer(id: string, username: string): IPlayer {
+export function getPlayer(id: string, username: string, ready: boolean): IPlayer {
 	return {
 		id: id,
 		username: username,
 		alive: true,
 		lastMessageAt: undefined,
 
-		ready: true,
+		ready: ready,
 		checkpoint: 0,
 		done_laps: 0,
 

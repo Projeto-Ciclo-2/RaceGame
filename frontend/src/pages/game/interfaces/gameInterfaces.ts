@@ -52,6 +52,36 @@ export interface IPlayer extends IBox {
 	};
 }
 
+export interface IOtherPlayer {
+	id: string;
+	username: string;
+	canControl: boolean;
+	alive: boolean;
+
+	color: "1" | "2" | "3";
+
+	done_laps: number;
+	checkpoint: checkPointOrder | 0;
+
+	usingNitro: boolean;
+	nitroDirection: {
+		up: boolean;
+		down: boolean;
+		left: boolean;
+		right: boolean;
+	};
+	nitroParticles: Array<IParticle>;
+
+	rotation: rotation | number;
+
+	x: number;
+	y: number;
+	toX: number;
+	toY: number;
+	width: number;
+	height: number;
+}
+
 export interface IMoves {
 	move: number;
 	x: number;

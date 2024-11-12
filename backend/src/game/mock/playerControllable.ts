@@ -3,7 +3,8 @@ import { CarController } from "../controller/carController";
 
 export function getPlayerControllable(
 	id: string,
-	username: string
+	username: string,
+	ready: boolean
 ): IPlayerControllable {
 	return {
 		id: id,
@@ -12,7 +13,7 @@ export function getPlayerControllable(
 		lastMessageAt: undefined,
 
 		carController: new CarController(),
-		ready: true,
+		ready: ready,
 		checkpoint: 0,
 		done_laps: 0,
 

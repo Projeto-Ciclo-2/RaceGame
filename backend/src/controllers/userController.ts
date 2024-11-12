@@ -18,7 +18,6 @@ export default class UserController {
 				status: 200,
 				data: req.authUser,
 			});
-			console.log(response);
 			res.status(response.status).json(response);
 		} catch (error: any) {
 			const response = new HttpResponse({
