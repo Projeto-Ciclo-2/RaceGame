@@ -5,6 +5,7 @@ import Btn from "./button";
 import { UserAPI } from "../../api/users";
 import { UserContext } from "../../context/UserContext";
 import { useNavigate } from "react-router-dom";
+import { config } from "../../config/config";
 
 export const Login = () => {
 	const [googleLoginAttempt, setGoogleLoginAttempt] = useState(false);
@@ -29,7 +30,7 @@ export const Login = () => {
 				const data = await result.json();
 
 				const apiResponse = await fetch(
-					"http://localhost:5000/api/login",
+					config.API_URL + "/login",
 					{
 						method: "POST",
 						headers: {
@@ -44,7 +45,7 @@ export const Login = () => {
 					const userApi = new UserAPI();
 
 					const user = await userApi.getMyUser();
-					
+
 					if (userContext) {
 						userContext.user.current = user.data;
 					}
