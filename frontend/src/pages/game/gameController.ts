@@ -3,14 +3,11 @@ import { MapController } from "./controller/mapController";
 import { GameDebug } from "./debug/gameDebug";
 import { IItems, IParticle, IPlayer } from "./interfaces/gameInterfaces";
 
-import bkg from "./assets/map1.svg";
-import carBlue from "./assets/carBlue.svg";
-import carYellow from "./assets/carYellow.svg";
-import carGreen from "./assets/carGreen.svg";
 import { loadImage } from "./tools/imgLoader";
 import { WebSocketContextType } from "../../context/WebSocketContext";
 import { WebSocketHandler } from "./websocket/websocketHandler";
 import { WsPlayerMove } from "../../interfaces/IWSMessages";
+import { src } from "../../assets/enum/enumSrc";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
@@ -28,6 +25,10 @@ export class GameController {
 	private carBlue: CanvasImageSource | undefined;
 	private carYellow: CanvasImageSource | undefined;
 	private carGreen: CanvasImageSource | undefined;
+
+	private nitro: CanvasImageSource | undefined;
+	private tree_log: CanvasImageSource | undefined;
+	private barrel: CanvasImageSource | undefined;
 
 	private particleColors = ["red", "orange", "white", "crimson"];
 	private particlesLimit = 50;
@@ -73,17 +74,33 @@ export class GameController {
 			this.websocketContext = websocketContext;
 
 			Promise.all([
-				loadImage(bkg),
-				loadImage(carBlue),
-				loadImage(carYellow),
-				loadImage(carGreen),
+				loadImage(src.map1),
+				loadImage(src.carBlue),
+				loadImage(src.carYellow),
+				loadImage(src.carGreen),
+				loadImage(src.nitro),
+				loadImage(src.tree_log),
+				loadImage(src.barrel),
 			])
-				.then(([bkgImg, carBlue, carYellow, carGreen]) => {
-					this.bkg = bkgImg;
-					this.carBlue = carBlue;
-					this.carYellow = carYellow;
-					this.carGreen = carGreen;
-				})
+				.then(
+					([
+						bkgImg,
+						carBlue,
+						carYellow,
+						carGreen,
+						nitro,
+						tree_log,
+						barrel,
+					]) => {
+						this.bkg = bkgImg;
+						this.carBlue = carBlue;
+						this.carYellow = carYellow;
+						this.carGreen = carGreen;
+						this.nitro = nitro;
+						this.tree_log = tree_log;
+						this.barrel = barrel;
+					}
+				)
 				.catch((error) => {
 					console.error("Failed to load images:", error);
 				});
@@ -117,7 +134,10 @@ export class GameController {
 			!this.carGreen ||
 			!this.carBlue ||
 			!this.carYellow ||
-			!this.mapController
+			!this.mapController ||
+			!this.barrel ||
+			!this.nitro ||
+			!this.tree_log
 		) {
 			this.initMapController();
 			window.requestAnimationFrame((time) => this.animate(time));
@@ -241,15 +261,14 @@ export class GameController {
 	}
 
 	private renderItems(items: Array<IItems>) {
+		const imgs = {
+			1: this.nitro!,
+			2: this.barrel!,
+			3: this.tree_log!,
+		};
 		for (const item of items) {
-			this.ctx.fillStyle = "#ff4455AA";
-			if (item.type === 1) {
-				this.ctx.fillStyle = "#0044ff99";
-			}
-			if (item.type === 3) {
-				this.ctx.fillStyle = "#AA44FF99";
-			}
-			this.ctx.fillRect(item.x, item.y, item.width, item.height);
+			const img = imgs[item.type];
+			this.ctx.drawImage(img, item.x, item.y, item.width, item.height);
 		}
 	}
 

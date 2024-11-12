@@ -162,7 +162,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 		userContext && userContext.user && userContext.user.current  && userContext.user.current.name;
 		const can = true && pathAuth && userCorrect;
 
-		console.log(userContext?.user);
+		// console.log(userContext?.user);
 
 		if (!allowed || tryingToConnect.current || !can) {
 			DebugConsole("-ws blocked-");
