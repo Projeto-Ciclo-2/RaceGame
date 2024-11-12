@@ -15,6 +15,7 @@ import {
 	WsGameInit,
 	WsGameState,
 	WsNewRoom,
+	WsPing,
 	WsPlayerArrives,
 	WsPlayerLeft,
 	WsPlayerMove,
@@ -128,12 +129,13 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 }) => {
 	const userContext = React.useContext(UserContext);
 
-
 	const isConnected = React.useRef(false);
 
 	const canConnect = React.useRef(window.location.pathname === "/home");
 	const tryingToConnect = React.useRef(false);
 	const timeInterval = React.useRef<NodeJS.Timer | undefined>(undefined);
+	const pingTimeoutRef = React.useRef<NodeJS.Timeout | undefined>(undefined);
+	const pingIntervalTime = 2000;
 
 	const onConnectPromise = React.useRef<undefined | Promise<boolean>>(
 		undefined
@@ -158,8 +160,10 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 		const pathAuth = currentPath === "/home";
 		const allowed = canConnect.current || !isConnected.current;
 		const userCorrect =
-
-		userContext && userContext.user && userContext.user.current  && userContext.user.current.name;
+			userContext &&
+			userContext.user &&
+			userContext.user.current &&
+			userContext.user.current.name;
 		const can = true && pathAuth && userCorrect;
 
 		// console.log(userContext?.user);
@@ -220,6 +224,14 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 			isConnected.current = true;
 			console.log("WebSocket connection established");
 			clearInterval(timeInterval.current);
+			pingTimeoutRef.current = setInterval(() => {
+				const msg: WsPing = {
+					type: "ping",
+				};
+				if (socket.readyState === WebSocket.OPEN) {
+					socket.send(JSON.stringify(msg));
+				}
+			}, pingIntervalTime);
 			if (resolvePromise.current) {
 				resolvePromise.current();
 			}
@@ -234,7 +246,7 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 				const valid = data && type;
 				const typeValid =
 					typeof data === "object" && typeof type === "string";
-				if (valid && typeValid) {
+				if (valid && typeValid && type !== "pong") {
 					let isValidAction = false;
 					for (const action of validActions) {
 						if (action === type) isValidAction = true;
@@ -259,8 +271,11 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 			if (rejectPromise.current) {
 				rejectPromise.current();
 			}
+
 			tryingToConnect.current = false;
 			isConnected.current = false;
+			clearInterval(pingTimeoutRef.current);
+
 			DebugConsole("WebSocket connection closed");
 			if (e.code === 1000) {
 				alert(
@@ -268,24 +283,33 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 				);
 			}
 			DebugConsole(e);
+			window.location.pathname = "/home";
 		};
 
 		socket.onerror = (error) => {
+
 			tryingToConnect.current = false;
 			isConnected.current = false;
+			clearInterval(pingTimeoutRef.current);
+
 			console.error("WebSocket error:", error);
 			if (rejectPromise.current) {
 				rejectPromise.current();
 			}
+			window.location.pathname = "/home";
 		};
 
 		return () => {
 			DebugConsole("ws effect dismounting context.");
+
 			tryingToConnect.current = false;
 			isConnected.current = false;
 			socket?.close();
+
 			clearInterval(timeInterval.current);
+			clearInterval(pingTimeoutRef.current);
 			timeInterval.current = undefined;
+
 			if (rejectPromise.current) {
 				rejectPromise.current();
 			}
