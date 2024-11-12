@@ -66,7 +66,7 @@ export class GameController {
 	};
 
 	private lastTime = 0;
-	private fps = 60;
+	private fps = 30;
 	private frameDuration = 1000 / this.fps;
 
 	private fpsCounter = 0;

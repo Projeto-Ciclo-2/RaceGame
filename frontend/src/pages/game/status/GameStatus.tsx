@@ -14,7 +14,6 @@ export default function GameStatus(props: {
 			const myself = props.players.find(
 				(p) => p.username === props.username
 			);
-			console.log("me [memo]");
 			return myself;
 		}
 		return undefined;
@@ -31,9 +30,6 @@ export default function GameStatus(props: {
 					myPosition.current = index + 1;
 				}
 			}
-			console.log("[myPosition] " + myPosition.current);
-			console.log("sortedPlayers [memo]");
-
 			return tempPlayers;
 		}
 		return [];
