@@ -1,3 +1,4 @@
+import { SoundController } from "../../../sound/soundController";
 import {
 	IBox,
 	ICheckPoint,
@@ -7,12 +8,15 @@ import {
 	IPlayer,
 } from "../interfaces/gameInterfaces";
 import { CollisionDetector } from "../tools/collisionDetect";
+import { InterpolateHandler } from "../tools/playerInterpolater";
 import { CarController } from "./carController";
 
 export class MapController {
 	private canvas: HTMLCanvasElement;
 	private carController: CarController;
 	private collisionDetector = new CollisionDetector();
+
+	private soundController: SoundController;
 
 	private itemRespawnTime = 5000;
 	private spawn = {
@@ -67,9 +71,10 @@ export class MapController {
 		{ order: 5, x: 420, y: 500, width: 20, height: 80 },
 	];
 
-	constructor(canvas: HTMLCanvasElement) {
+	constructor(canvas: HTMLCanvasElement, soundController: SoundController) {
 		this.canvas = canvas;
-		this.carController = new CarController();
+		this.soundController = soundController;
+		this.carController = new CarController(soundController);
 		this.carController.listen();
 	}
 
@@ -83,7 +88,10 @@ export class MapController {
 	) {
 		let changed = false;
 		const futurePlayers = players.map((p) => {
-			if (!p.canControl) return p;
+			if (!p.canControl) {
+				InterpolateHandler.interpolate(p as IOtherPlayer, 0.5);
+				return p;
+			}
 			let tempP = p as IPlayer;
 
 			if (tempP.conflictQueue.length > 0) {
@@ -170,6 +178,8 @@ export class MapController {
 
 		const result = this.collisionDetector.detect(futurePlayer, this.walls);
 		if (typeof result !== "boolean") {
+			this.soundController.playSomeBump();
+
 			if (result.length === 1) {
 				this.collisionDetector.resolveCollision(
 					p,
@@ -240,6 +250,7 @@ export class MapController {
 				if (p.checkpoint === finishLine.checkpointsNeeded) {
 					p.checkpoint = 0;
 					p.done_laps++;
+					this.soundController.playLapDone();
 				}
 			} else {
 				this.collisionDetector.resolveCollision(
@@ -289,6 +300,7 @@ export class MapController {
 			this.resetPlayer(player);
 		}
 	}
+
 	private resetPlayer(player: IPlayer): void {
 		player.x = this.spawn.x;
 		player.y = this.spawn.y;
