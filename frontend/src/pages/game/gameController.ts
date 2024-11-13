@@ -282,19 +282,39 @@ export class GameController {
 	private renderPlayers(players: Array<FrontPlayer | IOtherPlayer>) {
 		this.ctx.fillStyle = "red";
 		for (const p of players) {
-			this.ctx.save();
-
 			this.drawNitroParticles(p);
 
+			this.drawnUsername(p);
+
+			if (p.canControl) {
+				this.ctx.save();
+				this.ctx.filter =
+					"brightness(0) saturate(100%) invert(13%) sepia(100%) saturate(5435%) hue-rotate(2deg) brightness(105%) contrast(101%)"; // Red filter
+
+				const newWidth = p.width + 3;
+				const newHeight = p.height + 5;
+				this.ctx.translate(
+					p.x + newWidth / 2 - 1.5,
+					p.y + newHeight / 2 - 2.5
+				);
+				this.ctx.rotate((p.rotation * Math.PI) / 180);
+				this.ctx.drawImage(
+					this.carYellow!,
+					-newWidth / 2,
+					-newHeight / 2,
+					newWidth,
+					newHeight
+				);
+
+				this.ctx.restore();
+			}
+			this.ctx.save();
 			if (!p.canControl) {
 				this.ctx.globalAlpha = 0.5;
 			}
 
-			this.drawnUsername(p);
-
 			this.ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
 			this.ctx.rotate((p.rotation * Math.PI) / 180);
-
 			const img =
 				p.color === "1"
 					? this.carBlue!
@@ -369,14 +389,20 @@ export class GameController {
 
 	private drawnUsername(player: FrontPlayer | IOtherPlayer) {
 		this.ctx.font = "Press Start 2P 16px bold";
-		this.ctx.fillStyle = "white";
-		this.ctx.strokeStyle = "black";
+
+		if (player.canControl) {
+			this.ctx.fillStyle = "white";
+			this.ctx.strokeStyle = "#FA0030";
+		} else {
+			this.ctx.fillStyle = "white";
+			this.ctx.strokeStyle = "black";
+		}
 		this.ctx.lineWidth = 2;
 
 		const x =
 			player.x +
 			player.width / 2 -
-			player.username.slice(0, 20).length * 3.5;
+			player.username.slice(0, 20).length * 3;
 		const y = player.y + player.height + 15;
 		this.ctx.strokeText(player.username.slice(0, 15), x, y);
 		this.ctx.fillText(player.username.slice(0, 15), x, y);
