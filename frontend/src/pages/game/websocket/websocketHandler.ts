@@ -84,7 +84,6 @@ export class WebSocketHandler {
 				// CONTROLLABLE USER
 
 				const frontP = clientPlayer as FrontIPlayer;
-				console.log(frontP);
 				const result = ClientPrediction.detectDiferences(
 					frontP,
 					serverPlayer

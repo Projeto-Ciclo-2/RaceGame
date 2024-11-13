@@ -3,6 +3,9 @@ import { IUser } from "../interfaces/IUser";
 
 export default class UserRepository {
 	public async createUser(user: Partial<IUser>) {
+		console.log("user");
+		console.log(user);
+
 		const [createdUser] = (await dbConnection("users")
 			.insert(user)
 			.returning([

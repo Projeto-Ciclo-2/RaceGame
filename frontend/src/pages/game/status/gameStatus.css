@@ -1,0 +1,115 @@
+#gameStatus {
+	width: 100vw;
+	height: 100vh;
+	position: fixed;
+	top: 0;
+	left: 0;
+	display: flex;
+	color: white;
+	justify-content: space-between;
+	align-items: flex-start;
+	padding-top: 1rem;
+
+	& > div {
+		display: flex;
+		width: 20%;
+		background-color: var(--color-1-75);
+		border-radius: 5px;
+		padding: 1rem;
+		height: auto;
+	}
+
+	& > #gameStatusMe {
+		margin-left: 1rem;
+		display: flex;
+		flex-direction: column;
+		& > p:first-of-type {
+			font-weight: 900;
+			width: 100%;
+			font-size: 1.5rem;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 1rem;
+		}
+		& > #gameStatusMeNitro {
+			padding: 5px;
+			border-radius: 5px;
+			display: flex;
+			width: 100%;
+			align-items: center;
+			& span {
+				font-size: 1.2rem;
+				order: 2;
+				font-weight: 500;
+			}
+			& img {
+				order: 1;
+				margin-right: 0.5rem;
+				height: 35px;
+				width: 35px;
+				object-fit: contain;
+			}
+		}
+		& > .usingNitro {
+			background-color: var(--accent);
+		}
+		& > .noUsingNitro {
+			background-color: var(--color-1);
+		}
+	}
+
+	& > #gameStatusPlayers {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		justify-content: center;
+		margin-right: 1rem;
+		max-height: calc(100vh - 5rem);
+		overflow-x: hidden;
+		overflow-y: auto;
+		& > section {
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			width: 100%;
+			padding: 10px 0;
+			border-bottom: 1px solid black;
+			& > div {
+				display: flex;
+				align-items: center;
+				justify-content: flex-start;
+				& > span {
+					font-weight: 900;
+					margin-right: .5rem;
+				}
+				& > p {
+					display: flex;
+					flex-direction: column;
+					& > span:first-of-type {
+						font-weight: 500;
+					}
+					& > span:last-of-type {
+						font-weight: 100;
+						color: white;
+					}
+				}
+			}
+			& > img {
+				height: 30px;
+				width: 30px;
+				object-fit: contain;
+			}
+		}
+		& > section:first-of-type {
+			padding-top: 0;
+		}
+		& > section:last-of-type {
+			border: none;
+			padding-bottom: 0;
+		}
+		& > .isMe {
+			color: var(--red);
+		}
+	}
+}

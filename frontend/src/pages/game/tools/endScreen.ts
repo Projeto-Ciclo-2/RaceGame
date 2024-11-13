@@ -33,8 +33,8 @@ export class EndScreen {
 
 	private drawWheel() {
 		const { width, height } = this.canvas;
-		const x = width * 0.2;
-		const y = height * 0.4;
+		const x = width / 2;
+		const y = height / 2;
 
 		this.ctx.save();
 		this.ctx.translate(x, y);
@@ -48,14 +48,14 @@ export class EndScreen {
 
 		this.ctx.font = "700 30px 'Roboto'";
 		this.ctx.textAlign = "center";
-		this.ctx.fillStyle = "white";
+		this.ctx.fillStyle = "black";
 
 		// Draw "Game Ended"
-		this.ctx.fillText("Game Ended", width * 0.2, 50);
+		this.ctx.fillText("Game Ended", width / 2, 50);
 
 		// Draw winner's name
 		this.ctx.font = "500 25px 'Roboto'";
-		this.ctx.fillText(`Winner: ${this.winnerName}`, width * 0.2, 90);
+		this.ctx.fillText(`Winner: ${this.winnerName}`, width / 2, 90);
 	}
 
 	private drawScore() {
@@ -89,7 +89,7 @@ export class EndScreen {
 
 		this.drawWheel();
 		this.drawText();
-		this.drawScore();
+		// this.drawScore();
 
 		requestAnimationFrame(this.animate);
 	};

@@ -84,7 +84,7 @@ export class MapController {
 			id: "b",
 			type: 1,
 			x: 90,
-			y: 250,
+			y: 420,
 			width: 20,
 			height: 20,
 			velocity_effect: 2,

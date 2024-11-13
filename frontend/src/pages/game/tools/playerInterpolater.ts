@@ -17,7 +17,7 @@ export class InterpolateHandler {
 	}
 
 	public static interpolate(player: IOtherPlayer, time: number) {
-		console.log("interpolating player...");
+		// console.log("interpolating player...");
 		if (player.x !== player.toX) {
 			console.log(
 				"[x] " + player.x + " [toX] " + player.toX + " [time] " + time

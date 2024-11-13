@@ -35,6 +35,10 @@ export default async function AuthMiddleware(
 			throw new UnauthorizedException(Message.JWT_MALFORMATED);
 		}
 
+		console.log("tokenVerify");
+		console.log(tokenVerify);
+
+
 		const user = await new UserRepository().getUserById(
 			tokenVerify.user_id
 		);
@@ -52,6 +56,7 @@ export default async function AuthMiddleware(
 			error: error.name,
 			message: error.message,
 		});
+		console.log(response)
 
 		res.status(response.status).json(response);
 	}

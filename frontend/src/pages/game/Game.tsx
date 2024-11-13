@@ -4,11 +4,19 @@ import "./game.css";
 import { useWebSocket } from "../../context/WebSocketContext";
 import { useRoom } from "../../context/RoomContext";
 import { useNavigate } from "react-router-dom";
+import { IPlayer } from "../../interfaces/IRoom";
+import GameStatus from "./status/GameStatus";
+import EndScreen from "../end/EndScreen";
 
 export default function Game() {
 	const WebSocketContext = useWebSocket();
 	const RoomsContext = useRoom();
 	const navigate = useNavigate();
+
+	const [playersStatus, setPlayerStatus] = React.useState<Array<IPlayer>>([]);
+	const [gameStatus, setGameStatus] = React.useState(true);
+	const me = React.useRef<undefined | IPlayer>(undefined);
+	const winner = React.useRef("");
 
 	const gameController = React.useRef<null | GameController>(null);
 	const canvas = React.useRef<null | HTMLCanvasElement>(null);
@@ -44,7 +52,11 @@ export default function Game() {
 					canvas.current,
 					WebSocketContext,
 					WebSocketContext.username,
-					RoomsContext.currentRoom!.id
+					RoomsContext.currentRoom!.id,
+					setPlayerStatus,
+					setGameStatus,
+					me,
+					winner
 				);
 				gameController.current.start();
 			}
@@ -66,7 +78,25 @@ export default function Game() {
 
 	return (
 		<div id="game">
-			<canvas ref={canvas} width={760} height={600}></canvas>
+			{!gameStatus && me.current && (
+				<EndScreen
+					alive={!gameStatus}
+					me={me.current}
+					winner={winner.current}
+					players={playersStatus}
+					laps={RoomsContext.currentRoom?.laps}
+				/>
+			)}
+			{gameStatus && (
+				<>
+					<GameStatus
+						players={playersStatus}
+						username={WebSocketContext.username}
+						laps={RoomsContext.currentRoom?.laps}
+					/>
+					<canvas ref={canvas} width={760} height={600}></canvas>
+				</>
+			)}
 		</div>
 	);
 }

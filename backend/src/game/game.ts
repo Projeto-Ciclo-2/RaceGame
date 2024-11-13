@@ -12,7 +12,8 @@ import { getPlayerControllable } from "./mock/playerControllable";
 
 export class RaceGame {
 	private gameRooms: Array<IRoomActive> = [];
-	private interval = 1000 / 60;
+	private fps = 30;
+	private interval = 1000 / this.fps;
 	private roomService = new RoomService();
 
 	constructor() {

@@ -29,6 +29,12 @@
 		max-height: 400px;
 		overflow-y: auto;
 
+		& p {
+			width: 100%;
+			color: white;
+			text-align: center;
+		}
+
 		& li.room-game-init,
 		li.room-waiting {
 			display: flex;
