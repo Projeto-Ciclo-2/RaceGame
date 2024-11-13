@@ -31,6 +31,7 @@ export default class AuthController {
 				error: error.name,
 				message: error.message,
 			});
+			console.log(response);
 
 			res.status(response.status).json(response);
 		}

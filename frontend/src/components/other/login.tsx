@@ -52,6 +52,7 @@ export const Login = () => {
 
 					navigate("/home");
 				} else {
+					console.log(apiResponse);
 					throw new Error(apiResponse.statusText);
 				}
 			} catch (error) {

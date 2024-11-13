@@ -55,7 +55,11 @@ export class GameController {
 	private items: Array<IItems> = [];
 	private alreadyReceivePlayers = false;
 	private winner: string | undefined;
+
 	private setPlayersStatus: React.Dispatch<React.SetStateAction<IPlayer[]>>;
+	private setGameStatus: React.Dispatch<React.SetStateAction<boolean>>;
+	private reactMe: React.MutableRefObject<IPlayer | undefined>;
+	private reactWinner: React.MutableRefObject<string>;
 
 	private lastKeys = {
 		ArrowLeft: false,
@@ -77,7 +81,10 @@ export class GameController {
 		websocketContext: WebSocketContextType,
 		username: string,
 		roomID: string,
-		setPlayersStatus: React.Dispatch<React.SetStateAction<IPlayer[]>>
+		setPlayersStatus: React.Dispatch<React.SetStateAction<IPlayer[]>>,
+		setGameStatus: React.Dispatch<React.SetStateAction<boolean>>,
+		me: React.MutableRefObject<IPlayer | undefined>,
+		winner: React.MutableRefObject<string>
 	) {
 		this.canvas = canvas;
 		const ctx = this.canvas.getContext("2d");
@@ -85,7 +92,11 @@ export class GameController {
 			this.ctx = ctx;
 			this.gameDebug = new GameDebug(this.ctx);
 			this.gameEndScreen = new EndScreen(canvas);
+
 			this.setPlayersStatus = setPlayersStatus;
+			this.setGameStatus = setGameStatus;
+			this.reactMe = me;
+			this.reactWinner = winner;
 
 			this.username = username;
 			this.roomID = roomID;
@@ -159,7 +170,13 @@ export class GameController {
 					return playerConverter(p, previousPlayer, this.username);
 				});
 				this.winner = e.winner;
+
 				this.setPlayersStatus(e.players);
+				this.setGameStatus(this.gameAlive);
+				this.reactMe.current = this.players.find(
+					(u) => u.canControl
+				) as FrontPlayer;
+				this.reactWinner.current = e.winner;
 			}
 		});
 	}
