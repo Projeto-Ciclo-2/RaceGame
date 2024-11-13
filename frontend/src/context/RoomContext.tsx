@@ -97,6 +97,11 @@ export const RoomProvider: React.FC<{ children: ReactNode }> = ({
 				return [...prevMessages, e.message];
 			});
 		});
+		websocketContext.onReceiveJoinGame((e) => {
+			setPlayers((prevPlayers) => {
+				return [...prevPlayers, e.userID];
+			});
+		});
 		websocketContext.onReceivePlayerReady((e) => {
 			// Atualizar a lista de salas (rooms)
 			setRooms((prevRooms) => {
@@ -179,7 +184,7 @@ export const RoomProvider: React.FC<{ children: ReactNode }> = ({
 				setPlayersReady(updatedPlayersReady);
 			}
 		});
-	// eslint-disable-next-line react-hooks/exhaustive-deps
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [websocketContext]);
 
 	return (
@@ -195,7 +200,7 @@ export const RoomProvider: React.FC<{ children: ReactNode }> = ({
 				initGame,
 				players,
 				playersReady,
-				playerInRoom
+				playerInRoom,
 			}}
 		>
 			{children}
