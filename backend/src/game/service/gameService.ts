@@ -30,7 +30,10 @@ export class GameService {
 	private stated_at: number;
 	// 5 minutes of duration
 	private durationTime = 5 * 60 * 1000;
+	private startDelay = 3 * 1000;
+
 	public alive: boolean = true;
+	public started = false;
 
 	// 1 minute is the limit for a player stay without make move
 	private maxTimeWithoutMove = 1 * 60 * 1000;
@@ -108,6 +111,7 @@ export class GameService {
 					};
 				});
 			for (const user of this.selfRoom.WsPlayers) {
+
 				const message: WsGameState = {
 					type: "gameState",
 					entities: {
@@ -130,6 +134,12 @@ export class GameService {
 		for (const p of this.selfRoom!.WsPlayers) {
 			p.ws.send(JSON.stringify(msg));
 		}
+	}
+
+	private customWsSend(user: WsUser, players: Array<IPlayer>): void {
+		const tempPlayers = players.map(p => {
+
+		})
 	}
 
 	private resolvePlayerMoveQueue() {

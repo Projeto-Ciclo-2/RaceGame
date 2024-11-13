@@ -1,3 +1,4 @@
+import { SoundController } from "../../../sound/soundController";
 import { IItems, IPlayer, rotation } from "../interfaces/gameInterfaces";
 
 type keyValid = "ArrowRight" | "ArrowLeft" | "ArrowUp" | "ArrowDown" | "Space";
@@ -32,9 +33,15 @@ export class CarController {
 
 	private maxItems = 3;
 
-	private nitroAcceleration = 0.10;
+	private nitroAcceleration = 0.1;
 	private nitroDuration = 2500;
 	private nitroMaxVelocity = 8;
+
+	private soundController: SoundController;
+
+	constructor(soundController: SoundController) {
+		this.soundController = soundController;
+	}
 
 	public _getKeys() {
 		return this.keys;
@@ -72,6 +79,7 @@ export class CarController {
 	}
 
 	public useItem(player: IPlayer, item: IItems) {
+		this.soundController.playSomeBump();
 		if (player.velocities.vx > 0) {
 			const diference = player.velocities.vx + item.velocity_effect;
 			if (diference < 0) {
@@ -112,6 +120,7 @@ export class CarController {
 			return false;
 		}
 		player.items.push(item);
+		this.soundController.playNitroCollected();
 		return true;
 	}
 
@@ -200,6 +209,8 @@ export class CarController {
 			if (now >= limitDate) {
 				player.usingNitro = false;
 				player.nitroUsedAt = null;
+				this.soundController.stopNitro();
+				this.soundController.playEndNitro();
 			}
 		}
 	}
@@ -215,6 +226,7 @@ export class CarController {
 			player.usingNitro = true;
 			player.nitroUsedAt = Date.now();
 			player.items.shift();
+			this.soundController.playNitro();
 		}
 	}
 

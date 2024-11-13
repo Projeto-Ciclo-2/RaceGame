@@ -63,13 +63,8 @@ export class WebSocketHandler {
 				serverPlayer.username !== username
 			) {
 				if (serverPlayer.alive) {
-					// todo: others players interpolation
-
 					const otherP = players[i] as IOtherPlayer;
-
 					InterpolateHandler.update(otherP, serverPlayer);
-					InterpolateHandler.interpolate(otherP, 0.5);
-
 					players[i] = otherP;
 				} else {
 					// player is not alive, removing...
@@ -88,6 +83,10 @@ export class WebSocketHandler {
 					frontP,
 					serverPlayer
 				);
+
+				if (frontP.items.length !== serverPlayer.items.length) {
+					frontP.items = serverPlayer.items;
+				}
 
 				if (result) {
 					console.log(

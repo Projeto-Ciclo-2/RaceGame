@@ -16,6 +16,7 @@ import { src } from "../../assets/enum/enumSrc";
 import { playerConverter } from "./tools/playerConverter";
 import { EndScreen } from "./tools/endScreen";
 import { IPlayer } from "../../interfaces/IRoom";
+import { SoundController } from "../../sound/soundController";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
@@ -27,6 +28,8 @@ export class GameController {
 	private websocketContext: WebSocketContextType;
 	private websocketHandler = new WebSocketHandler();
 	private gameEndScreen: EndScreen;
+	private soundController = new SoundController();
+	private playingSoundTrack = false;
 
 	private roomID: string | undefined;
 
@@ -177,6 +180,8 @@ export class GameController {
 					(u) => u.canControl
 				) as FrontPlayer;
 				this.reactWinner.current = e.winner;
+				this.soundController.stopItsRaceTime();
+				this.soundController.playStart();
 			}
 		});
 	}
@@ -195,6 +200,10 @@ export class GameController {
 			this.initMapController();
 			window.requestAnimationFrame((time) => this.animate(time));
 			return;
+		}
+		if (!this.playingSoundTrack) {
+			this.soundController.playItsRaceTime();
+			this.playingSoundTrack = true;
 		}
 		if (!this.gameAlive) {
 			this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -429,7 +438,10 @@ export class GameController {
 		if (!this.mapController && this.players.length > 0 && this.roomID) {
 			const player = this.players.find((p) => p.canControl);
 			if (player) {
-				this.mapController = new MapController(this.canvas);
+				this.mapController = new MapController(
+					this.canvas,
+					this.soundController
+				);
 				return;
 			}
 		}
