@@ -19,7 +19,7 @@ export default class RoomRepository {
 
 		const room: IRoom = {
 			id: randomUUID(),
-			laps: 3,
+			laps: 1,
 			map: 1,
 			players: [player],
 			messages: [],

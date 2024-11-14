@@ -1,12 +1,14 @@
 import { IPlayer, IPlayerControllable, IRoomActive } from "../interfaces/IRoom";
 import { WsUser } from "../interfaces/IUser";
 import {
+	WsEndGame,
 	WsPlayerArrives,
 	WsPlayerMove,
 	WsPlayerPicksItem,
 	WsPlayerUsesItem,
 } from "../interfaces/IWSMessages";
 import RoomService from "../services/roomService";
+import { UserService } from "../services/userService";
 import { CarController } from "./controller/carController";
 import { getPlayerControllable } from "./mock/playerControllable";
 
@@ -15,6 +17,19 @@ export class RaceGame {
 	private fps = 30;
 	private interval = 1000 / this.fps;
 	private roomService = new RoomService();
+	private usersService = new UserService();
+
+	private triggerDeleteRoom(e: WsEndGame) {
+		console.log("trigger deleteRoom");
+
+		this.deleteRoomFn(e);
+	}
+	private deleteRoomFn: (e: WsEndGame) => void = (e: WsEndGame) => {};
+	public onDeleteRoom = (cbFn: (e: WsEndGame) => void) => {
+		console.log("fn seated");
+
+		this.deleteRoomFn = cbFn;
+	};
 
 	constructor() {
 		setInterval(() => {
@@ -45,6 +60,30 @@ export class RaceGame {
 
 	public getRoom(id: string) {
 		return this.gameRooms.find((room) => room.id === id);
+	}
+
+	public reconnectPlayer(
+		roomID: string,
+		wsPlayer: WsUser,
+		userID: string
+	): boolean {
+		const room = this.getRoom(roomID);
+		if (room) {
+			const success = room.gameService.reconnectPlayer(
+				getPlayerControllable(userID, wsPlayer.username, true)
+			);
+			if (success) {
+				const wsIndex = room.WsPlayers.findIndex(
+					(p) => p.username === wsPlayer.username
+				);
+				if (wsIndex !== -1) {
+					room.WsPlayers[wsIndex] = wsPlayer;
+				} else {
+					throw new Error("player was not found!");
+				}
+			}
+		}
+		return false;
 	}
 
 	public queuePlayerMove(action: WsPlayerMove) {
@@ -93,8 +132,43 @@ export class RaceGame {
 					this.gameRooms.splice(index, 1);
 				}
 				await this.roomService.deleteRoom(room.id);
-				console.log("roomservice deleted room. [id] " + room.id);
-				const rooms = await this.roomService.allRooms();
+				const msg: WsEndGame = {
+					type: "endGame",
+					players: room.gameService.players,
+					roomID: room.id,
+					winner: room.gameService.winner,
+				};
+				this.triggerDeleteRoom(msg);
+				this.updateUsersScore(
+					room.gameService.players,
+					room.gameService.winner,
+					room
+				);
+			}
+		}
+	}
+
+	private async updateUsersScore(
+		players: Array<IPlayerControllable>,
+		winner: string,
+		room: IRoomActive
+	) {
+		const msgs = room.messages;
+		for (const player of players) {
+			const { id, username, pickedItems } = player;
+			const { length: msgQntd } = msgs.filter(
+				(m) => m.username === username
+			);
+			const win = username === winner;
+
+			const user = await this.usersService.getUserById(id);
+			if (user) {
+				this.usersService.update(id, {
+					messages_send: user.messages_send + msgQntd,
+					picked_items: user.picked_items + pickedItems,
+					played_games: user.played_games + 1,
+					wins: user.wins + (win ? 1 : 0),
+				});
 			}
 		}
 	}

@@ -4,6 +4,8 @@ import { Link } from "react-router-dom";
 import { src } from "../../assets/enum/enumSrc";
 import "./endScreen.css";
 import { sortPlayers } from "../game/tools/sortPlayers";
+import { useRoom } from "../../context/RoomContext";
+import { calcPercentage } from "./calcPercentage";
 
 export default function EndScreen(props: {
 	alive: boolean;
@@ -12,6 +14,8 @@ export default function EndScreen(props: {
 	players: Array<IPlayer>;
 	laps: number | undefined;
 }) {
+	const RoomsContext = useRoom();
+
 	const sortedPlayers = React.useMemo<Array<IPlayer>>(() => {
 		if (props.players.length > 0) {
 			const tempPlayers = sortPlayers(props.players);
@@ -19,6 +23,15 @@ export default function EndScreen(props: {
 		}
 		return [];
 	}, [props.players]);
+
+	function clearThisRoom() {
+		RoomsContext.setRooms(
+			RoomsContext.rooms.filter(
+				(r) => r.id !== RoomsContext.currentRoom?.id
+			)
+		);
+		RoomsContext.reset();
+	}
 
 	if (!props.alive) {
 		return <></>;
@@ -32,7 +45,7 @@ export default function EndScreen(props: {
 						: "Game Over"}
 				</p>
 				<img src={src.wheel} alt="wheel" />
-				<Link id="endScreenBTN" to={"/home"}>
+				<Link id="endScreenBTN" to={"/home"} onClick={clearThisRoom}>
 					Voltar ao início
 				</Link>
 			</div>
@@ -49,13 +62,11 @@ export default function EndScreen(props: {
 							</p>
 							<span>
 								{p.done_laps} voltas{" "}
-								{p.done_laps >= (props.laps || 3)
-									? 100
-									: (
-											(p.checkpoint /
-												(6 * (props.laps || 3))) *
-											100
-									  ).toFixed(0)}
+								{calcPercentage(
+									p.checkpoint,
+									p.done_laps,
+									props.laps || 3
+								).toFixed(0)}
 								% concluído
 							</span>
 						</section>

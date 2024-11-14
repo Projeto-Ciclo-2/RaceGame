@@ -21,6 +21,7 @@ interface IRoomContextType {
 	playersReady: string[];
 	initGame: boolean;
 	playerInRoom: boolean;
+	reset: () => void;
 }
 
 const RoomContext = createContext<IRoomContextType | null>(null);
@@ -66,6 +67,7 @@ export const RoomProvider: React.FC<{ children: ReactNode }> = ({
 	}
 
 	function checkUserRoom(rooms: IRoom[]) {
+		console.log(rooms);
 		rooms.forEach((room) => {
 			const playerInRoom = room.players.find(
 				(p) => userContext?.user?.current?.id === p.id
@@ -73,8 +75,16 @@ export const RoomProvider: React.FC<{ children: ReactNode }> = ({
 			if (playerInRoom) {
 				setCurrentRoom(room);
 				setPlayerInRoom(true);
+			} else {
+				reset();
 			}
 		});
+	}
+
+	function reset() {
+		setPlayerInRoom(false);
+		setCurrentRoom(null);
+		setInitGame(false);
 	}
 
 	const websocketContext = useWebSocket();
@@ -200,7 +210,8 @@ export const RoomProvider: React.FC<{ children: ReactNode }> = ({
 				initGame,
 				players,
 				playersReady,
-				playerInRoom,
+				playerInRoom: playerInRoom,
+				reset,
 			}}
 		>
 			{children}

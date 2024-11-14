@@ -12,6 +12,8 @@ export function getPlayer(id: string, username: string, ready: boolean): IPlayer
 		done_laps: 0,
 
 		items: [],
+		pickedItems: 0,
+
 		usingNitro: false,
 		nitroUsedAt: null,
 		nitroDirection: {

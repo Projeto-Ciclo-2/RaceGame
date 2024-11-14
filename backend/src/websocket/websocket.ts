@@ -56,12 +56,22 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 	}
 
 	const thisUser = { username: username, ws: ws };
-
 	users.add(thisUser);
+	const allRooms = await roomService.allRooms();
+
+	raceGame.onDeleteRoom((e) => {
+		console.log("deleteROom on ws");
+		console.log(e);
+
+		broadcast(JSON.stringify(e));
+	});
+
+	reconnectPlayer(allRooms, thisUser);
+
 	ws.send(
 		JSON.stringify({
 			type: "allRooms",
-			rooms: await roomService.allRooms(),
+			rooms: allRooms,
 		})
 	);
 
@@ -363,15 +373,19 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 		users.delete(thisUser);
 
 		const user = await userService.getUserByUsername(thisUser.username);
-
-		// todo: Não remover usuário se o jogo tiver iniciado
-
 		// Remover o usuário do lobby
 		try {
 			if (user) {
 				const room = await roomService.getIdRoomUserWasIn(user.id);
 
 				if (room) {
+					// if room active (game started) => do not remove player
+					const activeRoom = raceGame.getRoom(room.id);
+					if (activeRoom) {
+						console.log("player was not removed.");
+						return;
+					}
+					console.log("removing player...");
 					const roomUpdate = await lobbyService.playerLeft({
 						type: "playerLeft",
 						username: user.username,
@@ -479,4 +493,26 @@ function initGame(room: IRoom) {
 		WsPlayers: wsPlayers,
 		gameInit: true,
 	});
+}
+
+async function reconnectPlayer(allRooms: IRoom[], thisUser: WsUser) {
+	for (const room of allRooms) {
+		const user = room.players.find((p) => p.username === thisUser.username);
+		if (user) {
+			const userComplete = await userService.getUserByUsername(
+				user.username
+			);
+			if (userComplete) {
+				const result = raceGame.reconnectPlayer(
+					room.id,
+					thisUser,
+					userComplete.id
+				);
+				console.log(
+					"player outside a room found, trying to reconnect him..."
+				);
+				console.log("[success] " + result);
+			}
+		}
+	}
 }
