@@ -26,10 +26,11 @@ export function getPlayer(id: string, username: string, ready: boolean): IPlayer
 		moveNumber: 0,
 
 		rotation: 0,
+		rotationAcceleration: 0,
 		x: 380,
 		y: 540,
-		height: 30,
-		width: 30,
+		height: 25,
+		width: 25,
 
 		velocities: {
 			vx: 0,

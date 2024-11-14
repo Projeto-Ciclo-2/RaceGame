@@ -36,6 +36,7 @@ export interface IPlayer extends IBox {
 	height: number;
 
 	rotation: number;
+	rotationAcceleration: number;
 
 	velocities: {
 		vx: number;

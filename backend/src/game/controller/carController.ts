@@ -24,10 +24,10 @@ export class CarController {
 		Space: false,
 	};
 
-	private width = 30;
-	private height = 30;
+	private width = 25;
+	private height = 25;
 
-	private maxVelocity = 6.5;
+	private maxVelocity = 6;
 	private acceleration = 0.13;
 	private decelerationRate = 0.04;
 	private maxDecelerationRate = 0.09;
@@ -37,6 +37,9 @@ export class CarController {
 	private nitroAcceleration = 0.1;
 	private nitroDuration = 2500;
 	private nitroMaxVelocity = 8;
+
+	private rotationSpeed = 1.5;
+	private maxRotationSpeed = 7;
 
 	public setKeys(keys: {
 		ArrowLeft: boolean;
@@ -67,11 +70,11 @@ export class CarController {
 			? this.nitroMaxVelocity
 			: this.maxVelocity;
 
-		this.defineRotation(futurePlayer);
 		this.decreaseVelocityOverTime(futurePlayer, maxVelocity);
 
 		this.getFuturePosition(futurePlayer);
 		this.correctVelocities(futurePlayer, maxVelocity);
+		this.correctRotation(futurePlayer);
 
 		return futurePlayer;
 	}
@@ -123,24 +126,13 @@ export class CarController {
 	private getFuturePosition(player: IPlayer) {
 		const nitro = player.usingNitro;
 		if (nitro) {
-			this.increasePlayerVelocity(player, this.nitroMaxVelocity);
-			this.applyNitro(player);
+			this.increasePlayerVelocity(player, true);
 			return;
 		}
-		this.increasePlayerVelocity(player, this.maxVelocity);
+		this.increasePlayerVelocity(player, false);
 	}
 
-	private increasePlayerVelocity(player: IPlayer, maxVelocity: number) {
-		const upSpeed = player.velocities.vy + this.acceleration * -1;
-		const downSpeed = player.velocities.vy + this.acceleration;
-		const leftSpeed = player.velocities.vx + this.acceleration * -1;
-		const rightSpeed = player.velocities.vx + this.acceleration;
-
-		const upCanIncrease = upSpeed > maxVelocity * -1;
-		const downCanIncrease = downSpeed < maxVelocity;
-		const leftCanIncrease = leftSpeed > maxVelocity * -1;
-		const rightCanIncrease = rightSpeed < maxVelocity;
-
+	private increasePlayerVelocity(player: IPlayer, usingNitro: boolean) {
 		const {
 			ArrowUp: keyUp,
 			ArrowDown: keyDown,
@@ -148,53 +140,54 @@ export class CarController {
 			ArrowRight: keyRight,
 		} = this.keys;
 
-		if (keyUp && upCanIncrease && !player.disableArrow.up) {
-			player.velocities.vy = Number.parseFloat(upSpeed.toFixed(2));
-			player.nitroDirection.up = true;
-			player.nitroDirection.down = false;
-			player.nitroDirection.right = false;
-			player.nitroDirection.left = false;
+		if (keyLeft) {
+			player.rotationAcceleration -= this.rotationSpeed;
+			if (player.rotationAcceleration < -this.maxRotationSpeed) {
+				player.rotationAcceleration = -this.maxRotationSpeed;
+			}
+			//
+		} else if (keyRight) {
+			player.rotationAcceleration += this.rotationSpeed;
+			if (player.rotationAcceleration > this.maxRotationSpeed) {
+				player.rotationAcceleration = this.maxRotationSpeed;
+			}
 		}
-		if (keyDown && downCanIncrease && !player.disableArrow.down) {
-			player.velocities.vy = Number.parseFloat(downSpeed.toFixed(2));
-			player.nitroDirection.up = false;
-			player.nitroDirection.down = true;
-			player.nitroDirection.right = false;
-			player.nitroDirection.left = false;
+
+		if (player.rotationAcceleration > 0) {
+			player.rotationAcceleration -= 0.5;
+			if (player.rotationAcceleration < 0) {
+				player.rotationAcceleration = 0;
+			}
 		}
-		if (keyLeft && leftCanIncrease && !player.disableArrow.left) {
-			player.velocities.vx = Number.parseFloat(leftSpeed.toFixed(2));
-			player.nitroDirection.up = false;
-			player.nitroDirection.down = false;
-			player.nitroDirection.right = false;
-			player.nitroDirection.left = true;
+		if (player.rotationAcceleration < 0) {
+			player.rotationAcceleration += 0.5;
+			if (player.rotationAcceleration > 0) {
+				player.rotationAcceleration = 0;
+			}
 		}
-		if (keyRight && rightCanIncrease && !player.disableArrow.right) {
-			player.velocities.vx = Number.parseFloat(rightSpeed.toFixed(2));
-			player.nitroDirection.up = false;
-			player.nitroDirection.down = false;
-			player.nitroDirection.right = true;
-			player.nitroDirection.left = false;
+
+		player.rotation += player.rotationAcceleration;
+
+		let acceleration = this.acceleration;
+		if (usingNitro) {
+			acceleration += this.nitroAcceleration;
+		}
+
+		if (keyUp) {
+			player.velocities.vy +=
+				-acceleration * Math.sin((player.rotation * Math.PI) / 180);
+			player.velocities.vx +=
+				-acceleration * Math.cos((player.rotation * Math.PI) / 180);
+		}
+		if (keyDown) {
+			player.velocities.vy +=
+				acceleration * Math.sin((player.rotation * Math.PI) / 180);
+			player.velocities.vx +=
+				acceleration * Math.cos((player.rotation * Math.PI) / 180);
 		}
 
 		player.x += player.velocities.vx;
 		player.y += player.velocities.vy;
-	}
-
-	private applyNitro(player: IPlayer) {
-		const { down, left, right, up } = player.nitroDirection;
-		if (up) {
-			player.velocities.vy -= this.nitroAcceleration;
-		}
-		if (down) {
-			player.velocities.vy += this.nitroAcceleration;
-		}
-		if (left) {
-			player.velocities.vx -= this.nitroAcceleration;
-		}
-		if (right) {
-			player.velocities.vx += this.nitroAcceleration;
-		}
 	}
 
 	private checkNitroValidity(player: IPlayer) {
@@ -223,37 +216,6 @@ export class CarController {
 		}
 	}
 
-	private defineRotation(player: IPlayer) {
-		const {
-			ArrowUp: up,
-			ArrowDown: down,
-			ArrowLeft: left,
-			ArrowRight: right,
-		} = this.keys;
-
-		const rotationMap: { [key: string]: rotation } = {
-			"up,left": 45,
-			up: 90,
-			"up,right": 135,
-			right: 180,
-			"down,right": 235,
-			down: 270,
-			"down,left": 315,
-			left: 0,
-		};
-
-		const pressedKey = [
-			up && "up",
-			down && "down",
-			left && "left",
-			right && "right",
-		]
-			.filter(Boolean)
-			.join(",");
-
-		player.rotation = rotationMap[pressedKey] ?? player.rotation;
-	}
-
 	private correctVelocities(player: IPlayer, maxVelocity: number) {
 		const { vx, vy } = player.velocities;
 		const negativeMaxVelocity = maxVelocity * -1;
@@ -273,6 +235,15 @@ export class CarController {
 		if (vy < negativeMaxVelocity) {
 			const diference = Math.abs(vy) - maxVelocity;
 			player.velocities.vy += diference;
+		}
+	}
+
+	private correctRotation(player: IPlayer) {
+		if (player.rotation >= 360) {
+			player.rotation = 0;
+		}
+		if (player.rotation < 0) {
+			player.rotation = 360;
 		}
 	}
 
