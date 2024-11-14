@@ -1,5 +1,5 @@
 /* eslint-disable react-hooks/exhaustive-deps */
-import React, { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import "./Lobby.css";
 import InputEmojiComponent from "../../components/InputEmoji/InputEmoji";
 import { useRoom } from "../../context/RoomContext";
@@ -8,7 +8,6 @@ import Btn from "../../components/other/button";
 import { useWebSocket } from "../../context/WebSocketContext";
 import { WsPlayerLeft, WsPlayerReady } from "../../interfaces/IWSMessages";
 import { UserContext } from "../../context/UserContext";
-import { IRoom } from "../../interfaces/IRoom";
 
 const Lobby = () => {
 	const userContext = useContext(UserContext);
