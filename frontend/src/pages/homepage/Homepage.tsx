@@ -6,10 +6,13 @@ import { UserContext } from "../../context/UserContext";
 import { useNavigate } from "react-router-dom";
 import { UserAPI } from "../../api/users";
 import { useRoom } from "../../context/RoomContext";
+import Confirmation from "../../components/modal/Confirmation";
 
 const Homepage = () => {
 	const userContext = useContext(UserContext);
 	const roomContext = useRoom();
+
+	const [modalAlive, setModalAlive] = React.useState(true);
 
 	const navigate = useNavigate();
 
@@ -44,15 +47,29 @@ const Homepage = () => {
 		}
 
 		// Usuário já está participando de um jogo?
-		if (roomContext.playerInRoom) {
-			navigate("/game");
-		}
+		// if (roomContext.playerInRoom) {
+		// 	navigate("/game");
+		// }
 
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
 
 	return (
 		<section id="homepage">
+			{roomContext.playerInRoom && modalAlive ? (
+				<Confirmation
+					title="You've been disconnected!"
+					description="We detected that you were in a game and were disconnected, do you want to return?"
+					onConfirm={() => {
+						navigate("/game");
+					}}
+					onReject={() => {
+						setModalAlive(false);
+					}}
+				/>
+			) : (
+				<></>
+			)}
 			<section id="content-homepage">
 				<SpeedDialComponent />
 				<div id="content-title">
