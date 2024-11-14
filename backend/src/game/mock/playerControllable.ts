@@ -18,6 +18,8 @@ export function getPlayerControllable(
 		done_laps: 0,
 
 		items: [],
+		pickedItems: 0,
+
 		usingNitro: false,
 		nitroUsedAt: null,
 		nitroDirection: {

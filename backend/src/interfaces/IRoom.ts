@@ -23,6 +23,8 @@ export interface IPlayer extends IBox {
 	checkpoint: checkPointOrder | 0;
 
 	items: Array<IItems>;
+	pickedItems: number;
+
 	usingNitro: boolean;
 	nitroUsedAt: number | null; //timestamp
 	nitroDirection: {

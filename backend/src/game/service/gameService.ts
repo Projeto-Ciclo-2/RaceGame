@@ -24,19 +24,21 @@ export class GameService {
 	private arrivesQueue: Array<WsPlayerArrives> = [];
 
 	private mapController = new MapController();
-	private players: Array<IPlayerControllable> = [];
+	public players: Array<IPlayerControllable> = [];
 	private selfRoom: IRoomActive | undefined;
 
 	private stated_at: number;
 	// 5 minutes of duration
-	private durationTime = 5 * 60 * 1000;
+	private durationTime = 15 * 60 * 1000;
 	private startDelay = 3 * 1000;
 
 	public alive: boolean = true;
 	public started = false;
 
+	public winner = "Unknown";
+
 	// 1 minute is the limit for a player stay without make move
-	private maxTimeWithoutMove = 1 * 60 * 1000;
+	private maxTimeWithoutMove = 5 * 60 * 1000;
 
 	constructor(players: Array<IPlayerControllable>) {
 		// if (players.length <= 0) {
@@ -61,6 +63,16 @@ export class GameService {
 		this.softDisableInactivePlayers();
 		this.checkIfSomeoneWins();
 		this.checkGameEndByTimeout();
+	}
+
+	public reconnectPlayer(player: IPlayerControllable): boolean {
+		// const pIndex = this.players.findIndex((p) => p.id === player.id);
+		// if (pIndex !== -1) {
+		// 	const oldPlayer = this.players[pIndex];
+		// 	this.players[pIndex] = {...oldPlayer};
+		return true;
+		// }
+		// return false;
 	}
 
 	public getEntities() {
@@ -96,6 +108,7 @@ export class GameService {
 						height: p.height,
 						id: p.id,
 						items: p.items,
+						pickedItems: p.pickedItems,
 						lastMessageAt: p.lastMessageAt,
 						moveNumber: p.moveNumber,
 						nitroDirection: p.nitroDirection,
@@ -111,7 +124,6 @@ export class GameService {
 					};
 				});
 			for (const user of this.selfRoom.WsPlayers) {
-
 				const message: WsGameState = {
 					type: "gameState",
 					entities: {
@@ -124,22 +136,8 @@ export class GameService {
 		}
 	}
 
-	private broadcastGameEnd(winner: string) {
-		const msg: WsEndGame = {
-			type: "endGame",
-			players: this.players,
-			roomID: this.selfRoom!.id,
-			winner: winner,
-		};
-		for (const p of this.selfRoom!.WsPlayers) {
-			p.ws.send(JSON.stringify(msg));
-		}
-	}
-
 	private customWsSend(user: WsUser, players: Array<IPlayer>): void {
-		const tempPlayers = players.map(p => {
-
-		})
+		const tempPlayers = players.map((p) => {});
 	}
 
 	private resolvePlayerMoveQueue() {
@@ -209,9 +207,9 @@ export class GameService {
 			}
 			if (!this.alive) {
 				if (betterPlayer) {
-					this.broadcastGameEnd(betterPlayer.username);
+					this.winner = betterPlayer.username;
 				} else {
-					this.broadcastGameEnd("Nobody.");
+					this.winner = "Nobody.";
 				}
 			}
 		}
@@ -240,9 +238,9 @@ export class GameService {
 			const sortedPlayers = this.sortPlayers();
 			const betterPlayer = sortedPlayers[sortedPlayers.length - 1];
 			if (betterPlayer) {
-				this.broadcastGameEnd(betterPlayer.username);
+				this.winner = betterPlayer.username;
 			} else {
-				this.broadcastGameEnd("Nobody.");
+				this.winner = "Nobody.";
 			}
 		}
 	}

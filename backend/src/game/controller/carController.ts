@@ -34,7 +34,7 @@ export class CarController {
 
 	private maxItems = 3;
 
-	private nitroAcceleration = 0.10;
+	private nitroAcceleration = 0.1;
 	private nitroDuration = 2500;
 	private nitroMaxVelocity = 8;
 
@@ -116,6 +116,7 @@ export class CarController {
 			return false;
 		}
 		player.items.push(item);
+		player.pickedItems = player.pickedItems + 1;
 		return true;
 	}
 
