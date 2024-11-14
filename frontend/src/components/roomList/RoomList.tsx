@@ -30,10 +30,15 @@ const RoomList = () => {
 		navigate("/lobby");
 	}
 
-	useEffect(() => {
-		console.log('effect rooomList');
+	WebsocketContext.onReceiveEndGame((e) => {
+		RoomsContext.setRooms(
+			RoomsContext.rooms.filter((r) => r.id !== e.roomID)
+		);
+	});
 
-	}, [WebsocketContext, RoomsContext.rooms])
+	useEffect(() => {
+		console.log("effect rooomList");
+	}, [WebsocketContext, RoomsContext.rooms]);
 
 	return (
 		<div id="room-list">
@@ -45,9 +50,16 @@ const RoomList = () => {
 				<li className="button-space"></li>
 			</ul>
 			<ul id="body-list">
-				{RoomsContext.rooms.length <= 0 && <p>nenhuma sala criada, crie uma!</p>}
+				{RoomsContext.rooms.length <= 0 && (
+					<p>nenhuma sala criada, crie uma!</p>
+				)}
 				{RoomsContext.rooms.map((room, index) => (
-					<li key={index} className={room.gameInit ? 'room-game-init' : 'room-waiting'}>
+					<li
+						key={index}
+						className={
+							room.gameInit ? "room-game-init" : "room-waiting"
+						}
+					>
 						<p className="room-id">{room.id}</p>
 						{room.gameInit ? (
 							<p>racing</p>
@@ -61,7 +73,12 @@ const RoomList = () => {
 								<Helmet />
 							</div>
 						) : (
-							<button onClick={() => joinRoom(room)} className="button-join">join</button>
+							<button
+								onClick={() => joinRoom(room)}
+								className="button-join"
+							>
+								join
+							</button>
 						)}
 					</li>
 				))}
