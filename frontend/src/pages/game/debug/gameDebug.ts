@@ -34,7 +34,10 @@ export class GameDebug {
 			const playerTitle = `Player ${index + 1}`;
 			const playerInfo = [
 				`Rotation: ${player.rotation}`,
-				`Position: (${player.x.toFixed(2)}, ${player.y.toFixed(2)})`,
+				`RotationS: ${player.rotationAcceleration}`,
+				`Acceleration [vx]: ${player.velocities.vx}`,
+				`Acceleration [vy]: ${player.velocities.vy}`,
+				`Position: (${player.x}, ${player.y})`,
 			];
 
 			// Draw title with border

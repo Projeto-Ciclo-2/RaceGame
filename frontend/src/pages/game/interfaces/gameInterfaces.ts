@@ -89,7 +89,7 @@ export interface IMoves {
 	y: number;
 	rotation: number;
 	rotationAcceleration: number;
-	itemsAmount: number,
+	itemsAmount: number;
 	velocities: {
 		vx: number;
 		vy: number;
@@ -108,6 +108,12 @@ export interface IItems extends IBox {
 	id: string;
 	type: 1 | 2 | 3;
 	velocity_effect: number;
+}
+
+export interface IDeletedItem extends IBox {
+	ttl: number;
+	particles: Array<IParticle>;
+	id: string;
 }
 
 export interface IParticle extends IBox {

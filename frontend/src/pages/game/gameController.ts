@@ -6,6 +6,7 @@ import {
 	IOtherPlayer,
 	IParticle,
 	IPlayer as FrontPlayer,
+	IDeletedItem,
 } from "./interfaces/gameInterfaces";
 
 import { loadImage } from "./tools/imgLoader";
@@ -57,6 +58,7 @@ export class GameController {
 
 	private players: Array<FrontPlayer | IOtherPlayer> = [];
 	private items: Array<IItems> = [];
+	private deletedItems: Array<IDeletedItem> = [];
 	private alreadyReceivePlayers = false;
 	private winner: string | undefined;
 
@@ -126,7 +128,7 @@ export class GameController {
 				loadImage(src.carUsualWhite),
 				loadImage(src.carPolice),
 				loadImage(src.carTaxi),
-				loadImage(src.nitro),
+				loadImage(src.nitroMin),
 				loadImage(src.tree_log),
 				loadImage(src.barrel),
 				loadImage(src.wheel),
@@ -181,13 +183,16 @@ export class GameController {
 
 	private listenWebSocket() {
 		this.websocketContext.onReceiveGameState((e) => {
-			const items = this.websocketHandler.handleGameState(
-				e,
-				this.players,
-				this.items,
-				this.username
-			);
+			const { items, deletedItems } =
+				this.websocketHandler.handleGameState(
+					e,
+					this.players,
+					this.items,
+					this.deletedItems,
+					this.username
+				);
 			this.items = items;
+			this.deletedItems = deletedItems;
 
 			this.setPlayersStatus(e.entities.players);
 			this.alreadyReceivePlayers = true;
@@ -260,13 +265,16 @@ export class GameController {
 		}
 		const entities = this.mapController.makePrediction(
 			this.players,
-			this.items
+			this.items,
+			this.deletedItems
 		);
 		this.myUserChanged = entities.changed;
 		this.players = entities.players;
 		this.items = entities.items;
+
 		this.renderPlayers(this.players);
 		this.renderItems(this.items);
+		this.renderDeletedItems(this.deletedItems);
 
 		if (this.debug) {
 			// this.gameDebug.makeHitBox(this.mapController.getWalls());
@@ -277,7 +285,8 @@ export class GameController {
 			// this.gameDebug.renderCollidedBoxes(
 			// 	this.mapController.getWallsCollided()
 			// );
-			// this.gameDebug.renderPlayerInfo(this.players);
+			this.myUser = this.players.find((u) => u.canControl) as FrontPlayer;
+			if (this.myUser) this.gameDebug.renderPlayerInfo([this.myUser]);
 			this.gameDebug.renderBoxes(
 				this.mapController.getCheckPoints(),
 				"#44FFadbb"
@@ -401,6 +410,59 @@ export class GameController {
 		}
 	}
 
+	private renderDeletedItems(deletedItems: Array<IDeletedItem>) {
+		for (let index = 0; index < deletedItems.length; index++) {
+			const item = deletedItems[index];
+
+			if (item.particles.length <= 0) {
+				for (let x = 0; x < item.width; x += 4) {
+					const leftForce = x < item.width / 2;
+
+					for (let y = 0; y < item.height; y += 4) {
+						const topForce = y < item.height / 2;
+						const n1 = Number.parseFloat(Math.random().toFixed(2));
+						const n2 = Number.parseFloat(Math.random().toFixed(2));
+						const velocityX = leftForce ? -n1 : n1;
+						const velocityY = topForce ? -n2 : n2;
+						const particle: IParticle = {
+							color: "#964B00",
+							height: 4,
+							opacity: 1,
+							velocityX: velocityX,
+							velocityY: velocityY,
+							width: 4,
+							x: item.x + x,
+							y: item.y + y,
+						};
+						item.particles.push(particle);
+					}
+				}
+			}
+			if (item.ttl > 0) {
+				for (const particle of item.particles) {
+					if (particle.opacity > 0) {
+						this.ctx.save();
+						// Draw the particle
+						this.ctx.fillStyle = particle.color;
+						this.ctx.globalAlpha = particle.opacity;
+						this.ctx.fillRect(
+							particle.x,
+							particle.y,
+							particle.width,
+							particle.height
+						);
+						particle.x += particle.velocityX;
+						particle.y += particle.velocityY;
+						particle.opacity -= 0.1;
+						this.ctx.restore();
+					}
+				}
+				item.ttl--;
+			}
+		}
+		this.deletedItems = deletedItems.filter((i) => i.ttl > 0);
+	}
+
 	private drawNitroParticles(player: FrontPlayer | IOtherPlayer) {
 		if (player.usingNitro) {
 			player.nitroParticles.push(this.getParticle(player));
@@ -443,7 +505,7 @@ export class GameController {
 	}
 
 	private drawnUsername(player: FrontPlayer | IOtherPlayer) {
-		this.ctx.font = "Press Start 2P 16px bold";
+		this.ctx.font = "Press Start 2P 12px bold";
 
 		if (player.canControl) {
 			this.ctx.fillStyle = "white";
@@ -457,7 +519,7 @@ export class GameController {
 		const x =
 			player.x +
 			player.width / 2 -
-			player.username.slice(0, 20).length * 3;
+			player.username.slice(0, 20).length * 4;
 		const y = player.y + player.height + 15;
 		this.ctx.strokeText(player.username.slice(0, 15), x, y);
 		this.ctx.fillText(player.username.slice(0, 15), x, y);

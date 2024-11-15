@@ -2,6 +2,7 @@ import { SoundController } from "../../../sound/soundController";
 import {
 	IBox,
 	ICheckPoint,
+	IDeletedItem,
 	IFinishLine,
 	IItems,
 	IOtherPlayer,
@@ -87,7 +88,8 @@ export class MapController {
 
 	public makePrediction(
 		players: Array<IPlayer | IOtherPlayer>,
-		items: Array<IItems>
+		items: Array<IItems>,
+		deletedItems: Array<IDeletedItem>
 	) {
 		let changed = false;
 		const futurePlayers = players.map((p) => {
@@ -99,7 +101,11 @@ export class MapController {
 			while (tempP.conflictQueue.length > 0) {
 				// console.log("deleting conflict queue");
 
-				const futurePlayer = this.getFuturePlayer(tempP, items);
+				const futurePlayer = this.getFuturePlayer(
+					tempP,
+					items,
+					deletedItems
+				);
 				if (this.havePlayerChanged(tempP, futurePlayer)) {
 					tempP = futurePlayer;
 					this.applyMove(futurePlayer);
@@ -107,7 +113,11 @@ export class MapController {
 				tempP.conflictQueue.pop();
 			}
 
-			const futurePlayer = this.getFuturePlayer(tempP, items);
+			const futurePlayer = this.getFuturePlayer(
+				tempP,
+				items,
+				deletedItems
+			);
 			changed = this.havePlayerChanged(tempP, futurePlayer);
 
 			if (changed) {
@@ -174,11 +184,15 @@ export class MapController {
 		return posAndVelChanged || rotationAndTurnSpeedChanged;
 	}
 
-	private getFuturePlayer(p: IPlayer, items: Array<IItems>) {
+	private getFuturePlayer(
+		p: IPlayer,
+		items: Array<IItems>,
+		deletedItems: Array<IDeletedItem>
+	) {
 		const futurePlayer = this.updatePlayer(p);
 		this.updateCheckpointInPlayer(futurePlayer);
 		this.checkPlayerFinishesLap(futurePlayer);
-		this.checkPlayerGetsItem(futurePlayer, items);
+		this.checkPlayerGetsItem(futurePlayer, items, deletedItems);
 		return futurePlayer;
 	}
 
@@ -285,7 +299,11 @@ export class MapController {
 		}
 	}
 
-	private checkPlayerGetsItem(p: IPlayer, items: Array<IItems>) {
+	private checkPlayerGetsItem(
+		p: IPlayer,
+		items: Array<IItems>,
+		deletedItems: Array<IDeletedItem>
+	) {
 		const collidedItems = this.collisionDetector.detect(p, items) as
 			| boolean
 			| Array<IItems>;
@@ -302,6 +320,17 @@ export class MapController {
 			if (itemAdded) {
 				const index = items.findIndex((i) => i.id === item.id);
 				items.splice(index, 1);
+				if (item.type !== 1) {
+					deletedItems.push({
+						id: item.id,
+						height: item.height,
+						ttl: 10,
+						width: item.width,
+						x: item.x,
+						y: item.y,
+						particles: [],
+					});
+				}
 				this.scheduleRespawnForItem(item);
 			}
 		}
