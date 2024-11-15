@@ -1,8 +1,26 @@
 export const src = {
 	map1: "/assets/svg/map1.svg",
+	// cars
 	carBlue: "/assets/svg/carBlue.svg",
 	carYellow: "/assets/svg/carYellow.svg",
 	carGreen: "/assets/svg/carGreen.svg",
+	// car variations
+	carAmethyst: "/assets/svg/carAmethyst.svg",
+	carBlackRed: "/assets/svg/carBlackRed.svg",
+	carCyan: "/assets/svg/carCyan.svg",
+	carJade: "/assets/svg/carJade.svg",
+	carOrange: "/assets/svg/carOrange.svg",
+	carOrangeAlt: "/assets/svg/carOrange2.svg",
+	carPink: "/assets/svg/carPink.svg",
+	carPurple: "/assets/svg/carPurple.svg",
+	carWhite: "/assets/svg/carWhite.svg",
+	// cars usuals
+	carUsualBlue: "/assets/svg/carUsualBlue.svg",
+	carUsualRed: "/assets/svg/carUsualRed.svg",
+	carUsualWhite: "/assets/svg/carUsualWhite.svg",
+	carPolice: "/assets/svg/carPolice.svg",
+	carTaxi: "/assets/svg/carTaxi.svg",
+	// others
 	nitro: "/assets/svg/nitro.svg",
 	barrel: "/assets/svg/barrel.svg",
 	tree_log: "/assets/svg/tree_log.svg",
