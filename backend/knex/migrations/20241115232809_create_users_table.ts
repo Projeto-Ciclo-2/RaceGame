@@ -13,6 +13,12 @@ export async function up(knex: Knex): Promise<void> {
 		table.integer("picked_items").defaultTo(0);
 		table.integer("played_games").defaultTo(0);
 		table.string("picture").notNullable();
+		table
+			.integer("selected_car_id")
+			.unsigned()
+			.references("id")
+			.inTable("cars")
+			.defaultTo(1);
 	});
 }
 

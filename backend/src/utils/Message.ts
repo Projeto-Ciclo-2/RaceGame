@@ -20,4 +20,5 @@ export const Message = {
 	ROOM_FULL: "Sala cheia",
 	INVALID_NAME: "Nome inválido",
 	INVALID_PASSWORD: "A senha deve conter pelo menos 8 caracteres",
+	INVALID_USER_OR_CAR: "Usuário ou carro inválido",
 } as const;
