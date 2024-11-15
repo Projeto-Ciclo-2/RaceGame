@@ -17,6 +17,7 @@ import { playerConverter } from "./tools/playerConverter";
 import { EndScreen } from "./tools/endScreen";
 import { IPlayer } from "../../interfaces/IRoom";
 import { SoundController } from "../../sound/soundController";
+import { degreesToRadians } from "./math/angleConversion";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
@@ -323,7 +324,7 @@ export class GameController {
 					p.x + newWidth / 2 - 1.5,
 					p.y + newHeight / 2 - 2.5
 				);
-				this.ctx.rotate((p.rotation * Math.PI) / 180);
+				this.ctx.rotate(degreesToRadians(p.rotation));
 				this.ctx.drawImage(
 					this.carYellow!,
 					-newWidth / 2,

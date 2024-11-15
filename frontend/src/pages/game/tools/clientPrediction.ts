@@ -5,6 +5,9 @@ export class ClientPrediction {
 	static createMoveObj(serverPlayer: BackIPlayer): IMoves {
 		return {
 			move: serverPlayer.moveNumber,
+			itemsAmount: serverPlayer.items.length,
+			rotation: serverPlayer.rotation,
+			rotationAcceleration: serverPlayer.rotationAcceleration,
 			velocities: {
 				vx: serverPlayer.velocities.vx,
 				vy: serverPlayer.velocities.vy,
@@ -37,26 +40,29 @@ export class ClientPrediction {
 					move.x !== serverPlayer.x ||
 					move.y !== serverPlayer.y ||
 					move.velocities.vx !== serverPlayer.velocities.vx ||
-					move.velocities.vy !== serverPlayer.velocities.vy
+					move.velocities.vy !== serverPlayer.velocities.vy ||
+					move.itemsAmount !== serverPlayer.items.length ||
+					move.rotation !== serverPlayer.rotation ||
+					move.rotationAcceleration !== serverPlayer.rotationAcceleration
 				) {
-					console.log("[different] move nº" + move.move);
+					// console.log("[different] move nº" + move.move);
 					if (!diferences) {
-						console.log("(client)");
-						console.log(
-							move.move,
-							move.x,
-							move.y,
-							move.velocities.vx,
-							move.velocities.vy
-						);
-						console.log("(server)");
-						console.log(
-							serverPlayer.moveNumber,
-							serverPlayer.x,
-							serverPlayer.y,
-							serverPlayer.velocities.vx,
-							serverPlayer.velocities.vy
-						);
+						// console.log("(client)");
+						// console.log(
+						// 	move.move,
+						// 	move.x,
+						// 	move.y,
+						// 	move.velocities.vx,
+						// 	move.velocities.vy
+						// );
+						// console.log("(server)");
+						// console.log(
+						// 	serverPlayer.moveNumber,
+						// 	serverPlayer.x,
+						// 	serverPlayer.y,
+						// 	serverPlayer.velocities.vx,
+						// 	serverPlayer.velocities.vy
+						// );
 						diferences =
 							ClientPrediction.createMoveObj(serverPlayer);
 					}

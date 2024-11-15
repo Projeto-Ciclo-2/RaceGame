@@ -18,7 +18,7 @@ export class MapController {
 
 	private soundController: SoundController;
 
-	private itemRespawnTime = 5000;
+	private itemRespawnTime = 3000;
 	private spawn = {
 		x: 380,
 		y: 540,
@@ -78,6 +78,9 @@ export class MapController {
 		this.carController.listen();
 	}
 
+	/**
+	 * @deprecated
+	 */
 	public _getCarKeys() {
 		return this.carController._getKeys();
 	}
@@ -93,11 +96,6 @@ export class MapController {
 				return p;
 			}
 			let tempP = p as IPlayer;
-
-			if (tempP.conflictQueue.length > 0) {
-				console.log("tempP.conflictQueue");
-				console.log(JSON.stringify(tempP.conflictQueue));
-			}
 			while (tempP.conflictQueue.length > 0) {
 				// console.log("deleting conflict queue");
 
@@ -128,10 +126,14 @@ export class MapController {
 	}
 
 	private applyMove(player: IPlayer) {
+		const { rotation, rotationAcceleration, items } = player;
 		const { vx, vy } = player.velocities;
 		player.moveNumber = player.moveNumber + 1;
 		player.moves.push({
 			move: player.moveNumber,
+			itemsAmount: items.length,
+			rotation: rotation,
+			rotationAcceleration: rotationAcceleration,
 			velocities: {
 				vx: vx,
 				vy: vy,
@@ -145,12 +147,31 @@ export class MapController {
 		oldPlayer: IPlayer,
 		futurePlayer: IPlayer
 	): boolean {
-		const { x, y, velocities: v } = oldPlayer;
-		const { x: newX, y: newY, velocities: newV } = futurePlayer;
+		const {
+			x,
+			y,
+			velocities: v,
+			rotation,
+			rotationAcceleration,
+		} = oldPlayer;
+		const {
+			x: newX,
+			y: newY,
+			velocities: newV,
+			rotation: newRotation,
+			rotationAcceleration: newTurnSpeed,
+		} = futurePlayer;
+
 		const somethingChange = x !== newX || y !== newY;
 		const velocitiesChanged = v.vx !== newV.vx || v.vy !== newV.vy;
+		const rotationChanged = rotation !== newRotation;
+		const turnAccelerationChanged = rotationAcceleration !== newTurnSpeed;
 
-		return somethingChange || velocitiesChanged;
+		const posAndVelChanged = somethingChange || velocitiesChanged;
+		const rotationAndTurnSpeedChanged =
+			rotationChanged || turnAccelerationChanged;
+
+		return posAndVelChanged || rotationAndTurnSpeedChanged;
 	}
 
 	private getFuturePlayer(p: IPlayer, items: Array<IItems>) {

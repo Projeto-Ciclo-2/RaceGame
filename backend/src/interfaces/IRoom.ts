@@ -43,6 +43,7 @@ export interface IPlayer extends IBox {
 	height: number;
 
 	rotation: number;
+	rotationAcceleration: number;
 
 	velocities: {
 		vx: number;
@@ -55,6 +56,16 @@ export interface IPlayer extends IBox {
 		left: boolean;
 		right: boolean;
 	};
+}
+
+export interface IPlayerMIN extends IBox {
+	user: string;
+	canControl: false;
+	lapsDone: number;
+	checkpoint: checkPointOrder | 0;
+	usingNitro: boolean;
+	nitroDirection: 0 | 1 | 2 | 3;
+	rotation: number;
 }
 
 export interface IPlayerControllable extends IPlayer {

@@ -48,6 +48,8 @@ export function playerConverter(
 		conflictQueue: conflictQueue,
 		//
 		rotation: p.rotation,
+		rotationAcceleration: p.rotationAcceleration,
+		//
 		velocities: p.velocities,
 		width: p.width,
 		height: p.height,

@@ -34,6 +34,7 @@ export interface IPlayer extends IBox {
 	nitroParticles: Array<IParticle>;
 
 	rotation: rotation | number;
+	rotationAcceleration: number;
 
 	moveNumber: number;
 	moves: Array<IMoves>;
@@ -86,6 +87,9 @@ export interface IMoves {
 	move: number;
 	x: number;
 	y: number;
+	rotation: number;
+	rotationAcceleration: number;
+	itemsAmount: number,
 	velocities: {
 		vx: number;
 		vy: number;

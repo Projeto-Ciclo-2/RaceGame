@@ -10,7 +10,6 @@ export function calcPercentage(
 	for (let index = 0; index < totalLaps; index++) {
 		percentage.totalCheckpoints += 5;
 	}
-	console.log(myCheckPoints, doneLaps, totalLaps);
 	if (doneLaps >= totalLaps) {
 		percentage.totalDone += 5 * totalLaps;
 	} else {

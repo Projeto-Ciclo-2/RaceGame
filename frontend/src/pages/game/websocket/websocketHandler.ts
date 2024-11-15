@@ -84,15 +84,25 @@ export class WebSocketHandler {
 					serverPlayer
 				);
 
-				if (frontP.items.length !== serverPlayer.items.length) {
-					frontP.items = serverPlayer.items;
-				}
-
 				if (result) {
 					console.log(
 						"need reconciliation - results greater than " +
 							result.move +
 							" will be in conflict queue"
+					);
+
+					console.log("before reconciliation");
+					console.log(
+						"moveNumber",
+						frontP.moveNumber,
+						"x",
+						frontP.x,
+						"y",
+						frontP.y,
+						"velocities.vx",
+						frontP.velocities.vx,
+						"velocities.vy",
+						frontP.velocities.vy
 					);
 
 					frontP.conflictQueue = frontP.moves.filter((m) => {
@@ -107,13 +117,23 @@ export class WebSocketHandler {
 					frontP.velocities.vx = result.velocities.vx;
 					frontP.velocities.vy = result.velocities.vy;
 					frontP.moveNumber = result.move;
-					players[i] = frontP;
+					frontP.items = serverPlayer.items;
+					frontP.rotationAcceleration =
+						serverPlayer.rotationAcceleration;
+					frontP.rotation = serverPlayer.rotation;
+
+					// players[i] = frontP;
 					console.log("after reconciliation");
 					console.log(
+						"moveNumber",
 						frontP.moveNumber,
+						"x",
 						frontP.x,
+						"y",
 						frontP.y,
+						"velocities.vx",
 						frontP.velocities.vx,
+						"velocities.vy",
 						frontP.velocities.vy
 					);
 				} else {

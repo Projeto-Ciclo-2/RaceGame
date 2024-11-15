@@ -16,6 +16,7 @@ import {
 } from "../../interfaces/IWSMessages";
 import { CarController } from "../controller/carController";
 import { MapController } from "../controller/mapController";
+import { havePlayerChanged } from "../tools/changeDetector";
 
 export class GameService {
 	private moveQueue: Set<WsPlayerMove> = new Set();
@@ -66,31 +67,33 @@ export class GameService {
 	}
 
 	public reconnectPlayer(player: IPlayerControllable): boolean {
-		// const pIndex = this.players.findIndex((p) => p.id === player.id);
-		// if (pIndex !== -1) {
-		// 	const oldPlayer = this.players[pIndex];
-		// 	this.players[pIndex] = {...oldPlayer};
 		return true;
-		// }
-		// return false;
 	}
 
 	public getEntities() {
 		return this.mapController.getEntities(this.players);
 	}
-
+	/**
+	 * @deprecated
+	 */
 	public queuePlayerMove(action: WsPlayerMove) {
 		this.moveQueue.add(action);
 	}
-
+	/**
+	 * @deprecated
+	 */
 	public queuePlayerPickItem(action: WsPlayerPicksItem) {
 		// this.pickItemQueue.push(action);
 	}
-
+	/**
+	 * @deprecated
+	 */
 	public queuePlayerUsesItem(action: WsPlayerUsesItem) {
 		// this.useItemQueue.push(action);
 	}
-
+	/**
+	 * @deprecated
+	 */
 	public queuePlayerArrives(action: WsPlayerArrives) {
 		// this.arrivesQueue.push(action);
 	}
@@ -115,6 +118,7 @@ export class GameService {
 						nitroUsedAt: p.nitroUsedAt,
 						ready: p.ready,
 						rotation: p.rotation,
+						rotationAcceleration: p.rotationAcceleration,
 						username: p.username,
 						usingNitro: p.usingNitro,
 						velocities: p.velocities,
@@ -164,17 +168,12 @@ export class GameService {
 					this.players
 				);
 
-				const { x, y, velocities: v } = oldPlayer;
-				const {
-					x: newX,
-					y: newY,
-					velocities: newV,
-				} = entities.players[pIndex];
+				const somethingChange = havePlayerChanged(
+					oldPlayer,
+					entities.players[pIndex]
+				);
 
-				const positionChanged = x !== newX || y !== newY;
-				const velocitiesChanged = v.vx !== newV.vx || v.vy !== newV.vy;
-
-				if (positionChanged || velocitiesChanged) {
+				if (somethingChange) {
 					this.players[pIndex].moveNumber =
 						this.players[pIndex].moveNumber + 1;
 					changed = true;
