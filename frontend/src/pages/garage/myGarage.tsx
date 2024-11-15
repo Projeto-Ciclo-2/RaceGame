@@ -27,12 +27,12 @@ const MyGarage = () => {
 		{ name: "Purple", value: 2, isLocked: false },
 		{ name: "Pink", value: 3, isLocked: false },
 		{ name: "Cian", value: 4, isLocked: false },
-		{ name: "Red", value: 5, isLocked: true },
-		{ name: "OrangeBlue", value: 6, isLocked: true },
-		{ name: "White", value: 7, isLocked: true },
-		{ name: "OrangeNeon", value: 8, isLocked: true },
-		{ name: "Jade", value: 9, isLocked: true },
-		{ name: "Amethist", value: 10, isLocked: true },
+		{ name: "Red", value: 5, isLocked: false },
+		{ name: "OrangeBlue", value: 6, isLocked: false },
+		{ name: "White", value: 7, isLocked: false },
+		{ name: "OrangeNeon", value: 8, isLocked: false },
+		{ name: "Jade", value: 9, isLocked: false },
+		{ name: "Amethist", value: 10, isLocked: false },
 	];
 	const home = () => {
 		navigate("/home");
