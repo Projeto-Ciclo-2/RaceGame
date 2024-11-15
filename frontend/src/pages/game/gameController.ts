@@ -157,7 +157,7 @@ export class GameController {
 						wheel,
 					]) => {
 						this.bkg = bkgImg;
-						this.carBlue = carAmethyst;
+						this.carBlue = carPink;
 						this.carYellow = carCyan;
 						this.carGreen = carGreen;
 						this.nitro = nitro;
