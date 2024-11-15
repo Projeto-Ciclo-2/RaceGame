@@ -31,6 +31,7 @@ export interface IPlayer extends IBox {
 		left: boolean;
 		right: boolean;
 	};
+	nitro: Array<INitroParticle>;
 	nitroParticles: Array<IParticle>;
 
 	rotation: rotation | number;
@@ -71,6 +72,8 @@ export interface IOtherPlayer {
 		left: boolean;
 		right: boolean;
 	};
+
+	nitro: Array<INitroParticle>;
 	nitroParticles: Array<IParticle>;
 
 	rotation: rotation | number;
@@ -89,7 +92,7 @@ export interface IMoves {
 	y: number;
 	rotation: number;
 	rotationAcceleration: number;
-	itemsAmount: number,
+	itemsAmount: number;
 	velocities: {
 		vx: number;
 		vy: number;
@@ -110,11 +113,24 @@ export interface IItems extends IBox {
 	velocity_effect: number;
 }
 
+export interface IDeletedItem extends IBox {
+	ttl: number;
+	particles: Array<IParticle>;
+	id: string;
+}
+
 export interface IParticle extends IBox {
 	velocityX: number;
 	velocityY: number;
 	color: string;
 	opacity: number;
+}
+
+export interface INitroParticle {
+	x: number;
+	y: number;
+	radius: number;
+	hue: number;
 }
 
 export interface IEntities {

@@ -28,7 +28,7 @@ export class CarController {
 	private height = 25;
 
 	private maxVelocity = 6;
-	private acceleration = 0.13;
+	private acceleration = 0.2;
 	private decelerationRate = 0.04;
 	private maxDecelerationRate = 0.09;
 
@@ -38,8 +38,8 @@ export class CarController {
 	private nitroDuration = 2500;
 	private nitroMaxVelocity = 8;
 
-	private rotationSpeed = 1.5;
-	private maxRotationSpeed = 7;
+	private rotationSpeed = .5;
+	private maxRotationSpeed = 6;
 
 	public setKeys(keys: {
 		ArrowLeft: boolean;
@@ -75,6 +75,12 @@ export class CarController {
 		this.getFuturePosition(futurePlayer);
 		this.correctVelocities(futurePlayer, maxVelocity);
 		this.correctRotation(futurePlayer);
+
+		const {vx, vy} = futurePlayer.velocities;
+		futurePlayer.velocities.vx = Number.parseFloat(vx.toFixed(2));
+		futurePlayer.velocities.vy = Number.parseFloat(vy.toFixed(2));
+		futurePlayer.x = Number.parseFloat(futurePlayer.x.toFixed(2));
+		futurePlayer.y = Number.parseFloat(futurePlayer.y.toFixed(2));
 
 		return futurePlayer;
 	}
@@ -140,14 +146,17 @@ export class CarController {
 			ArrowRight: keyRight,
 		} = this.keys;
 
+		const {vx, vy} = player.velocities;
+		const tempAcceleration = Math.ceil(Math.abs(vx) + Math.abs(vy));
+
 		if (keyLeft) {
-			player.rotationAcceleration -= this.rotationSpeed;
+			player.rotationAcceleration -= this.rotationSpeed * tempAcceleration;
 			if (player.rotationAcceleration < -this.maxRotationSpeed) {
 				player.rotationAcceleration = -this.maxRotationSpeed;
 			}
 			//
 		} else if (keyRight) {
-			player.rotationAcceleration += this.rotationSpeed;
+			player.rotationAcceleration += this.rotationSpeed * tempAcceleration;
 			if (player.rotationAcceleration > this.maxRotationSpeed) {
 				player.rotationAcceleration = this.maxRotationSpeed;
 			}

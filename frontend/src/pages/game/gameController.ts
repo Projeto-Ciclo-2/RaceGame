@@ -6,6 +6,7 @@ import {
 	IOtherPlayer,
 	IParticle,
 	IPlayer as FrontPlayer,
+	IDeletedItem,
 } from "./interfaces/gameInterfaces";
 
 import { loadImage } from "./tools/imgLoader";
@@ -18,6 +19,7 @@ import { EndScreen } from "./tools/endScreen";
 import { IPlayer } from "../../interfaces/IRoom";
 import { SoundController } from "../../sound/soundController";
 import { degreesToRadians } from "./math/angleConversion";
+import { getRandomInt } from "./math/randomNumber";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
@@ -48,6 +50,7 @@ export class GameController {
 
 	private particleColors = ["red", "orange", "white", "crimson"];
 	private particlesLimit = 50;
+	private nitroParticlesLimit = 100;
 
 	private debug = true || config.DEBUG_MODE;
 
@@ -57,6 +60,7 @@ export class GameController {
 
 	private players: Array<FrontPlayer | IOtherPlayer> = [];
 	private items: Array<IItems> = [];
+	private deletedItems: Array<IDeletedItem> = [];
 	private alreadyReceivePlayers = false;
 	private winner: string | undefined;
 
@@ -126,7 +130,7 @@ export class GameController {
 				loadImage(src.carUsualWhite),
 				loadImage(src.carPolice),
 				loadImage(src.carTaxi),
-				loadImage(src.nitro),
+				loadImage(src.nitroMin),
 				loadImage(src.tree_log),
 				loadImage(src.barrel),
 				loadImage(src.wheel),
@@ -181,13 +185,16 @@ export class GameController {
 
 	private listenWebSocket() {
 		this.websocketContext.onReceiveGameState((e) => {
-			const items = this.websocketHandler.handleGameState(
-				e,
-				this.players,
-				this.items,
-				this.username
-			);
+			const { items, deletedItems } =
+				this.websocketHandler.handleGameState(
+					e,
+					this.players,
+					this.items,
+					this.deletedItems,
+					this.username
+				);
 			this.items = items;
+			this.deletedItems = deletedItems;
 
 			this.setPlayersStatus(e.entities.players);
 			this.alreadyReceivePlayers = true;
@@ -260,13 +267,16 @@ export class GameController {
 		}
 		const entities = this.mapController.makePrediction(
 			this.players,
-			this.items
+			this.items,
+			this.deletedItems
 		);
 		this.myUserChanged = entities.changed;
 		this.players = entities.players;
 		this.items = entities.items;
+
 		this.renderPlayers(this.players);
 		this.renderItems(this.items);
+		this.renderDeletedItems(this.deletedItems);
 
 		if (this.debug) {
 			// this.gameDebug.makeHitBox(this.mapController.getWalls());
@@ -277,7 +287,8 @@ export class GameController {
 			// this.gameDebug.renderCollidedBoxes(
 			// 	this.mapController.getWallsCollided()
 			// );
-			// this.gameDebug.renderPlayerInfo(this.players);
+			this.myUser = this.players.find((u) => u.canControl) as FrontPlayer;
+			if (this.myUser) this.gameDebug.renderPlayerInfo([this.myUser]);
 			this.gameDebug.renderBoxes(
 				this.mapController.getCheckPoints(),
 				"#44FFadbb"
@@ -337,6 +348,7 @@ export class GameController {
 	private renderPlayers(players: Array<FrontPlayer | IOtherPlayer>) {
 		this.ctx.fillStyle = "red";
 		for (const p of players) {
+			this.drawNitro(p);
 			this.drawNitroParticles(p);
 
 			this.drawnUsername(p);
@@ -401,7 +413,107 @@ export class GameController {
 		}
 	}
 
+	private renderDeletedItems(deletedItems: Array<IDeletedItem>) {
+		for (let index = 0; index < deletedItems.length; index++) {
+			const item = deletedItems[index];
+
+			if (item.particles.length <= 0) {
+				for (let x = 0; x < item.width; x += 4) {
+					const leftForce = x < item.width / 2;
+
+					for (let y = 0; y < item.height; y += 4) {
+						const topForce = y < item.height / 2;
+						const n1 = Number.parseFloat(Math.random().toFixed(2));
+						const n2 = Number.parseFloat(Math.random().toFixed(2));
+						const velocityX = leftForce ? -n1 : n1;
+						const velocityY = topForce ? -n2 : n2;
+						const particle: IParticle = {
+							color: "#964B00",
+							height: 4,
+							opacity: 1,
+							velocityX: velocityX,
+							velocityY: velocityY,
+							width: 4,
+							x: item.x + x,
+							y: item.y + y,
+						};
+						item.particles.push(particle);
+					}
+				}
+			}
+			if (item.ttl > 0) {
+				for (const particle of item.particles) {
+					if (particle.opacity > 0) {
+						this.ctx.save();
+						// Draw the particle
+						this.ctx.fillStyle = particle.color;
+						this.ctx.globalAlpha = particle.opacity;
+						this.ctx.fillRect(
+							particle.x,
+							particle.y,
+							particle.width,
+							particle.height
+						);
+						particle.x += particle.velocityX;
+						particle.y += particle.velocityY;
+						particle.opacity -= 0.1;
+						this.ctx.restore();
+					}
+				}
+				item.ttl--;
+			}
+		}
+		this.deletedItems = deletedItems.filter((i) => i.ttl > 0);
+	}
+
+	private drawNitro(player: FrontPlayer | IOtherPlayer) {
+		const angleRad = ((player.rotation + 180) % 360) * (Math.PI / 180);
+
+		this.ctx.save();
+		this.ctx.globalCompositeOperation = "lighter";
+
+		if (player.usingNitro && player.nitro.length < this.nitroParticlesLimit) {
+			const particle = {
+				x: player.x + player.width / 2,
+				y: player.y + player.height / 2,
+				radius: 6,
+				hue: getRandomInt(0, 40),
+			};
+			player.nitro.push(particle);
+		}
+
+		for (const particle of player.nitro) {
+			this.ctx.beginPath();
+			this.ctx.arc(
+				particle.x,
+				particle.y,
+				particle.radius,
+				0,
+				Math.PI * 2
+			);
+			this.ctx.fillStyle = `hsla(${particle.hue}, 100%, 55%, .5)`;
+			this.ctx.fill();
+			this.ctx.shadowColor = `hsla(${particle.hue}, 100%, 55%, 1)`;
+			this.ctx.shadowBlur = 2.5;
+			this.ctx.closePath();
+		}
+
+		player.nitro = player.nitro.map((particle) => {
+			particle.radius -= 0.4;
+			particle.y += -Math.sin(angleRad) // + getRandomInt(0, 2);
+			particle.x += -Math.cos(angleRad) // + getRandomInt(0, 2);
+
+			return particle;
+		});
+		player.nitro = player.nitro.filter((particle) => particle.radius > 0);
+
+		this.ctx.restore();
+	}
+
 	private drawNitroParticles(player: FrontPlayer | IOtherPlayer) {
+		this.ctx.save();
+		this.ctx.globalCompositeOperation = "lighter";
+
 		if (player.usingNitro) {
 			player.nitroParticles.push(this.getParticle(player));
 			player.nitroParticles.push(this.getParticle(player));
@@ -424,7 +536,8 @@ export class GameController {
 				return particle;
 			})
 			.filter((particle) => particle.opacity > 0);
-		this.ctx.globalAlpha = 1;
+
+		this.ctx.restore()
 	}
 
 	private getParticle(player: FrontPlayer | IOtherPlayer): IParticle {
@@ -443,7 +556,7 @@ export class GameController {
 	}
 
 	private drawnUsername(player: FrontPlayer | IOtherPlayer) {
-		this.ctx.font = "Press Start 2P 16px bold";
+		this.ctx.font = "Press Start 2P 12px bold";
 
 		if (player.canControl) {
 			this.ctx.fillStyle = "white";
@@ -457,7 +570,7 @@ export class GameController {
 		const x =
 			player.x +
 			player.width / 2 -
-			player.username.slice(0, 20).length * 3;
+			player.username.slice(0, 20).length * 4;
 		const y = player.y + player.height + 15;
 		this.ctx.strokeText(player.username.slice(0, 15), x, y);
 		this.ctx.fillText(player.username.slice(0, 15), x, y);

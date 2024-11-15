@@ -22,6 +22,7 @@ export const src = {
 	carTaxi: "/assets/svg/carTaxi.svg",
 	// others
 	nitro: "/assets/svg/nitro.svg",
+	nitroMin: "/assets/svg/nitro_min.svg",
 	barrel: "/assets/svg/barrel.svg",
 	tree_log: "/assets/svg/tree_log.svg",
 	wheel: "/assets/svg/wheel.svg",

@@ -41,6 +41,7 @@ export function playerConverter(
 		nitroDirection: p.nitroDirection,
 		nitroUsedAt: p.nitroUsedAt,
 		usingNitro: p.usingNitro,
+		nitro: previousPlayer ? previousPlayer.nitro : [],
 		nitroParticles: previousPlayer ? previousPlayer.nitroParticles : [],
 		//
 		moveNumber: p.moveNumber,
@@ -71,6 +72,7 @@ export function otherPlayerConverter(
 		done_laps: player.done_laps,
 		id: player.id,
 		nitroDirection: player.nitroDirection,
+		nitro: player.nitro,
 		nitroParticles: player.nitroParticles,
 		rotation: player.rotation,
 		username: player.username,

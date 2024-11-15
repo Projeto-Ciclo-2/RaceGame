@@ -200,6 +200,12 @@ export class CollisionDetector {
 				futurePlayer.velocities.vx = newSpeed;
 			}
 		}
+
+		const { vx, vy } = futurePlayer.velocities;
+		futurePlayer.velocities.vx = Number.parseFloat(vx.toFixed(2));
+		futurePlayer.velocities.vy = Number.parseFloat(vy.toFixed(2));
+		futurePlayer.x = Number.parseFloat(futurePlayer.x.toFixed(2));
+		futurePlayer.y = Number.parseFloat(futurePlayer.y.toFixed(2));
 	}
 
 	private handleDiagonalEscape(

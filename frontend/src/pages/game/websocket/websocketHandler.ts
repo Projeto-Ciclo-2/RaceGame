@@ -1,6 +1,7 @@
 import { WsGameState } from "../../../interfaces/IWSMessages";
 import {
 	IPlayer as FrontIPlayer,
+	IDeletedItem,
 	IItems,
 	IOtherPlayer,
 	IPlayer,
@@ -17,8 +18,9 @@ export class WebSocketHandler {
 		e: WsGameState,
 		players: Array<FrontIPlayer | IOtherPlayer>,
 		items: Array<IItems>,
+		lastDeletedItems: Array<IDeletedItem>,
 		username: string
-	) {
+	): { items: Array<IItems>; deletedItems: Array<IDeletedItem> } {
 		if (players.length > e.entities.players.length) {
 			console.log("removing no active players");
 			const removeIndexes = [];
@@ -146,8 +148,48 @@ export class WebSocketHandler {
 				}
 			}
 		}
-		if (e.entities.items.length !== items.length) {
-			items = [];
+
+		if (e.entities.items.length < items.length) {
+			const itemsRef: Array<IItems> = [];
+			for (let i = 0; i < items.length; i++) {
+				const item = items[i];
+				const index = e.entities.items.findIndex(
+					(i) => i.id === item.id
+				);
+				console.log("item.id", item.id, "	item.type", item.type);
+
+				if (index === -1) {
+					console.log("item não existe no backend. index -1");
+
+					// item foi deletado!
+					if (item.type !== 1) {
+						console.log("item.type !== 1");
+						const itemIndex = lastDeletedItems.findIndex(
+							(i) => i.id === item.id
+						);
+						if (itemIndex === -1) {
+							console.log("push no 'DeletedItems'");
+							lastDeletedItems.push({
+								id: item.id,
+								height: item.height,
+								ttl: 10,
+								width: item.width,
+								x: item.x,
+								y: item.y,
+								particles: [],
+							});
+						} else {
+							console.log(lastDeletedItems)
+							console.log('não adicionado.')
+						}
+					}
+				} else {
+					// item não foi deletado
+					itemsRef.push(item);
+					console.log("item não deletado");
+				}
+			}
+			items = itemsRef;
 		}
 		for (const item of e.entities.items) {
 			const index = items.findIndex((i) => i.id === item.id);
@@ -157,6 +199,6 @@ export class WebSocketHandler {
 				items[index] = item;
 			}
 		}
-		return items;
+		return { items: items, deletedItems: lastDeletedItems };
 	}
 }
