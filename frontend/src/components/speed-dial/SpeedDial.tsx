@@ -1,7 +1,7 @@
 import React from "react";
 import SpeedDial from "@mui/material/SpeedDial";
 import SpeedDialAction from "@mui/material/SpeedDialAction";
-import { EmojiEvents, Logout } from "@mui/icons-material";
+import { EmojiEvents, Logout, Garage } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
 import "./SpeedDial.css";
 import { useNavigate } from "react-router-dom";
@@ -16,6 +16,7 @@ const SpeedDialComponent = () => {
 			name: "Leaderboard",
 			navigate: "/leaderboard",
 		},
+		{ icon: <Garage />, name: "My Garage", navigate: "/garage"}
 	];
 
 	const [open, setOpen] = React.useState(false);
