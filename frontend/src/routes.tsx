@@ -10,6 +10,7 @@ import Lobby from "./pages/lobby/Lobby";
 import LeaderBoard from "./pages/leaderboard/leaderboard";
 import Loading from "./pages/loading/loading";
 import { RoomProvider } from "./context/RoomContext";
+import MyGarage from "./pages/garage/myGarage";
 
 const AppRouter = () => {
 	return (
@@ -29,6 +30,7 @@ const AppRouter = () => {
 									element={<LeaderBoard />}
 									path="/leaderboard"
 								/>
+								<Route element={<MyGarage/>} path="/garage"/>
 							</Switch>
 						</BrowserRouter>
 					</RoomProvider>
