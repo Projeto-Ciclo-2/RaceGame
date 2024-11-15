@@ -31,6 +31,7 @@ export interface IPlayer extends IBox {
 		left: boolean;
 		right: boolean;
 	};
+	nitro: Array<INitroParticle>;
 	nitroParticles: Array<IParticle>;
 
 	rotation: rotation | number;
@@ -71,6 +72,8 @@ export interface IOtherPlayer {
 		left: boolean;
 		right: boolean;
 	};
+
+	nitro: Array<INitroParticle>;
 	nitroParticles: Array<IParticle>;
 
 	rotation: rotation | number;
@@ -121,6 +124,13 @@ export interface IParticle extends IBox {
 	velocityY: number;
 	color: string;
 	opacity: number;
+}
+
+export interface INitroParticle {
+	x: number;
+	y: number;
+	radius: number;
+	hue: number;
 }
 
 export interface IEntities {

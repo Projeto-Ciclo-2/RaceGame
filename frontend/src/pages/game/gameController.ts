@@ -19,6 +19,7 @@ import { EndScreen } from "./tools/endScreen";
 import { IPlayer } from "../../interfaces/IRoom";
 import { SoundController } from "../../sound/soundController";
 import { degreesToRadians } from "./math/angleConversion";
+import { getRandomInt } from "./math/randomNumber";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
@@ -49,6 +50,7 @@ export class GameController {
 
 	private particleColors = ["red", "orange", "white", "crimson"];
 	private particlesLimit = 50;
+	private nitroParticlesLimit = 100;
 
 	private debug = true || config.DEBUG_MODE;
 
@@ -346,6 +348,7 @@ export class GameController {
 	private renderPlayers(players: Array<FrontPlayer | IOtherPlayer>) {
 		this.ctx.fillStyle = "red";
 		for (const p of players) {
+			this.drawNitro(p);
 			this.drawNitroParticles(p);
 
 			this.drawnUsername(p);
@@ -463,7 +466,54 @@ export class GameController {
 		this.deletedItems = deletedItems.filter((i) => i.ttl > 0);
 	}
 
+	private drawNitro(player: FrontPlayer | IOtherPlayer) {
+		const angleRad = ((player.rotation + 180) % 360) * (Math.PI / 180);
+
+		this.ctx.save();
+		this.ctx.globalCompositeOperation = "lighter";
+
+		if (player.usingNitro && player.nitro.length < this.nitroParticlesLimit) {
+			const particle = {
+				x: player.x + player.width / 2,
+				y: player.y + player.height / 2,
+				radius: 6,
+				hue: getRandomInt(0, 40),
+			};
+			player.nitro.push(particle);
+		}
+
+		for (const particle of player.nitro) {
+			this.ctx.beginPath();
+			this.ctx.arc(
+				particle.x,
+				particle.y,
+				particle.radius,
+				0,
+				Math.PI * 2
+			);
+			this.ctx.fillStyle = `hsla(${particle.hue}, 100%, 55%, .5)`;
+			this.ctx.fill();
+			this.ctx.shadowColor = `hsla(${particle.hue}, 100%, 55%, 1)`;
+			this.ctx.shadowBlur = 2.5;
+			this.ctx.closePath();
+		}
+
+		player.nitro = player.nitro.map((particle) => {
+			particle.radius -= 0.4;
+			particle.y += -Math.sin(angleRad) // + getRandomInt(0, 2);
+			particle.x += -Math.cos(angleRad) // + getRandomInt(0, 2);
+
+			return particle;
+		});
+		player.nitro = player.nitro.filter((particle) => particle.radius > 0);
+
+		this.ctx.restore();
+	}
+
 	private drawNitroParticles(player: FrontPlayer | IOtherPlayer) {
+		this.ctx.save();
+		this.ctx.globalCompositeOperation = "lighter";
+
 		if (player.usingNitro) {
 			player.nitroParticles.push(this.getParticle(player));
 			player.nitroParticles.push(this.getParticle(player));
@@ -486,7 +536,8 @@ export class GameController {
 				return particle;
 			})
 			.filter((particle) => particle.opacity > 0);
-		this.ctx.globalAlpha = 1;
+
+		this.ctx.restore()
 	}
 
 	private getParticle(player: FrontPlayer | IOtherPlayer): IParticle {
