@@ -118,13 +118,13 @@ export class GameController {
 				loadImage(src.carGreen),
 				loadImage(src.carBlackRed),
 				loadImage(src.carCyan),
-				loadImage(src.carJade),
-				loadImage(src.carOrange),
-				loadImage(src.carOrangeAlt),
-				loadImage(src.carAmethyst),
+				loadImage(src.carJadeMIN),
+				loadImage(src.carOrangeMIN),
+				loadImage(src.carOrangeAltMIN),
+				loadImage(src.carAmethystMIN),
 				loadImage(src.carPink),
 				loadImage(src.carPurple),
-				loadImage(src.carWhite),
+				loadImage(src.carWhiteMIN),
 				loadImage(src.carUsualBlue),
 				loadImage(src.carUsualRed),
 				loadImage(src.carUsualWhite),
@@ -161,8 +161,8 @@ export class GameController {
 						wheel,
 					]) => {
 						this.bkg = bkgImg;
-						this.carBlue = carPink;
-						this.carYellow = carCyan;
+						this.carBlue = carCyan;
+						this.carYellow = carAmethyst;
 						this.carGreen = carGreen;
 						this.nitro = nitro;
 						this.tree_log = tree_log;
