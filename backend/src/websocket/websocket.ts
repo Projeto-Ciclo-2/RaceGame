@@ -343,6 +343,14 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 					sendErr(ws);
 				}
 				break;
+			case "clientReadyToPlay":
+				try {
+					raceGame.setThisPlayerReady(data.roomID, thisUser);
+				} catch (error) {
+					if (error instanceof Error) return sendErr(ws, error);
+					sendErr(ws);
+				}
+				break;
 			case "requestGameState":
 				try {
 					const room = raceGame.getRoom(data.roomID);

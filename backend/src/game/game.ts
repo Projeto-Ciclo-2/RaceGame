@@ -86,6 +86,21 @@ export class RaceGame {
 		return false;
 	}
 
+	public setThisPlayerReady(
+		roomID: string,
+		wsPlayer: WsUser
+	) {
+		const room = this.getRoom(roomID);
+		if (room) {
+			room.gameService.players = room.gameService.players.map((p) => {
+				if (p.username === wsPlayer.username) {
+					p.ready = true;
+				}
+				return p;
+			});
+		}
+	}
+
 	public queuePlayerMove(action: WsPlayerMove) {
 		for (const room of this.gameRooms) {
 			if (room.id === action.roomID) {
