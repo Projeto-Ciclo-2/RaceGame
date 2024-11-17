@@ -1,13 +1,16 @@
 import {
 	IEntities,
+	IItems,
 	IPlayer,
 	IPlayerControllable,
+	IPlayerMIN,
 	IRoomActive,
 } from "../../interfaces/IRoom";
 import { WsUser } from "../../interfaces/IUser";
 import {
 	WsBroadcastPlayerMove,
 	WsEndGame,
+	WsGameStart,
 	WsGameState,
 	WsPlayerArrives,
 	WsPlayerMove,
@@ -28,6 +31,7 @@ export class GameService {
 	public players: Array<IPlayerControllable> = [];
 	private selfRoom: IRoomActive | undefined;
 
+	private gameStarted = false;
 	private stated_at: number;
 	// 5 minutes of duration
 	private durationTime = 15 * 60 * 1000;
@@ -60,10 +64,30 @@ export class GameService {
 
 	public gameLoop(selfRoom: IRoomActive) {
 		this.selfRoom = selfRoom;
-		this.resolvePlayerMoveQueue();
-		this.softDisableInactivePlayers();
-		this.checkIfSomeoneWins();
-		this.checkGameEndByTimeout();
+		if (this.gameStarted) {
+			this.resolvePlayerMoveQueue();
+			this.softDisableInactivePlayers();
+			this.checkIfSomeoneWins();
+			this.checkGameEndByTimeout();
+		} else {
+			this.checkGameStarts();
+		}
+	}
+
+	private checkGameStarts() {
+		const allowed = this.players.every((p) => p.ready);
+		if (allowed) {
+			this.gameStarted = true;
+			this.stated_at = Date.now();
+			if (this.selfRoom) {
+				for (const wsPlayer of this.selfRoom.WsPlayers) {
+					const msg: WsGameStart = {
+						type: "gameStart",
+					};
+					wsPlayer.ws.send(JSON.stringify(msg));
+				}
+			}
+		}
 	}
 
 	public reconnectPlayer(player: IPlayerControllable): boolean {
@@ -105,6 +129,7 @@ export class GameService {
 				.map((p) => {
 					return {
 						alive: p.alive,
+						carID: p.carID,
 						checkpoint: p.checkpoint,
 						disableArrow: p.disableArrow,
 						done_laps: p.done_laps,
@@ -114,7 +139,6 @@ export class GameService {
 						pickedItems: p.pickedItems,
 						lastMessageAt: p.lastMessageAt,
 						moveNumber: p.moveNumber,
-						nitroDirection: p.nitroDirection,
 						nitroUsedAt: p.nitroUsedAt,
 						ready: p.ready,
 						rotation: p.rotation,
@@ -128,20 +152,43 @@ export class GameService {
 					};
 				});
 			for (const user of this.selfRoom.WsPlayers) {
-				const message: WsGameState = {
-					type: "gameState",
-					entities: {
-						items: entities.items,
-						players: filteredPlayer,
-					},
-				};
-				user.ws.send(JSON.stringify(message));
+				this.customWsSend(user, filteredPlayer, entities.items);
 			}
 		}
 	}
 
-	private customWsSend(user: WsUser, players: Array<IPlayer>): void {
-		const tempPlayers = players.map((p) => {});
+	private customWsSend(
+		user: WsUser,
+		players: Array<IPlayer>,
+		items: Array<IItems>
+	): void {
+		const customPlayers: Array<IPlayer | IPlayerMIN> = players.map((p) => {
+			if (p.username === user.username) {
+				const pMIN: IPlayerMIN = {
+					canControl: false,
+					carID: p.carID,
+					checkpoint: p.checkpoint,
+					height: p.height,
+					lapsDone: p.done_laps,
+					rotation: p.rotation,
+					user: p.username,
+					usingNitro: p.usingNitro,
+					width: p.width,
+					x: p.x,
+					y: p.y,
+				};
+				return pMIN;
+			}
+			return p as IPlayer;
+		});
+		const message: WsGameState = {
+			type: "gameState",
+			entities: {
+				items: items,
+				players: customPlayers,
+			},
+		};
+		user.ws.send(JSON.stringify(message));
 	}
 
 	private resolvePlayerMoveQueue() {
