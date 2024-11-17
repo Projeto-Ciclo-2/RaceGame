@@ -33,6 +33,7 @@ export default class UserRepository {
 				"messages_send",
 				"picked_items",
 				"played_games",
+				"selected_car_id",
 			]);
 
 		return user;

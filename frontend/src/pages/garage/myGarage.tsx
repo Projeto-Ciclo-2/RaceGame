@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./myGarage.css";
 import BxsHome from "../../components/icons/home";
@@ -7,41 +7,87 @@ import Btn from "../../components/other/button";
 import BxsLock from "../../assets/icons/lock";
 import GameIconsHomeGarage from "../../assets/icons/garage";
 import GameIconsF1Car from "../../assets/icons/f1";
+import { CarsAPI } from "../../api/cars";
+import { UserAPI } from "../../api/users";
 
-interface Car {
+
+interface CarsDictionary {
 	name: string;
 	value: number;
 	isLocked: boolean;
 }
-const MyGarage = () => {
-	const [inUse, setInUse] = useState(0);
-	const navigate = useNavigate();
 
+interface Car {
+	id: number;
+	name: string;
+	unlock_requirement: string;
+}
+const MyGarage = () => {
+	const [inUse, setInUse] = useState(1);
+	const [cars, setCars] =  useState<CarsDictionary[]>([]);
+	const navigate = useNavigate();
+	const apiCars = new CarsAPI();
+	const userApi = new UserAPI();
 	const carsIndex = [
-		{
-			name: "Blue",
-			value: 0,
-			isLocked: false,
-		},
-		{ name: "Green", value: 1, isLocked: false },
-		{ name: "Purple", value: 2, isLocked: false },
-		{ name: "Pink", value: 3, isLocked: false },
-		{ name: "Cian", value: 4, isLocked: false },
-		{ name: "Red", value: 5, isLocked: false },
-		{ name: "OrangeBlue", value: 6, isLocked: false },
-		{ name: "White", value: 7, isLocked: false },
-		{ name: "OrangeNeon", value: 8, isLocked: false },
-		{ name: "Jade", value: 9, isLocked: false },
-		{ name: "Amethist", value: 10, isLocked: false },
+		{name: "Blue", value: 1, isLocked: false,},
+		{ name: "Green", value: 2, isLocked: false },
+		{ name: "Purple", value: 3, isLocked: false },
+		{ name: "Pink", value: 4, isLocked: false },
+		{ name: "Cian", value: 5, isLocked: false },
+		{ name: "Red", value: 6, isLocked: false },
+		{ name: "OrangeBlue", value: 7, isLocked: false },
+		{ name: "White", value: 8, isLocked: false },
+		{ name: "OrangeNeon", value: 9, isLocked: false },
+		{ name: "Jade", value: 10, isLocked: false },
+		{ name: "Amethist", value: 11, isLocked: false },
 	];
 	const home = () => {
 		navigate("/home");
 	};
-	const handleChoosenCar = (car: Car) => {
+	const handleChoosenCar = async (car: CarsDictionary) => {
 		if (!car.isLocked) {
-			setInUse(car.value);
+			try{
+				const response = await userApi.getMyUser();
+				if(response.statusCode !== 200){
+					throw new Error("Ocorreu um erro ao buscar dados, tente mais tarde")
+				}
+				const id = response.data.id;
+				const carResponse = await apiCars.selectCar(id, car.value);	
+				setInUse(car.value);
+				console.log(carResponse);
+			}
+			catch(error){
+			console.error("Erro ao selecionar o carro: ", error);
+			}
 		}
 	};
+useEffect(() => {
+		async function fetchCars() {
+			try{
+				const responseMyUser = await userApi.getMyUser();
+				if(responseMyUser.statusCode !== 200){
+					throw new Error("Ocorreu um erro ao buscar dados, tente mais tarde")
+				}
+				const id = responseMyUser.data.id;
+				const selected_car = responseMyUser.data.selected_car_id
+				setInUse(selected_car)				
+				const responseCars = await apiCars.getCars(id);
+				const unlockedCars = responseCars.data
+				const combinedCars = carsIndex.map((car, index) => {
+					const isUnlocked = unlockedCars.some((unlockedCar: Car) => unlockedCar.id === index + 1)
+					return{
+						...car,
+						isLocked: !isUnlocked,
+					}
+				})
+				setCars(combinedCars)
+		
+			}catch(error){
+				console.error("Erro: ", error)
+			}		
+		}
+		fetchCars();
+	}, [])
 	return (
 		<div id="garage-content">
 			<div id="garage-header">
@@ -56,7 +102,7 @@ const MyGarage = () => {
 			<div id="garage-body">
 				<div id="big-image"></div>
 				<div id="cars-container">
-					{carsIndex.map((car, index) => (
+					{cars.map((car, index) => (
 						<div className="car" key={index}>
 							<Gallery index={index} />
 							{inUse === car.value && (
