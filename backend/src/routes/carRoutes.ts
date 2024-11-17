@@ -5,7 +5,7 @@ import CarController from "../controllers/carController";
 const carController: CarController = new CarController();
 const carRoutes: Router = Router();
 
-carRoutes.get("/", carController.getCars.bind(carController));
+carRoutes.get("/:userId", carController.getCars.bind(carController));
 
 carRoutes.put("/user_car", carController.selectUserCar.bind(carController));
 

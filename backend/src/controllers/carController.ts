@@ -33,10 +33,9 @@ class CarController {
 	}
 
 	public async getCars(req: Request, res: Response): Promise<void> {
-		const { userId } = req.params;
 
 		try {
-			const { userId } = req.body;
+			const { userId } = req.params;
 			if (!userId) {
 				throw new BadRequestException(Message.INVALID_ID);
 			}

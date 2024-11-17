@@ -11,6 +11,7 @@ export interface IUser {
 	picked_items: number;
 	played_games: number;
 	picture: string;
+	selected_car_id: number;
 }
 
 export interface IGoogleProfile {

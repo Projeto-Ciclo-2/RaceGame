@@ -5,7 +5,7 @@ class CarRepository {
 	async selectUserCar(userId: string, carId: number): Promise<void> {
 		await dbConnection("users")
 			.where({ id: userId })
-			.update({ selected_car: carId });
+			.update({ selected_car_id: carId });
 	}
 
 	async getCars(): Promise<ICar[]> {
