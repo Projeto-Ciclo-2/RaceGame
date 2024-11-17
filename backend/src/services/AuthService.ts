@@ -18,7 +18,7 @@ export default class AuthService {
 		);
 
 		if (!user) {
-			user = await this.userRepository.createUser({
+			user = await this.userRepository.createUserAndReturnID({
 				username: googleProfile.email.split("@")[0],
 				name: googleProfile.name,
 				google_id: googleProfile.sub,

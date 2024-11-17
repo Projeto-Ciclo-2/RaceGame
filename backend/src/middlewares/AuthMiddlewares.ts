@@ -35,10 +35,6 @@ export default async function AuthMiddleware(
 			throw new UnauthorizedException(Message.JWT_MALFORMATED);
 		}
 
-		console.log("tokenVerify");
-		console.log(tokenVerify);
-
-
 		const user = await new UserRepository().getUserById(
 			tokenVerify.user_id
 		);

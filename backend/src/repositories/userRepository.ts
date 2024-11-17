@@ -2,10 +2,27 @@ import dbConnection from "../database/dbConnection";
 import { IUser } from "../interfaces/IUser";
 
 export default class UserRepository {
-	public async createUser(user: Partial<IUser>) {
+	public async createUserAndReturnID(user: Partial<IUser>) {
 		console.log("user");
 		console.log(user);
 
+		const [createdUser] = (await dbConnection("users")
+			.insert(user)
+			.returning([
+				"id",
+				"username",
+				"name",
+				"google_id",
+				"created_at",
+				"wins",
+				"messages_send",
+				"picked_items",
+				"played_games",
+			])) as IUser[];
+		return createdUser;
+	}
+
+	public async createUser(user: Partial<IUser>) {
 		const [createdUser] = (await dbConnection("users")
 			.insert(user)
 			.returning([

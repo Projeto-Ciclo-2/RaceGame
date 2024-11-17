@@ -1,4 +1,5 @@
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload } from "jsonwebtoken";
+import { config } from "../config";
 
 interface IJwt {
 	user_id: string;
