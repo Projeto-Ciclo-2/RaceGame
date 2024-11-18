@@ -81,7 +81,7 @@ export default function EndScreen(props: {
 							<li key={i}>
 								<div id="div1">
 									<p className="position-number">{i + 1}</p>
-									<p className="username">{p.username}</p>
+									<p className="username">{p.username} {props.me.username === p.username && (<span style={{ color: '#e4f17e', marginLeft: '.5rem' }}>(you)</span>)}</p>
 								</div>
 								<div>
 									<p className="laps-number">{p.done_laps}</p>
