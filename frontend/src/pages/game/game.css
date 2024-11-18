@@ -5,6 +5,7 @@
 	align-items: center;
 	justify-content: center;
 	background-color: var(--primary);
+	background-image: url("../../../public/assets/svg/css/gameBkg.svg");
 }
 #musicBtnGameScreen {
 	height: 2.5rem;
@@ -19,6 +20,7 @@
 	cursor: pointer;
 	z-index: 999;
 	position: absolute;
+	outline: 2px solid var(--background);
 	left: 1rem;
 	top: 23%;
 	& > * {
@@ -26,5 +28,57 @@
 		width: 100%;
 		height: 100%;
 		object-fit: contain;
+	}
+	&:focus-within {
+		outline-color: var(--red);
+	}
+}
+#giveUp {
+	height: 2.5rem;
+	width: 9rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: none;
+	background: var(--red);
+	border-radius: 10px;
+	outline: 2px solid var(--red);
+	color: var(--bkg_1);
+	z-index: 999;
+	position: absolute;
+	font-family: var(--font-text);
+	left: 1rem;
+	bottom: 1rem;
+	cursor: pointer;
+	font-size: 1rem;
+	font-weight: 700;
+	& > * {
+		width: 1.5rem;
+		height: 1rem;
+		object-fit: contain;
+	}
+}
+
+#tipsContainer {
+	position: absolute;
+	right: 1rem;
+	bottom: 1rem;
+	background-color: var(--color-1-75);
+	padding: 1rem;
+	border-radius: 20px;
+	& > button {
+		height: 2rem;
+		width: 2rem;
+		color: var(--bkg_1);
+		background-color: var(--red);
+		border-radius: 100%;
+		border: none;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		position: absolute;
+		right: 0.5rem;
+		top: 0.5rem;
+		cursor: pointer;
 	}
 }

@@ -11,6 +11,10 @@ import { UserContext } from "../../context/UserContext";
 import { SoundController } from "../../sound/soundController";
 import MusicDisabled from "../../components/icons/musicDisabled";
 import MusicIcon from "../../components/icons/musicIcon";
+import GiveUp from "../../components/icons/giveUp";
+import Confirmation from "../../components/modal/Confirmation";
+import Tips from "../../components/svg/tips";
+import CloseIcon from "@mui/icons-material/Close";
 
 export default function Game() {
 	const WebSocketContext = useWebSocket();
@@ -32,6 +36,8 @@ export default function Game() {
 	const canvas = React.useRef<null | HTMLCanvasElement>(null);
 
 	const [isPlaying, setIsPlaying] = React.useState(false);
+	const [wantGiveUp, setWantGiveUp] = React.useState(false);
+	const [alreadySee, setAlreadySee] = React.useState(false);
 
 	function toggleMusic() {
 		setIsPlaying(!isPlaying);
@@ -119,6 +125,26 @@ export default function Game() {
 			)}
 			{gameStatus && (
 				<>
+					{wantGiveUp && (
+						<Confirmation
+							title="Are you sure?"
+							description="If you accept you will not be able to join again!"
+							onConfirm={() => {
+								if (RoomsContext) {
+									RoomsContext.reset();
+								}
+								soundController.stopAcceleration();
+								soundController.stopItsRaceTime();
+								soundController.stopNitro();
+								navigate("/home");
+							}}
+							onReject={() => setWantGiveUp(false)}
+						/>
+					)}
+					<button id="giveUp" onClick={() => setWantGiveUp(true)}>
+						To give up
+						<GiveUp />
+					</button>
 					<button id="musicBtnGameScreen" onClick={toggleMusic}>
 						{isPlaying ? <MusicDisabled /> : <MusicIcon />}
 					</button>
@@ -128,6 +154,17 @@ export default function Game() {
 						laps={RoomsContext.currentRoom?.laps}
 					/>
 					<canvas ref={canvas} width={760} height={600}></canvas>
+					{!alreadySee && (
+						<figure id="tipsContainer">
+							<button
+								onClick={() => setAlreadySee(true)}
+								className="reject-button"
+							>
+								<CloseIcon />
+							</button>
+							<Tips />
+						</figure>
+					)}
 				</>
 			)}
 		</div>

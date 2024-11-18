@@ -54,7 +54,7 @@ export class GameController {
 	private particlesLimit = 50;
 	private nitroParticlesLimit = 100;
 
-	private debug = true || config.DEBUG_MODE;
+	private debug = config.DEBUG_MODE;
 
 	private username: string;
 	private userID: string;
@@ -283,16 +283,16 @@ export class GameController {
 			// this.gameDebug.renderCollidedBoxes(
 			// 	this.mapController.getWallsCollided()
 			// );
-			this.myUser = this.players.find((u) => u.canControl) as FrontPlayer;
-			if (this.myUser) this.gameDebug.renderPlayerInfo([this.myUser]);
-			this.gameDebug.renderBoxes(
-				this.mapController.getCheckPoints(),
-				"#44FFadbb"
-			);
-			this.gameDebug.renderBoxes(
-				[this.mapController.getFinishLine()],
-				"#bbbb0099"
-			);
+			// this.myUser = this.players.find((u) => u.canControl) as FrontPlayer;
+			// if (this.myUser) this.gameDebug.renderPlayerInfo([this.myUser]);
+			// this.gameDebug.renderBoxes(
+			// 	this.mapController.getCheckPoints(),
+			// 	"#44FFadbb"
+			// );
+			// this.gameDebug.renderBoxes(
+			// 	[this.mapController.getFinishLine()],
+			// 	"#bbbb0099"
+			// );
 			// this.gameDebug.renderKeyInfo(this.mapController._getCarKeys());
 		}
 
