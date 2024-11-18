@@ -1,7 +1,7 @@
 import React from "react";
 import { IPlayer, IPlayerMIN } from "../../../interfaces/IRoom";
 import "./gameStatus.css";
-import { src } from "../../../assets/enum/enumSrc";
+import { getCarKey, src } from "../../../assets/enum/enumSrc";
 import { sortPlayers } from "../tools/sortPlayers";
 
 export default function GameStatus(props: {
@@ -78,14 +78,7 @@ export default function GameStatus(props: {
 									<span>{p.done_laps} voltas</span>
 								</p>
 							</div>
-							<img
-								src={
-									me?.username === p.username
-										? src.carBlue
-										: src.carGreen
-								}
-								alt="car"
-							/>
+							<img src={src[getCarKey(p.carID)]} alt="car" />
 						</section>
 					);
 				})}
