@@ -1,9 +1,16 @@
-import { IPlayer } from "../../interfaces/IRoom";
+import { carOptions, IPlayer } from "../../interfaces/IRoom";
 
-export function getPlayer(id: string, username: string, ready: boolean): IPlayer {
+export function getPlayer(
+	id: string,
+	username: string,
+	ready: boolean,
+	carID: carOptions
+): IPlayer {
 	return {
 		id: id,
 		username: username,
+		carID: carID,
+
 		alive: true,
 		lastMessageAt: undefined,
 
@@ -16,12 +23,6 @@ export function getPlayer(id: string, username: string, ready: boolean): IPlayer
 
 		usingNitro: false,
 		nitroUsedAt: null,
-		nitroDirection: {
-			down: false,
-			up: false,
-			left: false,
-			right: false,
-		},
 
 		moveNumber: 0,
 

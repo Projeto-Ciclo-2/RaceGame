@@ -1,6 +1,6 @@
 import { error } from "console";
 import redisClient from "../database/redisClient";
-import { IPlayer, IRoom } from "../interfaces/IRoom";
+import { carOptions, IPlayer, IRoom } from "../interfaces/IRoom";
 import {
 	WsPlayerLeft,
 	WsPlayerReady,
@@ -106,8 +106,8 @@ export class LobbySevice {
 		}
 	}
 
-	private createBasicPlayer(id: string, username: string): IPlayer {
-		const newPlayer: IPlayer = getPlayer(id, username, false);
+	private createBasicPlayer(id: string, username: string, carID: carOptions): IPlayer {
+		const newPlayer: IPlayer = getPlayer(id, username, false, carID);
 
 		return newPlayer;
 	}

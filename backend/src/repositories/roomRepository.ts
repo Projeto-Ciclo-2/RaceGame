@@ -1,5 +1,5 @@
 import redisClient from "../database/redisClient";
-import { IMessage, IPlayer, IRoom } from "../interfaces/IRoom";
+import { carOptions, IMessage, IPlayer, IRoom } from "../interfaces/IRoom";
 import { randomUUID } from "crypto";
 import { NotFoundException } from "../utils/Exception";
 import { Message } from "../utils/Message";
@@ -15,7 +15,7 @@ export default class RoomRepository {
 	}
 
 	async createRoom(user: IUser): Promise<IRoom> {
-		const player= getPlayer(user.id, user.username, false);
+		const player= getPlayer(user.id, user.username, false, user.selected_car_id as carOptions);
 
 		const room: IRoom = {
 			id: randomUUID(),

@@ -1,4 +1,4 @@
-import { IPlayer, IPlayerControllable, IRoomActive } from "../interfaces/IRoom";
+import { carOptions, IPlayer, IPlayerControllable, IRoomActive } from "../interfaces/IRoom";
 import { WsUser } from "../interfaces/IUser";
 import {
 	WsEndGame,
@@ -40,13 +40,13 @@ export class RaceGame {
 	/** not recommend
 	 * @deprecated
 	 */
-	public _addPlayer(wsPlayer: WsUser, player: IPlayer, roomID: string) {
+	public _addPlayer(wsPlayer: WsUser, player: IPlayer, roomID: string, carID: carOptions) {
 		this.gameRooms = this.gameRooms.map((r) => {
 			if (r.id === roomID) {
 				r.players.push(player);
 				r.WsPlayers.push(wsPlayer);
 				r.gameService._addPlayer(
-					getPlayerControllable(player.id, player.username, true),
+					getPlayerControllable(player.id, player.username, true, carID),
 					r
 				);
 			}
@@ -65,12 +65,13 @@ export class RaceGame {
 	public reconnectPlayer(
 		roomID: string,
 		wsPlayer: WsUser,
-		userID: string
+		userID: string,
+		carID: carOptions
 	): boolean {
 		const room = this.getRoom(roomID);
 		if (room) {
 			const success = room.gameService.reconnectPlayer(
-				getPlayerControllable(userID, wsPlayer.username, true)
+				getPlayerControllable(userID, wsPlayer.username, true, carID)
 			);
 			if (success) {
 				const wsIndex = room.WsPlayers.findIndex(

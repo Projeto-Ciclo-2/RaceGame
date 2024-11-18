@@ -3,7 +3,7 @@ import { GameService } from "../game/service/gameService";
 import { WsUser } from "./IUser";
 
 type checkPointOrder = 1 | 2 | 3 | 4 | 5;
-type carOptions = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
+export type carOptions = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12;
 
 export interface IBox {
 	x: number;
@@ -55,10 +55,10 @@ export interface IPlayer extends IBox {
 }
 
 export interface IPlayerMIN extends IBox {
-	user: string;
+	username: string;
 	carID: carOptions;
 	canControl: false;
-	lapsDone: number;
+	done_laps: number;
 	checkpoint: checkPointOrder | 0;
 	usingNitro: boolean;
 	rotation: number;
