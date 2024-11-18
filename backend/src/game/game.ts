@@ -1,4 +1,9 @@
-import { carOptions, IPlayer, IPlayerControllable, IRoomActive } from "../interfaces/IRoom";
+import {
+	carOptions,
+	IPlayer,
+	IPlayerControllable,
+	IRoomActive,
+} from "../interfaces/IRoom";
 import { WsUser } from "../interfaces/IUser";
 import {
 	WsEndGame,
@@ -20,14 +25,10 @@ export class RaceGame {
 	private usersService = new UserService();
 
 	private triggerDeleteRoom(e: WsEndGame) {
-		console.log("trigger deleteRoom");
-
 		this.deleteRoomFn(e);
 	}
 	private deleteRoomFn: (e: WsEndGame) => void = (e: WsEndGame) => {};
 	public onDeleteRoom = (cbFn: (e: WsEndGame) => void) => {
-		console.log("fn seated");
-
 		this.deleteRoomFn = cbFn;
 	};
 
@@ -40,13 +41,23 @@ export class RaceGame {
 	/** not recommend
 	 * @deprecated
 	 */
-	public _addPlayer(wsPlayer: WsUser, player: IPlayer, roomID: string, carID: carOptions) {
+	public _addPlayer(
+		wsPlayer: WsUser,
+		player: IPlayer,
+		roomID: string,
+		carID: carOptions
+	) {
 		this.gameRooms = this.gameRooms.map((r) => {
 			if (r.id === roomID) {
 				r.players.push(player);
 				r.WsPlayers.push(wsPlayer);
 				r.gameService._addPlayer(
-					getPlayerControllable(player.id, player.username, true, carID),
+					getPlayerControllable(
+						player.id,
+						player.username,
+						true,
+						carID
+					),
 					r
 				);
 			}
@@ -82,20 +93,22 @@ export class RaceGame {
 				} else {
 					throw new Error("player was not found!");
 				}
+			} else {
+				console.log("reconnectPlayer fail");
 			}
+		} else {
+			console.log("room not found");
 		}
 		return false;
 	}
 
-	public setThisPlayerReady(
-		roomID: string,
-		wsPlayer: WsUser
-	) {
+	public setThisPlayerReady(roomID: string, wsPlayer: WsUser) {
 		const room = this.getRoom(roomID);
 		if (room) {
 			room.gameService.players = room.gameService.players.map((p) => {
 				if (p.username === wsPlayer.username) {
 					p.ready = true;
+					console.log("setting player ready to play: " + p.username);
 				}
 				return p;
 			});

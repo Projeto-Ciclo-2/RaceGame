@@ -8,6 +8,9 @@ import Btn from "../../components/other/button";
 import { useWebSocket } from "../../context/WebSocketContext";
 import { WsPlayerLeft, WsPlayerReady } from "../../interfaces/IWSMessages";
 import { UserContext } from "../../context/UserContext";
+import { WaitingSoundController } from "../../sound/waitingController";
+import MusicIcon from "../../components/icons/musicIcon";
+import MusicDisabled from "../../components/icons/musicDisabled";
 
 const Lobby = () => {
 	const userContext = useContext(UserContext);
@@ -15,6 +18,10 @@ const Lobby = () => {
 	const WebsocketContext = useWebSocket();
 
 	const chatRef = useRef<HTMLDivElement | null>(null);
+
+	const soundController = useRef(new WaitingSoundController());
+	soundController.current.playItsWaitingTime();
+	const [isPlaying, setIsPlaying] = useState(false);
 
 	const [buttonReadyDisabled, setButtonReadyDisabled] = useState(false);
 
@@ -25,6 +32,7 @@ const Lobby = () => {
 			chatRef.current.scrollTop = chatRef.current.scrollHeight + 10;
 		}
 		if (RoomsContext.initGame) {
+			soundController.current.stopItsWaitingTime();
 			navigate("/game");
 		}
 	}, [
@@ -39,13 +47,14 @@ const Lobby = () => {
 			RoomsContext.updateRoomLobby(RoomsContext.currentRoom);
 		}
 		if (!userContext?.user.current) {
+			soundController.current.stopItsWaitingTime();
 			navigate("/home");
 		}
 	}, []);
 
 	useEffect(() => {
-		console.log('current room update');
-	}, [RoomsContext.currentRoom])
+		console.log("current room update");
+	}, [RoomsContext.currentRoom]);
 
 	function isReady() {
 		const message: WsPlayerReady = {
@@ -67,7 +76,13 @@ const Lobby = () => {
 		};
 		WebsocketContext.sendPlayerLeft(message);
 
+		soundController.current.stopItsWaitingTime();
 		navigate("/home");
+	}
+
+	function toggleMusic() {
+		setIsPlaying(!isPlaying);
+		soundController.current.changeActiveState(isPlaying);
 	}
 
 	return (
@@ -83,7 +98,9 @@ const Lobby = () => {
 							Players Ready:{" "}
 							<span>
 								{RoomsContext.playersReady.length} /{" "}
-								{RoomsContext.players.length < 3 ? "2" : RoomsContext.players.length}
+								{RoomsContext.players.length < 3
+									? "2"
+									: RoomsContext.players.length}
 							</span>
 						</p>
 					</div>
@@ -94,6 +111,9 @@ const Lobby = () => {
 					<div id="last-div">
 						<hr />
 						<div>
+							<button id="musicBtn" onClick={toggleMusic}>
+								{isPlaying ? <MusicDisabled /> : <MusicIcon />}
+							</button>
 							{buttonReadyDisabled ? (
 								<Btn
 									type="button"

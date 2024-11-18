@@ -43,9 +43,10 @@ export class ClientPrediction {
 					move.velocities.vy !== serverPlayer.velocities.vy ||
 					move.itemsAmount !== serverPlayer.items.length ||
 					move.rotation !== serverPlayer.rotation ||
-					move.rotationAcceleration !== serverPlayer.rotationAcceleration
+					move.rotationAcceleration !==
+						serverPlayer.rotationAcceleration
 				) {
-					// console.log("[different] move nº" + move.move);
+					console.log("[different] move nº" + move.move);
 					if (!diferences) {
 						// console.log("(client)");
 						// console.log(

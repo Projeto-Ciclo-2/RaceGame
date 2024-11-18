@@ -75,6 +75,8 @@ const MyGarage = () => {
 				setInUse(selected_car);
 				const responseCars = await apiCars.getCars(id);
 				const unlockedCars = responseCars.data;
+				console.log(responseCars);
+
 				const combinedCars = carsIndex.map((car, index) => {
 					const isUnlocked = unlockedCars.some(
 						(unlockedCar: Car) => unlockedCar.id === index + 1

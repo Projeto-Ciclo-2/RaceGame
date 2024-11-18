@@ -104,6 +104,7 @@ const validActions: serverActions[] = [
 	"broadcastNewMessage",
 	"broadcastPlayerReady",
 	"gameInit",
+	"gameStart",
 	"broadcastPlayerMove",
 	"broadcastPlayerPickItem",
 	"broadcastUseItem",

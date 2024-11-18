@@ -26,14 +26,18 @@ export class GameController {
 	private canvas: HTMLCanvasElement;
 	private ctx: CanvasRenderingContext2D;
 
+	private firstRender = true;
 	private gameAlive = true;
+	private gameStarted = false;
+
+	private countDownMode = false;
+	private countDown = 3;
 
 	private mapController: MapController | undefined;
 	private websocketContext: WebSocketContextType;
 	private websocketHandler = new WebSocketHandler();
 	private gameEndScreen: EndScreen;
-	private soundController = new SoundController();
-	private playingSoundTrack = false;
+	private soundController: SoundController;
 	private carsImgHandler = new ImgHandler();
 
 	private roomID: string | undefined;
@@ -53,6 +57,7 @@ export class GameController {
 	private debug = true || config.DEBUG_MODE;
 
 	private username: string;
+	private userID: string;
 	private myUser: FrontPlayer | undefined;
 	private myUserChanged = false;
 
@@ -87,7 +92,9 @@ export class GameController {
 	constructor(
 		canvas: HTMLCanvasElement,
 		websocketContext: WebSocketContextType,
+		soundController: SoundController,
 		username: string,
+		userID: string,
 		roomID: string,
 		setPlayersStatus: React.Dispatch<
 			React.SetStateAction<(IPlayer | IPlayerMIN)[]>
@@ -102,14 +109,16 @@ export class GameController {
 			this.ctx = ctx;
 			this.gameDebug = new GameDebug(this.ctx);
 			this.gameEndScreen = new EndScreen(canvas);
+			this.soundController = soundController;
 
 			this.setPlayersStatus = setPlayersStatus;
 			this.setGameStatus = setGameStatus;
 			this.reactMe = me;
 			this.reactWinner = winner;
 
-			this.username = username;
 			this.roomID = roomID;
+			this.username = username;
+			this.userID = userID;
 
 			this.websocketContext = websocketContext;
 
@@ -120,21 +129,13 @@ export class GameController {
 				loadImage(src.barrel),
 				loadImage(src.wheel),
 			])
-				.then(
-					([
-						bkgImg,
-						nitro,
-						tree_log,
-						barrel,
-						wheel,
-					]) => {
-						this.bkg = bkgImg;
-						this.nitro = nitro;
-						this.tree_log = tree_log;
-						this.barrel = barrel;
-						this.wheel = wheel;
-					}
-				)
+				.then(([bkgImg, nitro, tree_log, barrel, wheel]) => {
+					this.bkg = bkgImg;
+					this.nitro = nitro;
+					this.tree_log = tree_log;
+					this.barrel = barrel;
+					this.wheel = wheel;
+				})
 				.catch((error) => {
 					console.error("Failed to load images:", error);
 				});
@@ -150,7 +151,17 @@ export class GameController {
 
 	private listenWebSocket() {
 		this.websocketContext.onReceiveGameStart((e) => {
-			console.log("Game started");
+			const interval = setInterval(() => {
+				this.countDown--;
+				if (this.countDown <= 0) {
+					clearInterval(interval);
+					this.countDownMode = false;
+					this.gameStarted = true;
+					this.soundController.playStart();
+				}
+			}, 1000);
+			this.countDownMode = true;
+			this.soundController.playCountdown();
 		});
 		this.websocketContext.onReceiveGameState((e) => {
 			const { items, deletedItems } =
@@ -166,6 +177,10 @@ export class GameController {
 
 			this.setPlayersStatus(e.entities.players);
 			this.alreadyReceivePlayers = true;
+			if (e.started) {
+				this.countDownMode = false;
+				this.gameStarted = true;
+			}
 		});
 		this.websocketContext.onReceiveEndGame((e) => {
 			if (e.roomID === this.roomID) {
@@ -180,12 +195,18 @@ export class GameController {
 
 				this.setPlayersStatus(e.players);
 				this.setGameStatus(this.gameAlive);
-				this.reactMe.current = this.players.find(
+
+				const foundUser = this.players.find(
 					(u) => u.canControl
 				) as FrontPlayer;
+				this.reactMe.current = { ...foundUser, id: "" };
+
 				this.reactWinner.current = e.winner;
-				this.soundController.stopItsRaceTime();
+
 				this.soundController.playStart();
+				this.soundController.stopItsRaceTime();
+				this.soundController.stopAcceleration();
+				this.soundController.stopNitro();
 			}
 		});
 	}
@@ -202,21 +223,25 @@ export class GameController {
 			window.requestAnimationFrame((time) => this.animate(time));
 			return;
 		}
-		if (!this.playingSoundTrack) {
+		if (this.firstRender) {
 			this.soundController.playItsRaceTime();
-			this.playingSoundTrack = true;
+			this.websocketContext.sendClientReadyToPlay({
+				roomID: this.roomID!,
+				type: "clientReadyToPlay",
+			});
+			this.firstRender = false;
 		}
 		if (!this.gameAlive) {
 			this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 			if (!this.wheel) {
-				window.requestAnimationFrame((time) => this.animate(time));
+				// window.requestAnimationFrame((time) => this.animate(time));
 				return;
 			}
 			if (!this.winner) {
 				console.error("winner name not provided.");
 				return;
 			}
-			this.gameEndScreen.start(this.wheel, this.players, this.winner);
+			// this.gameEndScreen.start(this.wheel, this.players, this.winner);
 			return;
 		}
 		const durationOfLastExec = timestamp - this.lastTime;
@@ -227,21 +252,27 @@ export class GameController {
 
 		this.renderDefaultBkg();
 
-		if (this.myUserChanged) {
-			this.sendMove();
+		if (this.gameStarted) {
+			if (this.myUserChanged) {
+				this.sendMove();
+			}
+			const entities = this.mapController.makePrediction(
+				this.players,
+				this.items,
+				this.deletedItems
+			);
+			this.myUserChanged = entities.changed;
+			this.players = entities.players;
+			this.items = entities.items;
 		}
-		const entities = this.mapController.makePrediction(
-			this.players,
-			this.items,
-			this.deletedItems
-		);
-		this.myUserChanged = entities.changed;
-		this.players = entities.players;
-		this.items = entities.items;
 
 		this.renderPlayers(this.players);
 		this.renderItems(this.items);
 		this.renderDeletedItems(this.deletedItems);
+
+		if (!this.gameStarted) {
+			this.renderCountDown();
+		}
 
 		if (this.debug) {
 			// this.gameDebug.makeHitBox(this.mapController.getWalls());
@@ -281,12 +312,11 @@ export class GameController {
 		}
 		if (this.myUser) {
 			const newKeys = this.mapController!._getCarKeys();
-
 			const message: WsPlayerMove = {
 				type: "playerMove",
 				roomID: this.roomID!,
 				player: {
-					id: this.myUser.id,
+					id: this.userID,
 				},
 				keys: newKeys,
 			};
@@ -518,7 +548,7 @@ export class GameController {
 	}
 
 	private drawnUsername(player: FrontPlayer | IOtherPlayer) {
-		this.ctx.font = "Press Start 2P 12px bold";
+		this.ctx.font = "bold 12px Arial";
 
 		if (player.canControl) {
 			this.ctx.fillStyle = "white";
@@ -560,6 +590,28 @@ export class GameController {
 					"not was possible to request game state. roomID missing."
 				);
 			}
+		}
+	}
+
+	private renderCountDown() {
+		this.ctx.fillStyle = "#00000050";
+		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+		this.ctx.fillStyle = "#ff5733";
+		if (this.countDownMode) {
+			this.ctx.font = "bold 100px Arial";
+			this.ctx.fillText(
+				this.countDown.toString(),
+				this.canvas.width / 2,
+				this.canvas.height / 2
+			);
+		} else {
+			this.ctx.font = "bold 30px Arial";
+			const text = "Waiting players...";
+			this.ctx.fillText(
+				text,
+				this.canvas.width / 2 - text.length * 4,
+				this.canvas.height / 2
+			);
 		}
 	}
 

@@ -18,12 +18,24 @@ export class SoundController {
 	constructor() {
 		this["nitro"].volume = 0.5;
 		this["endNitro"].volume = 0.5;
-		this['itsRaceTime'].volume = 0.1;
+		this["itsRaceTime"].volume = 0.1;
+		this.itsRaceTime.loop = true;
+		this.lapDone.volume = 1;
+		console.log("soundController created");
+	}
+
+	public changeActiveState(isPlaying: boolean) {
+		this.sfxActive = isPlaying;
+		if (isPlaying) {
+			this.playItsRaceTime();
+		} else {
+			this.stopAcceleration();
+			this.stopItsRaceTime();
+			this.stopNitro();
+		}
 	}
 
 	public playAcceleration() {
-		console.log("acceleration");
-		console.log(this.acceleration);
 		if (this.sfxActive && this.acceleration.ended) {
 			this.acceleration.play();
 		}
@@ -59,14 +71,12 @@ export class SoundController {
 	}
 
 	public playItsRaceTime() {
-		if (this.sfxActive) {
+		if (this.sfxActive && this.itsRaceTime.paused) {
 			this.itsRaceTime.play();
 		}
 	}
 	public stopItsRaceTime() {
-		if (this.sfxActive) {
-			this.itsRaceTime.pause();
-		}
+		this.itsRaceTime.pause();
 	}
 
 	public playLapDone() {

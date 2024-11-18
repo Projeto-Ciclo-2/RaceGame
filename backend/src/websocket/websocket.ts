@@ -357,6 +357,7 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 					if (room) {
 						const message: WsGameState = {
 							type: "gameState",
+							started: room.gameService.gameStarted,
 							entities: room.gameService.getEntities(),
 						};
 						ws.send(JSON.stringify(message));
@@ -480,7 +481,7 @@ function broadcast(data: string): void {
 function initGame(room: IRoom) {
 	console.log("-initGame-");
 	const controllablePlayers = room.players.map((p) =>
-		getPlayerControllable(p.id, p.username, p.ready, p.carID)
+		getPlayerControllable(p.id, p.username, false, p.carID)
 	);
 	const wsPlayers: WsUser[] = [];
 	for (const user of users) {

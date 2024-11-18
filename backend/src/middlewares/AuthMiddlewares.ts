@@ -52,7 +52,6 @@ export default async function AuthMiddleware(
 			error: error.name,
 			message: error.message,
 		});
-		console.log(response)
 
 		res.status(response.status).json(response);
 	}

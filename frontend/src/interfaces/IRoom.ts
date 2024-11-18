@@ -87,14 +87,13 @@ export interface IMessage {
 	username: string;
 	userID: string;
 	typeMessageChat: "message" | "userJoined" | "userLeft" | "userReady";
-
 }
 
 export interface IRoom {
 	id: string;
 	laps: number;
 	map: 1;
-	players: Array<IPlayer>
-	messages: Array<IMessage>
-	gameInit: boolean
+	players: Array<IPlayer>;
+	messages: Array<IMessage>;
+	gameInit: boolean;
 }

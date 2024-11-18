@@ -98,6 +98,7 @@ export interface WsEndGame {
 
 export interface WsGameState {
 	type: "gameState";
+	started: boolean;
 	entities: IEntitiesForBroadcast;
 }
 

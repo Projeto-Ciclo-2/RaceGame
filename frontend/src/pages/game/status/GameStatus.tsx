@@ -53,7 +53,12 @@ export default function GameStatus(props: {
 					}
 					id="gameStatusMeNitro"
 				>
-					<span>{me ? me.items.length : "0"} / 3</span>
+					<span>
+						{me && me.items && Array.isArray(me.items)
+							? me.items.length
+							: "0"}{" "}
+						/ 3
+					</span>
 					<img src={src.nitro} alt="Nitro" />
 				</div>
 			</div>
@@ -62,7 +67,9 @@ export default function GameStatus(props: {
 					return (
 						<section
 							key={p.username}
-							className={me?.username === p.username ? "isMe" : ""}
+							className={
+								me?.username === p.username ? "isMe" : ""
+							}
 						>
 							<div>
 								<span>{i + 1}º</span>
@@ -73,7 +80,9 @@ export default function GameStatus(props: {
 							</div>
 							<img
 								src={
-									me?.username === p.username ? src.carBlue : src.carGreen
+									me?.username === p.username
+										? src.carBlue
+										: src.carGreen
 								}
 								alt="car"
 							/>

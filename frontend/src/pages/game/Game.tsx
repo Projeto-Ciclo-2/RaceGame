@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import { GameController } from "./gameController";
 import "./game.css";
 import { useWebSocket } from "../../context/WebSocketContext";
@@ -7,19 +7,36 @@ import { useNavigate } from "react-router-dom";
 import { IPlayer, IPlayerMIN } from "../../interfaces/IRoom";
 import GameStatus from "./status/GameStatus";
 import EndScreen from "../end/EndScreen";
+import { UserContext } from "../../context/UserContext";
+import { SoundController } from "../../sound/soundController";
+import MusicDisabled from "../../components/icons/musicDisabled";
+import MusicIcon from "../../components/icons/musicIcon";
 
 export default function Game() {
 	const WebSocketContext = useWebSocket();
 	const RoomsContext = useRoom();
+	const userContext = useContext(UserContext);
 	const navigate = useNavigate();
 
-	const [playersStatus, setPlayerStatus] = React.useState<Array<IPlayer | IPlayerMIN>>([]);
+	const [playersStatus, setPlayerStatus] = React.useState<
+		Array<IPlayer | IPlayerMIN>
+	>([]);
 	const [gameStatus, setGameStatus] = React.useState(true);
 	const me = React.useRef<undefined | IPlayer>(undefined);
 	const winner = React.useRef("");
 
 	const gameController = React.useRef<null | GameController>(null);
+	const soundController = React.useMemo(() => {
+		return new SoundController();
+	}, []);
 	const canvas = React.useRef<null | HTMLCanvasElement>(null);
+
+	const [isPlaying, setIsPlaying] = React.useState(false);
+
+	function toggleMusic() {
+		setIsPlaying(!isPlaying);
+		soundController.changeActiveState(isPlaying);
+	}
 
 	React.useEffect(() => {
 		const can =
@@ -39,6 +56,17 @@ export default function Game() {
 		if (!can && !WebSocketContext.onConnectPromise) {
 			return;
 		}
+
+		if (
+			!userContext ||
+			!userContext.user ||
+			!userContext.user.current ||
+			!userContext.user.current.id
+		) {
+			console.error("user not found");
+			navigate("/home");
+			return;
+		}
 		function gameInit() {
 			if (
 				!gameController.current &&
@@ -51,7 +79,9 @@ export default function Game() {
 				gameController.current = new GameController(
 					canvas.current,
 					WebSocketContext,
+					soundController,
 					WebSocketContext.username,
+					userContext!.user.current!.id,
 					RoomsContext.currentRoom!.id,
 					setPlayerStatus,
 					setGameStatus,
@@ -89,6 +119,9 @@ export default function Game() {
 			)}
 			{gameStatus && (
 				<>
+					<button id="musicBtnGameScreen" onClick={toggleMusic}>
+						{isPlaying ? <MusicDisabled /> : <MusicIcon />}
+					</button>
 					<GameStatus
 						players={playersStatus}
 						username={WebSocketContext.username}

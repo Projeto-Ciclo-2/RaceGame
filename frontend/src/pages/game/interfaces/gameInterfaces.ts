@@ -11,7 +11,6 @@ export interface IBox {
 }
 
 export interface IPlayer extends IBox {
-	id: string;
 	username: string;
 	canControl: boolean;
 	carID: carOptions;

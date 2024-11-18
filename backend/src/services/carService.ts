@@ -28,16 +28,16 @@ class CarService {
 		let unlockedCars = await this.carRepository.getCars();
 
 		if (user.wins >= 1) {
-			unlockedCars = unlockedCars.filter((car) => car.id <= 8);
+			unlockedCars = unlockedCars.filter((car) => car.id <= 11);
 			return unlockedCars;
 		}
 
 		if (user.played_games >= 1) {
-			unlockedCars = unlockedCars.filter((car) => car.id <= 6);
+			unlockedCars = unlockedCars.filter((car) => car.id <= 8);
 			return unlockedCars;
 		}
 
-		unlockedCars = unlockedCars.filter((car) => car.id <= 3);
+		unlockedCars = unlockedCars.filter((car) => car.id <= 5);
 
 		return unlockedCars;
 	}

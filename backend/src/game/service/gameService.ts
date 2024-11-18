@@ -31,7 +31,7 @@ export class GameService {
 	public players: Array<IPlayerControllable> = [];
 	private selfRoom: IRoomActive | undefined;
 
-	private gameStarted = false;
+	public gameStarted = false;
 	private stated_at: number;
 	// 5 minutes of duration
 	private durationTime = 15 * 60 * 1000;
@@ -124,33 +124,9 @@ export class GameService {
 
 	private broadcastGameState(entities: IEntities) {
 		if (this.selfRoom) {
-			const filteredPlayer: Array<IPlayer> = entities.players
-				.filter((p) => p.alive)
-				.map((p) => {
-					return {
-						alive: p.alive,
-						carID: p.carID,
-						checkpoint: p.checkpoint,
-						disableArrow: p.disableArrow,
-						done_laps: p.done_laps,
-						height: p.height,
-						id: p.id,
-						items: p.items,
-						pickedItems: p.pickedItems,
-						lastMessageAt: p.lastMessageAt,
-						moveNumber: p.moveNumber,
-						nitroUsedAt: p.nitroUsedAt,
-						ready: p.ready,
-						rotation: p.rotation,
-						rotationAcceleration: p.rotationAcceleration,
-						username: p.username,
-						usingNitro: p.usingNitro,
-						velocities: p.velocities,
-						width: p.width,
-						x: p.x,
-						y: p.y,
-					};
-				});
+			const filteredPlayer: Array<IPlayer> = entities.players.filter(
+				(p) => p.alive
+			);
 			for (const user of this.selfRoom.WsPlayers) {
 				this.customWsSend(user, filteredPlayer, entities.items);
 			}
@@ -163,7 +139,7 @@ export class GameService {
 		items: Array<IItems>
 	): void {
 		const customPlayers: Array<IPlayer | IPlayerMIN> = players.map((p) => {
-			if (p.username === user.username) {
+			if (p.username !== user.username) {
 				const pMIN: IPlayerMIN = {
 					canControl: false,
 					carID: p.carID,
@@ -183,6 +159,7 @@ export class GameService {
 		});
 		const message: WsGameState = {
 			type: "gameState",
+			started: this.gameStarted,
 			entities: {
 				items: items,
 				players: customPlayers,
