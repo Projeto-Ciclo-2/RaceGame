@@ -75,7 +75,7 @@ export default function GameStatus(props: {
 								<span>{i + 1}º</span>
 								<p>
 									<span>{p.username.slice(0, 15)}</span>
-									<span>{p.done_laps} voltas</span>
+									<span>{p.done_laps} laps</span>
 								</p>
 							</div>
 							<img src={src[getCarKey(p.carID)]} alt="car" />
