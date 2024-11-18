@@ -124,9 +124,34 @@ export class GameService {
 
 	private broadcastGameState(entities: IEntities) {
 		if (this.selfRoom) {
-			const filteredPlayer: Array<IPlayer> = entities.players.filter(
-				(p) => p.alive
-			);
+			const filteredPlayer: Array<IPlayer> = entities.players
+				.filter((p) => p.alive)
+				.map((p) => {
+					return {
+						// NÃO REMOVER ISSO!!!!!!!
+						alive: p.alive,
+						carID: p.carID,
+						checkpoint: p.checkpoint,
+						disableArrow: p.disableArrow,
+						done_laps: p.done_laps,
+						height: p.height,
+						id: p.id,
+						items: p.items,
+						pickedItems: p.pickedItems,
+						lastMessageAt: p.lastMessageAt,
+						moveNumber: p.moveNumber,
+						nitroUsedAt: p.nitroUsedAt,
+						ready: p.ready,
+						rotation: p.rotation,
+						rotationAcceleration: p.rotationAcceleration,
+						username: p.username,
+						usingNitro: p.usingNitro,
+						velocities: p.velocities,
+						width: p.width,
+						x: p.x,
+						y: p.y,
+					};
+				});
 			for (const user of this.selfRoom.WsPlayers) {
 				this.customWsSend(user, filteredPlayer, entities.items);
 			}
