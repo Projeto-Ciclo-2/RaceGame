@@ -20,6 +20,8 @@ const Homepage = () => {
 		navigate("/loading");
 	}
 
+	useEffect(() => {}, [roomContext.disabledBtnCreateRace]);
+
 	useEffect(() => {
 		async function fetchUser() {
 			try {
@@ -78,7 +80,11 @@ const Homepage = () => {
 				</div>
 				<div id="content-rooms">
 					<RoomList />
-					<button onClick={createRace}>Create Race</button>
+					{roomContext.disabledBtnCreateRace ? (
+						<button disabled={true} style={{ backgroundColor: '#c0bbbb', color: '#dfd6d6' }}>Create Race</button>
+					) : (
+						<button onClick={createRace}>Create Race</button>
+					)}
 				</div>
 			</section>
 		</section>
