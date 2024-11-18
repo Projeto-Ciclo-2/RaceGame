@@ -10,9 +10,11 @@ import {
 	WsBroadcastPlayerPickItem,
 	WsBroadcastPlayerReady,
 	WsBroadcastUseItem,
+	WsClientReadyToPlay,
 	WsCreateRoom,
 	WsEndGame,
 	WsGameInit,
+	WsGameStart,
 	WsGameState,
 	WsNewRoom,
 	WsPing,
@@ -47,6 +49,7 @@ export interface WebSocketContextType {
 	onReceiveNewMessage: (cbFn: (e: WsBroadcastNewMessage) => any) => void;
 	onReceivePlayerReady: (cbFn: (e: WsBroadcastPlayerReady) => any) => void;
 	onReceiveGameInit: (cbFn: (e: WsGameInit) => any) => void;
+	onReceiveGameStart: (cbFn: (e: WsGameStart) => any) => void;
 	onReceivePlayerMove: (cbFn: (e: WsBroadcastPlayerMove) => any) => void;
 	onReceivePickItem: (cbFn: (e: WsBroadcastPlayerPickItem) => any) => void;
 	onReceiveUseItem: (cbFn: (e: WsBroadcastUseItem) => any) => void;
@@ -59,6 +62,7 @@ export interface WebSocketContextType {
 	sendPlayerLeft: (obj: WsPlayerLeft) => void;
 	sendMessage: (obj: WsPostMessage) => void;
 	sendPlayerReady: (obj: WsPlayerReady) => void;
+	sendClientReadyToPlay: (obj: WsClientReadyToPlay) => void;
 	sendPlayerMove: (obj: WsPlayerMove) => void;
 	sendPlayerPickItem: (obj: WsPlayerPicksItem) => void;
 	sendPlayerUsesItem: (obj: WsPlayerUsesItem) => void;
@@ -83,6 +87,7 @@ type serverActions =
 	| "broadcastNewMessage"
 	| "broadcastPlayerReady"
 	| "gameInit"
+	| "gameStart"
 	| "broadcastPlayerMove"
 	| "broadcastPlayerPickItem"
 	| "broadcastUseItem"
@@ -116,6 +121,7 @@ const fnMapping: Record<serverActions, (e: any) => void> = {
 	broadcastNewMessage: (e: WsBroadcastNewMessage) => {},
 	broadcastPlayerReady: (e: WsBroadcastPlayerReady) => {},
 	gameInit: (e: WsGameInit) => {},
+	gameStart: (e: WsGameStart) => {},
 	broadcastPlayerMove: (e: WsBroadcastPlayerMove) => {},
 	broadcastPlayerPickItem: (e: WsBroadcastPlayerPickItem) => {},
 	broadcastUseItem: (e: WsBroadcastUseItem) => {},
@@ -287,7 +293,6 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 		};
 
 		socket.onerror = (error) => {
-
 			tryingToConnect.current = false;
 			isConnected.current = false;
 			clearInterval(pingTimeoutRef.current);
@@ -367,6 +372,8 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 				//in-game
 				onReceiveGameInit: (cbFn) =>
 					setCallback<WsGameInit>("gameInit", cbFn),
+				onReceiveGameStart: (cbFn) =>
+					setCallback<WsGameStart>("gameStart", cbFn),
 				onReceivePlayerMove: (cbFn) =>
 					setCallback<WsBroadcastPlayerMove>(
 						"broadcastPlayerMove",
@@ -394,6 +401,8 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({
 				sendMessage: (obj) => sendMessage(JSON.stringify(obj)),
 				sendPlayerReady: (obj) => sendMessage(JSON.stringify(obj)),
 				//in-game
+				sendClientReadyToPlay: (obj) =>
+					sendMessage(JSON.stringify(obj)),
 				sendPlayerMove: (obj) => sendMessage(JSON.stringify(obj)),
 				sendPlayerPickItem: (obj) => sendMessage(JSON.stringify(obj)),
 				sendPlayerUsesItem: (obj) => sendMessage(JSON.stringify(obj)),
