@@ -1,5 +1,5 @@
 import React from "react";
-import { IPlayer } from "../../interfaces/IRoom";
+import { IPlayer, IPlayerMIN } from "../../interfaces/IRoom";
 import { Link } from "react-router-dom";
 import { src } from "../../assets/enum/enumSrc";
 import "./endScreen.css";
@@ -11,12 +11,12 @@ export default function EndScreen(props: {
 	alive: boolean;
 	winner: string;
 	me: IPlayer;
-	players: Array<IPlayer>;
+	players: Array<IPlayer | IPlayerMIN>;
 	laps: number | undefined;
 }) {
 	const RoomsContext = useRoom();
 
-	const sortedPlayers = React.useMemo<Array<IPlayer>>(() => {
+	const sortedPlayers = React.useMemo<Array<IPlayer | IPlayerMIN>>(() => {
 		if (props.players.length > 0) {
 			const tempPlayers = sortPlayers(props.players);
 			return tempPlayers;
@@ -53,8 +53,8 @@ export default function EndScreen(props: {
 				{sortedPlayers.map((p, i) => {
 					return (
 						<section
-							key={p.id}
-							className={props.me?.id === p.id ? "isMe" : ""}
+							key={p.username}
+							className={props.me?.username === p.username ? "isMe" : ""}
 						>
 							<p>
 								<span>{i + 1}º</span>

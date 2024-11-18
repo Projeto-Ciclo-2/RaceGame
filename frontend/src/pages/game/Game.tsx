@@ -4,7 +4,7 @@ import "./game.css";
 import { useWebSocket } from "../../context/WebSocketContext";
 import { useRoom } from "../../context/RoomContext";
 import { useNavigate } from "react-router-dom";
-import { IPlayer } from "../../interfaces/IRoom";
+import { IPlayer, IPlayerMIN } from "../../interfaces/IRoom";
 import GameStatus from "./status/GameStatus";
 import EndScreen from "../end/EndScreen";
 
@@ -13,7 +13,7 @@ export default function Game() {
 	const RoomsContext = useRoom();
 	const navigate = useNavigate();
 
-	const [playersStatus, setPlayerStatus] = React.useState<Array<IPlayer>>([]);
+	const [playersStatus, setPlayerStatus] = React.useState<Array<IPlayer | IPlayerMIN>>([]);
 	const [gameStatus, setGameStatus] = React.useState(true);
 	const me = React.useRef<undefined | IPlayer>(undefined);
 	const winner = React.useRef("");

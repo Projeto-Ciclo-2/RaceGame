@@ -16,10 +16,11 @@ import { WsPlayerMove } from "../../interfaces/IWSMessages";
 import { src } from "../../assets/enum/enumSrc";
 import { playerConverter } from "./tools/playerConverter";
 import { EndScreen } from "./tools/endScreen";
-import { IPlayer } from "../../interfaces/IRoom";
+import { IPlayer, IPlayerMIN } from "../../interfaces/IRoom";
 import { SoundController } from "../../sound/soundController";
 import { degreesToRadians } from "./math/angleConversion";
 import { getRandomInt } from "./math/randomNumber";
+import { ImgHandler } from "./tools/imgHandler";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
@@ -33,16 +34,13 @@ export class GameController {
 	private gameEndScreen: EndScreen;
 	private soundController = new SoundController();
 	private playingSoundTrack = false;
+	private carsImgHandler = new ImgHandler();
 
 	private roomID: string | undefined;
 
 	private gameDebug: GameDebug;
 
 	private bkg: CanvasImageSource | undefined;
-	private carBlue: CanvasImageSource | undefined;
-	private carYellow: CanvasImageSource | undefined;
-	private carGreen: CanvasImageSource | undefined;
-
 	private nitro: CanvasImageSource | undefined;
 	private tree_log: CanvasImageSource | undefined;
 	private barrel: CanvasImageSource | undefined;
@@ -64,7 +62,9 @@ export class GameController {
 	private alreadyReceivePlayers = false;
 	private winner: string | undefined;
 
-	private setPlayersStatus: React.Dispatch<React.SetStateAction<IPlayer[]>>;
+	private setPlayersStatus: React.Dispatch<
+		React.SetStateAction<(IPlayer | IPlayerMIN)[]>
+	>;
 	private setGameStatus: React.Dispatch<React.SetStateAction<boolean>>;
 	private reactMe: React.MutableRefObject<IPlayer | undefined>;
 	private reactWinner: React.MutableRefObject<string>;
@@ -89,7 +89,9 @@ export class GameController {
 		websocketContext: WebSocketContextType,
 		username: string,
 		roomID: string,
-		setPlayersStatus: React.Dispatch<React.SetStateAction<IPlayer[]>>,
+		setPlayersStatus: React.Dispatch<
+			React.SetStateAction<(IPlayer | IPlayerMIN)[]>
+		>,
 		setGameStatus: React.Dispatch<React.SetStateAction<boolean>>,
 		me: React.MutableRefObject<IPlayer | undefined>,
 		winner: React.MutableRefObject<string>
@@ -113,23 +115,6 @@ export class GameController {
 
 			Promise.all([
 				loadImage(src.map1),
-				loadImage(src.carBlue),
-				loadImage(src.carYellow),
-				loadImage(src.carGreen),
-				loadImage(src.carBlackRed),
-				loadImage(src.carCyan),
-				loadImage(src.carJadeMIN),
-				loadImage(src.carOrangeMIN),
-				loadImage(src.carOrangeAltMIN),
-				loadImage(src.carAmethystMIN),
-				loadImage(src.carPink),
-				loadImage(src.carPurple),
-				loadImage(src.carWhiteMIN),
-				loadImage(src.carUsualBlue),
-				loadImage(src.carUsualRed),
-				loadImage(src.carUsualWhite),
-				loadImage(src.carPolice),
-				loadImage(src.carTaxi),
 				loadImage(src.nitroMin),
 				loadImage(src.tree_log),
 				loadImage(src.barrel),
@@ -138,32 +123,12 @@ export class GameController {
 				.then(
 					([
 						bkgImg,
-						carBlue,
-						carYellow,
-						carGreen,
-						carBlackRed,
-						carCyan,
-						carJade,
-						carOrange,
-						carOrangeAlt,
-						carAmethyst,
-						carPink,
-						carPurple,
-						carWhite,
-						carUsualBlue,
-						carUsualRed,
-						carUsualWhite,
-						carPolice,
-						carTaxi,
 						nitro,
 						tree_log,
 						barrel,
 						wheel,
 					]) => {
 						this.bkg = bkgImg;
-						this.carBlue = carCyan;
-						this.carYellow = carAmethyst;
-						this.carGreen = carGreen;
 						this.nitro = nitro;
 						this.tree_log = tree_log;
 						this.barrel = barrel;
@@ -184,6 +149,9 @@ export class GameController {
 	}
 
 	private listenWebSocket() {
+		this.websocketContext.onReceiveGameStart((e) => {
+			console.log("Game started");
+		});
 		this.websocketContext.onReceiveGameState((e) => {
 			const { items, deletedItems } =
 				this.websocketHandler.handleGameState(
@@ -204,7 +172,7 @@ export class GameController {
 				this.gameAlive = false;
 				this.players = e.players.map((p) => {
 					const previousPlayer = this.players.find(
-						(oldP) => oldP.id === p.id
+						(oldP) => oldP.username === p.username
 					);
 					return playerConverter(p, previousPlayer, this.username);
 				});
@@ -225,9 +193,6 @@ export class GameController {
 	private animate(timestamp: DOMHighResTimeStamp): void {
 		if (
 			!this.bkg ||
-			!this.carGreen ||
-			!this.carBlue ||
-			!this.carYellow ||
 			!this.mapController ||
 			!this.barrel ||
 			!this.nitro ||
@@ -366,7 +331,7 @@ export class GameController {
 				);
 				this.ctx.rotate(degreesToRadians(p.rotation));
 				this.ctx.drawImage(
-					this.carYellow!,
+					this.carsImgHandler.getImg(p.carID),
 					-newWidth / 2,
 					-newHeight / 2,
 					newWidth,
@@ -382,15 +347,9 @@ export class GameController {
 
 			this.ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
 			this.ctx.rotate((p.rotation * Math.PI) / 180);
-			const img =
-				p.color === "1"
-					? this.carBlue!
-					: p.color === "2"
-					? this.carGreen!
-					: this.carYellow!;
 
 			this.ctx.drawImage(
-				img,
+				this.carsImgHandler.getImg(p.carID),
 				-p.width / 2,
 				-p.height / 2,
 				p.width,
@@ -472,7 +431,10 @@ export class GameController {
 		this.ctx.save();
 		this.ctx.globalCompositeOperation = "lighter";
 
-		if (player.usingNitro && player.nitro.length < this.nitroParticlesLimit) {
+		if (
+			player.usingNitro &&
+			player.nitro.length < this.nitroParticlesLimit
+		) {
 			const particle = {
 				x: player.x + player.width / 2,
 				y: player.y + player.height / 2,
@@ -500,8 +462,8 @@ export class GameController {
 
 		player.nitro = player.nitro.map((particle) => {
 			particle.radius -= 0.4;
-			particle.y += -Math.sin(angleRad) // + getRandomInt(0, 2);
-			particle.x += -Math.cos(angleRad) // + getRandomInt(0, 2);
+			particle.y += -Math.sin(angleRad); // + getRandomInt(0, 2);
+			particle.x += -Math.cos(angleRad); // + getRandomInt(0, 2);
 
 			return particle;
 		});
@@ -537,7 +499,7 @@ export class GameController {
 			})
 			.filter((particle) => particle.opacity > 0);
 
-		this.ctx.restore()
+		this.ctx.restore();
 	}
 
 	private getParticle(player: FrontPlayer | IOtherPlayer): IParticle {
