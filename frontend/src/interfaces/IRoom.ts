@@ -1,3 +1,5 @@
+import { carOptions } from "./IAssets";
+
 type checkPointOrder = 1 | 2 | 3 | 4 | 5;
 
 export interface IBox {
@@ -9,6 +11,7 @@ export interface IBox {
 export interface IPlayer extends IBox {
 	id: string;
 	username: string;
+	carID: carOptions;
 	alive: boolean;
 	lastMessageAt: undefined | number; //timestamp
 
@@ -20,12 +23,6 @@ export interface IPlayer extends IBox {
 	items: Array<IItems>;
 	usingNitro: boolean;
 	nitroUsedAt: number | null; //timestamp
-	nitroDirection: {
-		up: boolean;
-		down: boolean;
-		left: boolean;
-		right: boolean;
-	};
 
 	moveNumber: number;
 
@@ -51,6 +48,16 @@ export interface IPlayer extends IBox {
 	};
 }
 
+export interface IPlayerMIN extends IBox {
+	username: string;
+	carID: carOptions;
+	canControl: false;
+	done_laps: number;
+	checkpoint: checkPointOrder | 0;
+	usingNitro: boolean;
+	rotation: number;
+}
+
 export interface ICheckPoint extends IBox {
 	order: checkPointOrder;
 }
@@ -70,20 +77,23 @@ export interface IEntities {
 	items: Array<IItems>;
 }
 
+export interface IEntitiesForBroadcast {
+	players: Array<IPlayer | IPlayerMIN>;
+	items: Array<IItems>;
+}
 
 export interface IMessage {
 	content: string;
 	username: string;
 	userID: string;
 	typeMessageChat: "message" | "userJoined" | "userLeft" | "userReady";
-
 }
 
 export interface IRoom {
 	id: string;
 	laps: number;
 	map: 1;
-	players: Array<IPlayer>
-	messages: Array<IMessage>
-	gameInit: boolean
+	players: Array<IPlayer>;
+	messages: Array<IMessage>;
+	gameInit: boolean;
 }

@@ -1,17 +1,52 @@
-import { IPlayer as BackIPlayer } from "../../../interfaces/IRoom";
+import { IPlayer as BackIPlayer, IPlayerMIN } from "../../../interfaces/IRoom";
 import {
 	IPlayer as FrontIPlayer,
+	IItems,
 	IMoves,
 	IOtherPlayer,
 } from "../interfaces/gameInterfaces";
 
 export function playerConverter(
-	p: BackIPlayer,
+	p: BackIPlayer | IPlayerMIN,
 	previousPlayer: FrontIPlayer | IOtherPlayer | undefined,
 	username: string
 ): FrontIPlayer {
+	let disableArrow = {
+		up: false,
+		down: false,
+		left: false,
+		right: false,
+	};
+	let items: IItems[] = [];
+	let nitroUsedAt: number | null = null;
+	let moveNumber = 0;
+	let rotationAcceleration = 0;
+	let velocities = {
+		vx: 0,
+		vy: 0,
+	};
+
+	const playerKeys = Object.keys(p);
+	if (
+		playerKeys.includes("disableArrow") &&
+		playerKeys.includes("items") &&
+		playerKeys.includes("nitroUsedAt") &&
+		playerKeys.includes("moveNumber") &&
+		playerKeys.includes("rotationAcceleration") &&
+		playerKeys.includes("velocities")
+	) {
+		const tempP = p as BackIPlayer;
+		disableArrow = tempP.disableArrow;
+		items = tempP.items;
+		nitroUsedAt = tempP.nitroUsedAt;
+		moveNumber = tempP.moveNumber;
+		rotationAcceleration = tempP.rotationAcceleration;
+		velocities = tempP.velocities;
+	}
+
 	let conflictQueue: Array<IMoves> = [];
 	let moves: Array<IMoves> = [];
+
 	if (previousPlayer) {
 		const keys = Object.keys(previousPlayer);
 		const x = previousPlayer as FrontIPlayer;
@@ -23,35 +58,32 @@ export function playerConverter(
 		}
 	}
 	return {
-		id: p.id,
 		username: p.username,
 		canControl: p.username === username,
-		ready: p.ready,
+		carID: p.carID,
+		ready: true, //assuming its no necessary
 		//
-		alive: p.alive,
-		lastMessageAt: p.lastMessageAt,
-		//
-		color: p.username === username ? "1" : "3",
+		alive: true,
+		lastMessageAt: undefined,
 		//
 		checkpoint: p.checkpoint,
 		done_laps: p.done_laps,
-		disableArrow: p.disableArrow,
+		disableArrow: disableArrow,
 		//
-		items: p.items,
-		nitroDirection: p.nitroDirection,
-		nitroUsedAt: p.nitroUsedAt,
+		items: items,
+		nitroUsedAt: nitroUsedAt,
 		usingNitro: p.usingNitro,
 		nitro: previousPlayer ? previousPlayer.nitro : [],
 		nitroParticles: previousPlayer ? previousPlayer.nitroParticles : [],
 		//
-		moveNumber: p.moveNumber,
+		moveNumber: moveNumber,
 		moves: moves,
 		conflictQueue: conflictQueue,
 		//
 		rotation: p.rotation,
-		rotationAcceleration: p.rotationAcceleration,
+		rotationAcceleration: rotationAcceleration,
 		//
-		velocities: p.velocities,
+		velocities: velocities,
 		width: p.width,
 		height: p.height,
 		x: p.x,
@@ -65,13 +97,10 @@ export function otherPlayerConverter(
 	toY: number
 ): IOtherPlayer {
 	return {
-		alive: player.alive,
-		canControl: player.canControl,
+		canControl: false,
+		carID: player.carID,
 		checkpoint: player.checkpoint,
-		color: player.color,
 		done_laps: player.done_laps,
-		id: player.id,
-		nitroDirection: player.nitroDirection,
 		nitro: player.nitro,
 		nitroParticles: player.nitroParticles,
 		rotation: player.rotation,
@@ -82,6 +111,6 @@ export function otherPlayerConverter(
 		toX: toX,
 		toY: toY,
 		height: player.height,
-		width: player.width
+		width: player.width,
 	};
 }

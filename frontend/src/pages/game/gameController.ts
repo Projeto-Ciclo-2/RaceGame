@@ -16,33 +16,35 @@ import { WsPlayerMove } from "../../interfaces/IWSMessages";
 import { src } from "../../assets/enum/enumSrc";
 import { playerConverter } from "./tools/playerConverter";
 import { EndScreen } from "./tools/endScreen";
-import { IPlayer } from "../../interfaces/IRoom";
+import { IPlayer, IPlayerMIN } from "../../interfaces/IRoom";
 import { SoundController } from "../../sound/soundController";
 import { degreesToRadians } from "./math/angleConversion";
 import { getRandomInt } from "./math/randomNumber";
+import { ImgHandler } from "./tools/imgHandler";
 
 export class GameController {
 	private canvas: HTMLCanvasElement;
 	private ctx: CanvasRenderingContext2D;
 
+	private firstRender = true;
 	private gameAlive = true;
+	private gameStarted = false;
+
+	private countDownMode = false;
+	private countDown = 3;
 
 	private mapController: MapController | undefined;
 	private websocketContext: WebSocketContextType;
 	private websocketHandler = new WebSocketHandler();
 	private gameEndScreen: EndScreen;
-	private soundController = new SoundController();
-	private playingSoundTrack = false;
+	private soundController: SoundController;
+	private carsImgHandler = new ImgHandler();
 
 	private roomID: string | undefined;
 
 	private gameDebug: GameDebug;
 
 	private bkg: CanvasImageSource | undefined;
-	private carBlue: CanvasImageSource | undefined;
-	private carYellow: CanvasImageSource | undefined;
-	private carGreen: CanvasImageSource | undefined;
-
 	private nitro: CanvasImageSource | undefined;
 	private tree_log: CanvasImageSource | undefined;
 	private barrel: CanvasImageSource | undefined;
@@ -55,6 +57,7 @@ export class GameController {
 	private debug = true || config.DEBUG_MODE;
 
 	private username: string;
+	private userID: string;
 	private myUser: FrontPlayer | undefined;
 	private myUserChanged = false;
 
@@ -64,7 +67,9 @@ export class GameController {
 	private alreadyReceivePlayers = false;
 	private winner: string | undefined;
 
-	private setPlayersStatus: React.Dispatch<React.SetStateAction<IPlayer[]>>;
+	private setPlayersStatus: React.Dispatch<
+		React.SetStateAction<(IPlayer | IPlayerMIN)[]>
+	>;
 	private setGameStatus: React.Dispatch<React.SetStateAction<boolean>>;
 	private reactMe: React.MutableRefObject<IPlayer | undefined>;
 	private reactWinner: React.MutableRefObject<string>;
@@ -87,9 +92,13 @@ export class GameController {
 	constructor(
 		canvas: HTMLCanvasElement,
 		websocketContext: WebSocketContextType,
+		soundController: SoundController,
 		username: string,
+		userID: string,
 		roomID: string,
-		setPlayersStatus: React.Dispatch<React.SetStateAction<IPlayer[]>>,
+		setPlayersStatus: React.Dispatch<
+			React.SetStateAction<(IPlayer | IPlayerMIN)[]>
+		>,
 		setGameStatus: React.Dispatch<React.SetStateAction<boolean>>,
 		me: React.MutableRefObject<IPlayer | undefined>,
 		winner: React.MutableRefObject<string>
@@ -100,76 +109,33 @@ export class GameController {
 			this.ctx = ctx;
 			this.gameDebug = new GameDebug(this.ctx);
 			this.gameEndScreen = new EndScreen(canvas);
+			this.soundController = soundController;
 
 			this.setPlayersStatus = setPlayersStatus;
 			this.setGameStatus = setGameStatus;
 			this.reactMe = me;
 			this.reactWinner = winner;
 
-			this.username = username;
 			this.roomID = roomID;
+			this.username = username;
+			this.userID = userID;
 
 			this.websocketContext = websocketContext;
 
 			Promise.all([
 				loadImage(src.map1),
-				loadImage(src.carBlue),
-				loadImage(src.carYellow),
-				loadImage(src.carGreen),
-				loadImage(src.carBlackRed),
-				loadImage(src.carCyan),
-				loadImage(src.carJadeMIN),
-				loadImage(src.carOrangeMIN),
-				loadImage(src.carOrangeAltMIN),
-				loadImage(src.carAmethystMIN),
-				loadImage(src.carPink),
-				loadImage(src.carPurple),
-				loadImage(src.carWhiteMIN),
-				loadImage(src.carUsualBlue),
-				loadImage(src.carUsualRed),
-				loadImage(src.carUsualWhite),
-				loadImage(src.carPolice),
-				loadImage(src.carTaxi),
 				loadImage(src.nitroMin),
 				loadImage(src.tree_log),
 				loadImage(src.barrel),
 				loadImage(src.wheel),
 			])
-				.then(
-					([
-						bkgImg,
-						carBlue,
-						carYellow,
-						carGreen,
-						carBlackRed,
-						carCyan,
-						carJade,
-						carOrange,
-						carOrangeAlt,
-						carAmethyst,
-						carPink,
-						carPurple,
-						carWhite,
-						carUsualBlue,
-						carUsualRed,
-						carUsualWhite,
-						carPolice,
-						carTaxi,
-						nitro,
-						tree_log,
-						barrel,
-						wheel,
-					]) => {
-						this.bkg = bkgImg;
-						this.carBlue = carCyan;
-						this.carYellow = carAmethyst;
-						this.carGreen = carGreen;
-						this.nitro = nitro;
-						this.tree_log = tree_log;
-						this.barrel = barrel;
-						this.wheel = wheel;
-					}
-				)
+				.then(([bkgImg, nitro, tree_log, barrel, wheel]) => {
+					this.bkg = bkgImg;
+					this.nitro = nitro;
+					this.tree_log = tree_log;
+					this.barrel = barrel;
+					this.wheel = wheel;
+				})
 				.catch((error) => {
 					console.error("Failed to load images:", error);
 				});
@@ -184,6 +150,19 @@ export class GameController {
 	}
 
 	private listenWebSocket() {
+		this.websocketContext.onReceiveGameStart((e) => {
+			const interval = setInterval(() => {
+				this.countDown--;
+				if (this.countDown <= 0) {
+					clearInterval(interval);
+					this.countDownMode = false;
+					this.gameStarted = true;
+					this.soundController.playStart();
+				}
+			}, 1000);
+			this.countDownMode = true;
+			this.soundController.playCountdown();
+		});
 		this.websocketContext.onReceiveGameState((e) => {
 			const { items, deletedItems } =
 				this.websocketHandler.handleGameState(
@@ -198,13 +177,17 @@ export class GameController {
 
 			this.setPlayersStatus(e.entities.players);
 			this.alreadyReceivePlayers = true;
+			if (e.started) {
+				this.countDownMode = false;
+				this.gameStarted = true;
+			}
 		});
 		this.websocketContext.onReceiveEndGame((e) => {
 			if (e.roomID === this.roomID) {
 				this.gameAlive = false;
 				this.players = e.players.map((p) => {
 					const previousPlayer = this.players.find(
-						(oldP) => oldP.id === p.id
+						(oldP) => oldP.username === p.username
 					);
 					return playerConverter(p, previousPlayer, this.username);
 				});
@@ -212,12 +195,18 @@ export class GameController {
 
 				this.setPlayersStatus(e.players);
 				this.setGameStatus(this.gameAlive);
-				this.reactMe.current = this.players.find(
+
+				const foundUser = this.players.find(
 					(u) => u.canControl
 				) as FrontPlayer;
+				this.reactMe.current = { ...foundUser, id: "" };
+
 				this.reactWinner.current = e.winner;
-				this.soundController.stopItsRaceTime();
+
 				this.soundController.playStart();
+				this.soundController.stopItsRaceTime();
+				this.soundController.stopAcceleration();
+				this.soundController.stopNitro();
 			}
 		});
 	}
@@ -225,9 +214,6 @@ export class GameController {
 	private animate(timestamp: DOMHighResTimeStamp): void {
 		if (
 			!this.bkg ||
-			!this.carGreen ||
-			!this.carBlue ||
-			!this.carYellow ||
 			!this.mapController ||
 			!this.barrel ||
 			!this.nitro ||
@@ -237,21 +223,25 @@ export class GameController {
 			window.requestAnimationFrame((time) => this.animate(time));
 			return;
 		}
-		if (!this.playingSoundTrack) {
+		if (this.firstRender) {
 			this.soundController.playItsRaceTime();
-			this.playingSoundTrack = true;
+			this.websocketContext.sendClientReadyToPlay({
+				roomID: this.roomID!,
+				type: "clientReadyToPlay",
+			});
+			this.firstRender = false;
 		}
 		if (!this.gameAlive) {
 			this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 			if (!this.wheel) {
-				window.requestAnimationFrame((time) => this.animate(time));
+				// window.requestAnimationFrame((time) => this.animate(time));
 				return;
 			}
 			if (!this.winner) {
 				console.error("winner name not provided.");
 				return;
 			}
-			this.gameEndScreen.start(this.wheel, this.players, this.winner);
+			// this.gameEndScreen.start(this.wheel, this.players, this.winner);
 			return;
 		}
 		const durationOfLastExec = timestamp - this.lastTime;
@@ -262,21 +252,27 @@ export class GameController {
 
 		this.renderDefaultBkg();
 
-		if (this.myUserChanged) {
-			this.sendMove();
+		if (this.gameStarted) {
+			if (this.myUserChanged) {
+				this.sendMove();
+			}
+			const entities = this.mapController.makePrediction(
+				this.players,
+				this.items,
+				this.deletedItems
+			);
+			this.myUserChanged = entities.changed;
+			this.players = entities.players;
+			this.items = entities.items;
 		}
-		const entities = this.mapController.makePrediction(
-			this.players,
-			this.items,
-			this.deletedItems
-		);
-		this.myUserChanged = entities.changed;
-		this.players = entities.players;
-		this.items = entities.items;
 
 		this.renderPlayers(this.players);
 		this.renderItems(this.items);
 		this.renderDeletedItems(this.deletedItems);
+
+		if (!this.gameStarted) {
+			this.renderCountDown();
+		}
 
 		if (this.debug) {
 			// this.gameDebug.makeHitBox(this.mapController.getWalls());
@@ -316,12 +312,11 @@ export class GameController {
 		}
 		if (this.myUser) {
 			const newKeys = this.mapController!._getCarKeys();
-
 			const message: WsPlayerMove = {
 				type: "playerMove",
 				roomID: this.roomID!,
 				player: {
-					id: this.myUser.id,
+					id: this.userID,
 				},
 				keys: newKeys,
 			};
@@ -366,7 +361,7 @@ export class GameController {
 				);
 				this.ctx.rotate(degreesToRadians(p.rotation));
 				this.ctx.drawImage(
-					this.carYellow!,
+					this.carsImgHandler.getImg(p.carID),
 					-newWidth / 2,
 					-newHeight / 2,
 					newWidth,
@@ -382,15 +377,9 @@ export class GameController {
 
 			this.ctx.translate(p.x + p.width / 2, p.y + p.height / 2);
 			this.ctx.rotate((p.rotation * Math.PI) / 180);
-			const img =
-				p.color === "1"
-					? this.carBlue!
-					: p.color === "2"
-					? this.carGreen!
-					: this.carYellow!;
 
 			this.ctx.drawImage(
-				img,
+				this.carsImgHandler.getImg(p.carID),
 				-p.width / 2,
 				-p.height / 2,
 				p.width,
@@ -472,7 +461,10 @@ export class GameController {
 		this.ctx.save();
 		this.ctx.globalCompositeOperation = "lighter";
 
-		if (player.usingNitro && player.nitro.length < this.nitroParticlesLimit) {
+		if (
+			player.usingNitro &&
+			player.nitro.length < this.nitroParticlesLimit
+		) {
 			const particle = {
 				x: player.x + player.width / 2,
 				y: player.y + player.height / 2,
@@ -500,8 +492,8 @@ export class GameController {
 
 		player.nitro = player.nitro.map((particle) => {
 			particle.radius -= 0.4;
-			particle.y += -Math.sin(angleRad) // + getRandomInt(0, 2);
-			particle.x += -Math.cos(angleRad) // + getRandomInt(0, 2);
+			particle.y += -Math.sin(angleRad); // + getRandomInt(0, 2);
+			particle.x += -Math.cos(angleRad); // + getRandomInt(0, 2);
 
 			return particle;
 		});
@@ -537,7 +529,7 @@ export class GameController {
 			})
 			.filter((particle) => particle.opacity > 0);
 
-		this.ctx.restore()
+		this.ctx.restore();
 	}
 
 	private getParticle(player: FrontPlayer | IOtherPlayer): IParticle {
@@ -556,7 +548,7 @@ export class GameController {
 	}
 
 	private drawnUsername(player: FrontPlayer | IOtherPlayer) {
-		this.ctx.font = "Press Start 2P 12px bold";
+		this.ctx.font = "bold 12px Arial";
 
 		if (player.canControl) {
 			this.ctx.fillStyle = "white";
@@ -598,6 +590,28 @@ export class GameController {
 					"not was possible to request game state. roomID missing."
 				);
 			}
+		}
+	}
+
+	private renderCountDown() {
+		this.ctx.fillStyle = "#00000050";
+		this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+		this.ctx.fillStyle = "#ff5733";
+		if (this.countDownMode) {
+			this.ctx.font = "bold 100px Arial";
+			this.ctx.fillText(
+				this.countDown.toString(),
+				this.canvas.width / 2,
+				this.canvas.height / 2
+			);
+		} else {
+			this.ctx.font = "bold 30px Arial";
+			const text = "Waiting players...";
+			this.ctx.fillText(
+				text,
+				this.canvas.width / 2 - text.length * 4,
+				this.canvas.height / 2
+			);
 		}
 	}
 

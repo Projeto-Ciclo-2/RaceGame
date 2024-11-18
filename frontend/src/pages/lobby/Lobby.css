@@ -1,3 +1,24 @@
+#musicBtn {
+	height: 2.5rem;
+	width: 2.5rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	border: none;
+	background: var(--background);
+	border-radius: 100%;
+	padding: 7px;
+	cursor: pointer;
+	position: absolute;
+	left: 46%;
+	/* bottom: 3rem; */
+	& > * {
+		filter: invert();
+		width: 100%;
+		height: 100%;
+		object-fit: contain;
+	}
+}
 #lobby {
 	width: 100%;
 	height: 100vh;
@@ -78,7 +99,7 @@
 			padding: 0.5rem;
 			display: flex;
 			flex-direction: column;
-			gap: .5rem;
+			gap: 0.5rem;
 			overflow: auto;
 			scroll-behavior: smooth;
 			box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.15);

@@ -8,10 +8,11 @@ export async function up(knex: Knex): Promise<void> {
 	});
 	await knex.raw(`INSERT INTO cars (name, unlock_requirement)
 				VALUES
+					('Blue', 'Livre'),
 					('Green', 'Livre'),
 					('Purple', 'Livre'),
 					('Pink', 'Livre'),
-					('Cian', '1 partida concluída'),
+					('Cian', 'Livre'),
 					('Red', '1 partida concluída'),
 					('OrangeBlue', '1 partida concluída'),
 					('White', '1 partida concluída'),

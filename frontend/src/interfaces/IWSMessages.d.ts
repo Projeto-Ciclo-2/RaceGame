@@ -1,4 +1,4 @@
-import { IEntities, IMessage, IPlayer, IRoom } from "./IRoom";
+import { IEntitiesForBroadcast, IMessage, IPlayer, IRoom } from "./IRoom";
 
 /**
  * |===============================|
@@ -85,6 +85,10 @@ export interface WsPublishItem {
 	y: number;
 }
 
+export interface WsGameStart {
+	type: "gameStart";
+}
+
 export interface WsEndGame {
 	type: "endGame";
 	roomID: string;
@@ -94,7 +98,8 @@ export interface WsEndGame {
 
 export interface WsGameState {
 	type: "gameState";
-	entities: IEntities;
+	started: boolean;
+	entities: IEntitiesForBroadcast;
 }
 
 /***********************************
@@ -134,6 +139,11 @@ export interface WsPlayerReady {
 	type: "playerReady";
 	roomID: string;
 	userID: string;
+}
+
+export interface WsClientReadyToPlay {
+	type: "clientReadyToPlay";
+	roomID: string;
 }
 
 export interface WsPlayerMove {

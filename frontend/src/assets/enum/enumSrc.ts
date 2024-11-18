@@ -1,3 +1,33 @@
+import { carOptions } from "../../interfaces/IAssets";
+
+export function getCarKey(carOption: carOptions): carsKeys {
+	return {
+		1: "carBlue",
+		2: "carGreen",
+		3: "carPurple",
+		4: "carPink",
+		5: "carCyan",
+		6: "carBlackRed",
+		7: "carOrangeMIN",
+		8: "carWhiteMIN",
+		9: "carOrangeAltMIN",
+		10: "carJadeMIN",
+		11: "carAmethystMIN",
+	}[carOption] as carsKeys;
+}
+type carsKeys =
+	| "carBlue"
+	| "carGreen"
+	| "carPurple"
+	| "carPink"
+	| "carCyan"
+	| "carBlackRed"
+	| "carOrangeMIN"
+	| "carWhiteMIN"
+	| "carOrangeAltMIN"
+	| "carJadeMIN"
+	| "carAmethystMIN";
+
 export const src = {
 	map1: "/assets/svg/map1.svg",
 	// cars

@@ -1,3 +1,5 @@
+import { carOptions } from "../../../interfaces/IAssets";
+
 export type rotation = 0 | 45 | 90 | 135 | 180 | 235 | 270 | 315;
 type checkPointOrder = 1 | 2 | 3 | 4 | 5;
 
@@ -9,14 +11,12 @@ export interface IBox {
 }
 
 export interface IPlayer extends IBox {
-	id: string;
 	username: string;
 	canControl: boolean;
+	carID: carOptions;
 
 	alive: boolean;
 	lastMessageAt: undefined | number; //timestamp
-
-	color: "1" | "2" | "3";
 
 	ready: boolean;
 	done_laps: number;
@@ -25,21 +25,16 @@ export interface IPlayer extends IBox {
 	items: Array<IItems>;
 	usingNitro: boolean;
 	nitroUsedAt: number | null; //timestamp
-	nitroDirection: {
-		up: boolean;
-		down: boolean;
-		left: boolean;
-		right: boolean;
-	};
+
 	nitro: Array<INitroParticle>;
 	nitroParticles: Array<IParticle>;
-
-	rotation: rotation | number;
-	rotationAcceleration: number;
 
 	moveNumber: number;
 	moves: Array<IMoves>;
 	conflictQueue: Array<IMoves>;
+
+	rotation: rotation | number;
+	rotationAcceleration: number;
 
 	velocities: {
 		vx: number;
@@ -55,23 +50,13 @@ export interface IPlayer extends IBox {
 }
 
 export interface IOtherPlayer {
-	id: string;
 	username: string;
-	canControl: boolean;
-	alive: boolean;
-
-	color: "1" | "2" | "3";
-
+	carID: carOptions;
+	canControl: false;
 	done_laps: number;
 	checkpoint: checkPointOrder | 0;
 
 	usingNitro: boolean;
-	nitroDirection: {
-		up: boolean;
-		down: boolean;
-		left: boolean;
-		right: boolean;
-	};
 
 	nitro: Array<INitroParticle>;
 	nitroParticles: Array<IParticle>;

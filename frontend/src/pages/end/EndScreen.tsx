@@ -1,7 +1,6 @@
 import React from "react";
-import { IPlayer } from "../../interfaces/IRoom";
-import { Link, useNavigate } from "react-router-dom";
-import { src } from "../../assets/enum/enumSrc";
+import { IPlayer, IPlayerMIN } from "../../interfaces/IRoom";
+import { useNavigate } from "react-router-dom";
 import "./endScreen.css";
 import { sortPlayers } from "../game/tools/sortPlayers";
 import { useRoom } from "../../context/RoomContext";
@@ -12,12 +11,12 @@ export default function EndScreen(props: {
 	alive: boolean;
 	winner: string;
 	me: IPlayer;
-	players: Array<IPlayer>;
+	players: Array<IPlayer | IPlayerMIN>;
 	laps: number | undefined;
 }) {
 	const RoomsContext = useRoom();
 
-	const sortedPlayers = React.useMemo<Array<IPlayer>>(() => {
+	const sortedPlayers = React.useMemo<Array<IPlayer | IPlayerMIN>>(() => {
 		if (props.players.length > 0) {
 			const tempPlayers = sortPlayers(props.players);
 			return tempPlayers;
@@ -41,6 +40,7 @@ export default function EndScreen(props: {
 	}
 
 	function navigateToPageHome() {
+		clearThisRoom();
 		navigate("/home");
 	}
 

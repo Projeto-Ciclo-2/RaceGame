@@ -1,14 +1,16 @@
-import { IPlayerControllable } from "../../interfaces/IRoom";
+import { carOptions, IPlayerControllable } from "../../interfaces/IRoom";
 import { CarController } from "../controller/carController";
 
 export function getPlayerControllable(
 	id: string,
 	username: string,
-	ready: boolean
+	ready: boolean,
+	carID: carOptions
 ): IPlayerControllable {
 	return {
 		id: id,
 		username: username,
+		carID: carID,
 		alive: true,
 		lastMessageAt: undefined,
 
@@ -22,12 +24,6 @@ export function getPlayerControllable(
 
 		usingNitro: false,
 		nitroUsedAt: null,
-		nitroDirection: {
-			down: false,
-			up: false,
-			left: false,
-			right: false,
-		},
 
 		moveNumber: 0,
 

@@ -5,10 +5,8 @@ function interpolate(oldV: number, newV: number, time: number): number {
 }
 export class InterpolateHandler {
 	public static update(oldP: IOtherPlayer, newP: IPlayer) {
-		oldP.alive = newP.alive;
 		oldP.checkpoint = newP.checkpoint;
 		oldP.done_laps = newP.done_laps;
-		oldP.nitroDirection = newP.nitroDirection;
 		oldP.rotation = newP.rotation;
 		oldP.usingNitro = newP.usingNitro;
 

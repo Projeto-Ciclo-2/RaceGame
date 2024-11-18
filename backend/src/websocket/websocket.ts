@@ -27,7 +27,7 @@ import { WsUser } from "../interfaces/IUser";
 import { RaceGame } from "../game/game";
 import { GameService } from "../game/service/gameService";
 import { LobbySevice } from "../services/lobbyService";
-import { IRoom } from "../interfaces/IRoom";
+import { carOptions, IRoom } from "../interfaces/IRoom";
 import { getPlayerControllable } from "../game/mock/playerControllable";
 
 const userService = new UserService();
@@ -343,12 +343,21 @@ wss.on("connection", async (ws: WebSocket, req: IncomingMessage) => {
 					sendErr(ws);
 				}
 				break;
+			case "clientReadyToPlay":
+				try {
+					raceGame.setThisPlayerReady(data.roomID, thisUser);
+				} catch (error) {
+					if (error instanceof Error) return sendErr(ws, error);
+					sendErr(ws);
+				}
+				break;
 			case "requestGameState":
 				try {
 					const room = raceGame.getRoom(data.roomID);
 					if (room) {
 						const message: WsGameState = {
 							type: "gameState",
+							started: room.gameService.gameStarted,
 							entities: room.gameService.getEntities(),
 						};
 						ws.send(JSON.stringify(message));
@@ -472,7 +481,7 @@ function broadcast(data: string): void {
 function initGame(room: IRoom) {
 	console.log("-initGame-");
 	const controllablePlayers = room.players.map((p) =>
-		getPlayerControllable(p.id, p.username, p.ready)
+		getPlayerControllable(p.id, p.username, false, p.carID)
 	);
 	const wsPlayers: WsUser[] = [];
 	for (const user of users) {
@@ -506,7 +515,8 @@ async function reconnectPlayer(allRooms: IRoom[], thisUser: WsUser) {
 				const result = raceGame.reconnectPlayer(
 					room.id,
 					thisUser,
-					userComplete.id
+					userComplete.id,
+					userComplete.selected_car_id as carOptions
 				);
 				console.log(
 					"player outside a room found, trying to reconnect him..."

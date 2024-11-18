@@ -1,10 +1,10 @@
+import { IPlayer as BackIPlayer } from "../../../interfaces/IRoom";
 import { WsGameState } from "../../../interfaces/IWSMessages";
 import {
 	IPlayer as FrontIPlayer,
 	IDeletedItem,
 	IItems,
 	IOtherPlayer,
-	IPlayer,
 } from "../interfaces/gameInterfaces";
 import { ClientPrediction } from "../tools/clientPrediction";
 import {
@@ -21,13 +21,16 @@ export class WebSocketHandler {
 		lastDeletedItems: Array<IDeletedItem>,
 		username: string
 	): { items: Array<IItems>; deletedItems: Array<IDeletedItem> } {
+		/** ////////////////////////////////|||
+		 *         PLAYERS FUNCTIONS        |||
+		 */ ////////////////////////////////|||
 		if (players.length > e.entities.players.length) {
 			console.log("removing no active players");
 			const removeIndexes = [];
 			for (let index = 0; index < players.length; index++) {
 				const thisUser = players[index];
 				const foundIndex = e.entities.players.findIndex(
-					(p) => p.id === thisUser.id
+					(p) => p.username === thisUser.username
 				);
 				if (foundIndex === -1) {
 					removeIndexes.push(index);
@@ -38,8 +41,9 @@ export class WebSocketHandler {
 			}
 		}
 		for (const player of e.entities.players) {
-			const i = players.findIndex((p) => p.id === player.id);
-			const clientPlayer: IPlayer | IOtherPlayer | undefined = players[i];
+			const i = players.findIndex((p) => p.username === player.username);
+			const clientPlayer: FrontIPlayer | IOtherPlayer | undefined =
+				players[i];
 			const serverPlayer = playerConverter(
 				player,
 				clientPlayer,
@@ -71,7 +75,7 @@ export class WebSocketHandler {
 				} else {
 					// player is not alive, removing...
 					const pIndex = players.findIndex(
-						(p) => p.id === serverPlayer.id
+						(p) => p.username === serverPlayer.username
 					);
 					if (pIndex !== -1) {
 						players.splice(pIndex, 1);
@@ -83,8 +87,27 @@ export class WebSocketHandler {
 				const frontP = clientPlayer as FrontIPlayer;
 				const result = ClientPrediction.detectDiferences(
 					frontP,
-					serverPlayer
+					serverPlayer as unknown as BackIPlayer
 				);
+
+				// console.log(
+				// 	"[front]",
+				// 	frontP.canControl,
+				// 	frontP.items.length,
+				// 	frontP.x,
+				// 	frontP.y,
+				// 	"[moves]",
+				// 	frontP.moveNumber,
+				// 	frontP.moves.length
+				// );
+				// console.log(
+				// 	"[back]",
+				// 	serverPlayer.canControl,
+				// 	serverPlayer.items.length,
+				// 	serverPlayer.x,
+				// 	serverPlayer.y,
+				// 	serverPlayer.moveNumber
+				// );
 
 				if (result) {
 					console.log(
@@ -93,19 +116,19 @@ export class WebSocketHandler {
 							" will be in conflict queue"
 					);
 
-					console.log("before reconciliation");
-					console.log(
-						"moveNumber",
-						frontP.moveNumber,
-						"x",
-						frontP.x,
-						"y",
-						frontP.y,
-						"velocities.vx",
-						frontP.velocities.vx,
-						"velocities.vy",
-						frontP.velocities.vy
-					);
+					// console.log("before reconciliation");
+					// console.log(
+					// 	"moveNumber",
+					// 	frontP.moveNumber,
+					// 	"x",
+					// 	frontP.x,
+					// 	"y",
+					// 	frontP.y,
+					// 	"velocities.vx",
+					// 	frontP.velocities.vx,
+					// 	"velocities.vy",
+					// 	frontP.velocities.vy
+					// );
 
 					frontP.conflictQueue = frontP.moves.filter((m) => {
 						if (m.move > result.move) {
@@ -125,19 +148,19 @@ export class WebSocketHandler {
 					frontP.rotation = serverPlayer.rotation;
 
 					// players[i] = frontP;
-					console.log("after reconciliation");
-					console.log(
-						"moveNumber",
-						frontP.moveNumber,
-						"x",
-						frontP.x,
-						"y",
-						frontP.y,
-						"velocities.vx",
-						frontP.velocities.vx,
-						"velocities.vy",
-						frontP.velocities.vy
-					);
+					// console.log("after reconciliation");
+					// console.log(
+					// 	"moveNumber",
+					// 	frontP.moveNumber,
+					// 	"x",
+					// 	frontP.x,
+					// 	"y",
+					// 	frontP.y,
+					// 	"velocities.vx",
+					// 	frontP.velocities.vx,
+					// 	"velocities.vy",
+					// 	frontP.velocities.vy
+					// );
 				} else {
 					if (frontP.moves.length > 1) {
 						frontP.moves = frontP.moves.filter(
@@ -149,6 +172,9 @@ export class WebSocketHandler {
 			}
 		}
 
+		/** ////////////////////////////////|||
+		 *             ITEMS FUNCTIONS      |||
+		 */ ////////////////////////////////|||
 		if (e.entities.items.length < items.length) {
 			const itemsRef: Array<IItems> = [];
 			for (let i = 0; i < items.length; i++) {
@@ -156,14 +182,14 @@ export class WebSocketHandler {
 				const index = e.entities.items.findIndex(
 					(i) => i.id === item.id
 				);
-				console.log("item.id", item.id, "	item.type", item.type);
+				// console.log("item.id", item.id, "	item.type", item.type);
 
 				if (index === -1) {
-					console.log("item não existe no backend. index -1");
+					// console.log("item não existe no backend. index -1");
 
 					// item foi deletado!
 					if (item.type !== 1) {
-						console.log("item.type !== 1");
+						// console.log("item.type !== 1");
 						const itemIndex = lastDeletedItems.findIndex(
 							(i) => i.id === item.id
 						);
@@ -179,14 +205,14 @@ export class WebSocketHandler {
 								particles: [],
 							});
 						} else {
-							console.log(lastDeletedItems)
-							console.log('não adicionado.')
+							console.log(lastDeletedItems);
+							// console.log("não adicionado.");
 						}
 					}
 				} else {
 					// item não foi deletado
 					itemsRef.push(item);
-					console.log("item não deletado");
+					// console.log("item não deletado");
 				}
 			}
 			items = itemsRef;

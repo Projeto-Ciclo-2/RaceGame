@@ -1,11 +1,11 @@
 import React from "react";
-import { IPlayer } from "../../../interfaces/IRoom";
+import { IPlayer, IPlayerMIN } from "../../../interfaces/IRoom";
 import "./gameStatus.css";
 import { src } from "../../../assets/enum/enumSrc";
 import { sortPlayers } from "../tools/sortPlayers";
 
 export default function GameStatus(props: {
-	players: Array<IPlayer>;
+	players: Array<IPlayer | IPlayerMIN>;
 	username: string | undefined;
 	laps: number | undefined;
 }) {
@@ -14,18 +14,20 @@ export default function GameStatus(props: {
 			const myself = props.players.find(
 				(p) => p.username === props.username
 			);
-			return myself;
+			return myself as IPlayer;
 		}
 		return undefined;
 	}, [props.players, props.username]);
 
 	const myPosition = React.useRef(0);
 
-	const sortedPlayers = React.useMemo<Array<IPlayer>>(() => {
+	const sortedPlayers = React.useMemo<Array<IPlayer | IPlayerMIN>>(() => {
 		if (props.players.length > 0) {
 			const tempPlayers = sortPlayers(props.players);
 			if (me) {
-				const index = tempPlayers.findIndex((p) => p.id === me.id);
+				const index = tempPlayers.findIndex(
+					(p) => p.username === me.username
+				);
 				if (index !== -1) {
 					myPosition.current = index + 1;
 				}
@@ -51,14 +53,24 @@ export default function GameStatus(props: {
 					}
 					id="gameStatusMeNitro"
 				>
-					<span>{me ? me.items.length : "0"} / 3</span>
+					<span>
+						{me && me.items && Array.isArray(me.items)
+							? me.items.length
+							: "0"}{" "}
+						/ 3
+					</span>
 					<img src={src.nitro} alt="Nitro" />
 				</div>
 			</div>
 			<div id="gameStatusPlayers">
 				{sortedPlayers.map((p, i) => {
 					return (
-						<section key={p.id} className={me?.id === p.id ? "isMe" : ""}>
+						<section
+							key={p.username}
+							className={
+								me?.username === p.username ? "isMe" : ""
+							}
+						>
 							<div>
 								<span>{i + 1}º</span>
 								<p>
@@ -68,7 +80,9 @@ export default function GameStatus(props: {
 							</div>
 							<img
 								src={
-									me?.id === p.id ? src.carBlue : src.carGreen
+									me?.username === p.username
+										? src.carBlue
+										: src.carGreen
 								}
 								alt="car"
 							/>

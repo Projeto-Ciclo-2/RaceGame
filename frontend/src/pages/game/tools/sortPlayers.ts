@@ -1,6 +1,8 @@
-import { IPlayer } from "../../../interfaces/IRoom";
+import { IPlayer, IPlayerMIN } from "../../../interfaces/IRoom";
 
-export function sortPlayers(players: Array<IPlayer>): Array<IPlayer> {
+export function sortPlayers(
+	players: Array<IPlayer | IPlayerMIN>
+): Array<IPlayer | IPlayerMIN> {
 	return players.sort((a, b) => {
 		if (a.done_laps > b.done_laps) return -1;
 

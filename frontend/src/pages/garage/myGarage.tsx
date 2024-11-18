@@ -10,7 +10,6 @@ import GameIconsF1Car from "../../assets/icons/f1";
 import { CarsAPI } from "../../api/cars";
 import { UserAPI } from "../../api/users";
 
-
 interface CarsDictionary {
 	name: string;
 	value: number;
@@ -24,12 +23,12 @@ interface Car {
 }
 const MyGarage = () => {
 	const [inUse, setInUse] = useState(1);
-	const [cars, setCars] =  useState<CarsDictionary[]>([]);
+	const [cars, setCars] = useState<CarsDictionary[]>([]);
 	const navigate = useNavigate();
 	const apiCars = new CarsAPI();
 	const userApi = new UserAPI();
 	const carsIndex = [
-		{name: "Blue", value: 1, isLocked: false,},
+		{ name: "Blue", value: 1, isLocked: false },
 		{ name: "Green", value: 2, isLocked: false },
 		{ name: "Purple", value: 3, isLocked: false },
 		{ name: "Pink", value: 4, isLocked: false },
@@ -46,48 +45,54 @@ const MyGarage = () => {
 	};
 	const handleChoosenCar = async (car: CarsDictionary) => {
 		if (!car.isLocked) {
-			try{
+			try {
 				const response = await userApi.getMyUser();
-				if(response.statusCode !== 200){
-					throw new Error("Ocorreu um erro ao buscar dados, tente mais tarde")
+				if (response.statusCode !== 200) {
+					throw new Error(
+						"Ocorreu um erro ao buscar dados, tente mais tarde"
+					);
 				}
 				const id = response.data.id;
-				const carResponse = await apiCars.selectCar(id, car.value);	
+				const carResponse = await apiCars.selectCar(id, car.value);
 				setInUse(car.value);
 				console.log(carResponse);
-			}
-			catch(error){
-			console.error("Erro ao selecionar o carro: ", error);
+			} catch (error) {
+				console.error("Erro ao selecionar o carro: ", error);
 			}
 		}
 	};
-useEffect(() => {
+	useEffect(() => {
 		async function fetchCars() {
-			try{
+			try {
 				const responseMyUser = await userApi.getMyUser();
-				if(responseMyUser.statusCode !== 200){
-					throw new Error("Ocorreu um erro ao buscar dados, tente mais tarde")
+				if (responseMyUser.statusCode !== 200) {
+					throw new Error(
+						"Ocorreu um erro ao buscar dados, tente mais tarde"
+					);
 				}
 				const id = responseMyUser.data.id;
-				const selected_car = responseMyUser.data.selected_car_id
-				setInUse(selected_car)				
+				const selected_car = responseMyUser.data.selected_car_id;
+				setInUse(selected_car);
 				const responseCars = await apiCars.getCars(id);
-				const unlockedCars = responseCars.data
+				const unlockedCars = responseCars.data;
+				console.log(responseCars);
+
 				const combinedCars = carsIndex.map((car, index) => {
-					const isUnlocked = unlockedCars.some((unlockedCar: Car) => unlockedCar.id === index + 1)
-					return{
+					const isUnlocked = unlockedCars.some(
+						(unlockedCar: Car) => unlockedCar.id === index + 1
+					);
+					return {
 						...car,
 						isLocked: !isUnlocked,
-					}
-				})
-				setCars(combinedCars)
-		
-			}catch(error){
-				console.error("Erro: ", error)
-			}		
+					};
+				});
+				setCars(combinedCars);
+			} catch (error) {
+				console.error("Erro: ", error);
+			}
 		}
 		fetchCars();
-	}, [])
+	}, []);
 	return (
 		<div id="garage-content">
 			<div id="garage-header">
