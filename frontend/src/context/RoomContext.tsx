@@ -22,6 +22,7 @@ interface IRoomContextType {
 	initGame: boolean;
 	playerInRoom: boolean;
 	reset: () => void;
+	disabledBtnCreateRace: boolean;
 }
 
 const RoomContext = createContext<IRoomContextType | null>(null);
@@ -44,6 +45,9 @@ export const RoomProvider: React.FC<{ children: ReactNode }> = ({
 
 	// Init Game
 	const [initGame, setInitGame] = useState(false);
+
+	// Desabilitar botão de criar corrida
+	const [disabledBtnCreateRace, setDisabledBtnCreateRace] = useState(false);
 
 	const userContext = useContext(UserContext);
 
@@ -79,6 +83,11 @@ export const RoomProvider: React.FC<{ children: ReactNode }> = ({
 				reset();
 			}
 		});
+	}
+
+	function roomEntryCheck(rooms: IRoom[]) {
+		const disabledButton = rooms.some((room) => room.players.length < 10); // "true" se houver uma sala disponível, caso contrário "false".
+		setDisabledBtnCreateRace(disabledButton);
 	}
 
 	function reset() {
@@ -173,6 +182,8 @@ export const RoomProvider: React.FC<{ children: ReactNode }> = ({
 				});
 			});
 
+			roomEntryCheck(rooms);
+
 			// Atualizar o currentRoom se for a sala que recebemos no evento
 			setCurrentRoom((prevCurrentRoom) => {
 				if (prevCurrentRoom?.id === e.room.id) {
@@ -212,6 +223,7 @@ export const RoomProvider: React.FC<{ children: ReactNode }> = ({
 				playersReady,
 				playerInRoom: playerInRoom,
 				reset,
+				disabledBtnCreateRace
 			}}
 		>
 			{children}
