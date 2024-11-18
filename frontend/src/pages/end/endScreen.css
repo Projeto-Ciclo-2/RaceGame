@@ -7,97 +7,162 @@
 	}
 }
 
-#container {
+#end-game {
 	display: flex;
 	width: 100vw;
 	height: 100vh;
 	flex-direction: row;
 	justify-content: center;
 	align-items: center;
+	background: #202c5785;
+	background-image: url("./../../../public/assets/imgs/bkg-end-game.svg");
+	background-size: cover;
+	background-repeat: no-repeat;
+	position: relative;
 }
 
-#endScreen {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	margin-right: 5rem;
-	justify-content: center;
-	& > p {
-		font-size: 1.5rem;
-		font-weight: 900;
+#back-home{
+    background-color: var(--background);
+    border-radius: 50%;
+    cursor: pointer;
+    height: 3rem;
+    width: 3rem;
+    margin-left: 1rem;
+    display: flex;
+    align-items: center;
+    transition: transform 0.3 ease;
+    box-shadow: 4px 4px 4px var(--gray);
+	position: absolute;
+	top: 1rem;
+	left: 1rem;
+
+	&:hover {
+		transform: scale(1.20);
 	}
-	& > img {
-		height: 150px;
-		width: 150px;
-		animation: rotate infinite 2s linear;
-		object-fit: contain;
-	}
-	& > #endScreenBTN {
-		padding: 1rem;
-		color: var(--color-2);
-		background-color: var(--color-3);
-		border: 1px solid var(--color-3);
-		font-weight: 600;
-		text-decoration: none;
-		outline: none;
-		border-radius: 10px;
-		text-align: center;
-		transition: 400ms;
-		&:hover {
-			color: var(--color-3);
-			background-color: var(--color-2);
-		}
-	}
+    & svg{
+        height: 2rem;
+    }
 }
 
-#endScreenTable {
-	background-color: var(--color-1-75);
-	padding: 1rem;
-	border-radius: 5px;
+#container {
 	display: flex;
-	flex-direction: column;
-	align-items: flex-start;
-	justify-content: center;
-	margin-left: 5rem;
-	max-height: calc(100vh - 5rem);
-	overflow-x: hidden;
-	width: 20%;
-	overflow-y: auto;
-	& > section {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		flex-direction: column;
+	gap: 1rem;
+	padding: 0.5rem;
+	min-width: 60%;
+}
+
+#game-result {
+	width: 45%;
+
+	& #result {
 		width: 100%;
-		padding: 10px 0;
-		border-bottom: 1px solid black;
-		& > span {
-			font-weight: 100;
-			color: white;
-			padding-left: 30px;
-			width: 100%;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		padding: 0.5rem 1rem;
+		height: 80px;
+		background-color: #2c282b;
+
+		& p {
+			font-family: var(--font-title);
+			font-size: 36px;
+			text-transform: uppercase;
+			letter-spacing: 0.75px;
 		}
-		& > p {
+	}
+
+	& #img-result {
+		width: 100%;
+		height: 300px;
+		background-color: #1a244743;
+		background-position: center;
+		background-size: 240px 240px;
+		background-repeat: no-repeat;
+	}
+}
+
+#race {
+	display: flex;
+	align-items: center;
+	flex-direction: column;
+	width: 65%;
+
+	& #race-result {
+		width: 100%;
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: 0.5rem 1rem;
+		height: 80px;
+		background-color: #2c282b;
+
+		& p {
+			font-size: 36px;
+			text-transform: uppercase;
+			color: var(--color-2);
+		}
+
+		& div {
 			display: flex;
-			flex-direction: row;
-			font-weight: 500;
-			& > span:first-of-type {
-				font-weight: 900;
-				padding-left: 5px;
-			}
-			& > span:last-of-type {
-				padding-left: 8px;
+			align-items: flex-end;
+			height: 100%;
+
+			& p {
+				width: 90px;
+				text-align: center;
+				font-size: 14px;
 			}
 		}
 	}
-	& > section:first-of-type {
-		padding-top: 0;
-	}
-	& > section:last-of-type {
-		border: none;
-		padding-bottom: 0;
-	}
-	& > .isMe {
-		color: var(--red);
+
+	& ul {
+		display: flex;
+		align-items: center;
+		flex-direction: column;
+		background-color: #1a244743;
+		width: 100%;
+		overflow-y: auto;
+		height: calc(100% - 80px);
+		max-height: 300px;
+
+		& li {
+			background-color: #3c3d41;
+			width: 100%;
+			list-style: none;
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 0.5rem 1rem;
+			color: var(--color-2);
+
+			& div {
+				display: flex;
+				align-items: center;
+
+				& p {
+					width: 90px;
+					text-align: center;
+					font-size: 14px;
+				}
+			}
+
+			& #div1 {
+				gap: 1rem;
+
+				& p {
+					width: fit-content;
+					text-align: center;
+					font-size: 14px;
+				}
+
+				& .position-number {
+					padding: 0.5rem;
+					font-family: var(--font-title);
+					background-color: var(--color-2);
+					color: var(--color-1);
+					border-radius: 0 0 0.7rem 0;
+				}
+			}
+		}
 	}
 }
