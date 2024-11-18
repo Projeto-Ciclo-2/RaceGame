@@ -72,6 +72,11 @@ const RoomList = () => {
 							<div className="center-helmet">
 								<Helmet />
 							</div>
+						) : room.players.length === 10 ? (
+							// Botão desabilitado
+							<button className="button-join" disabled={true} style={{ backgroundColor: '#9a9595', color: '#dacbcb' }}>
+								join
+							</button>
 						) : (
 							<button
 								onClick={() => joinRoom(room)}
