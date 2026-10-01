@@ -1,88 +1,70 @@
-# CopilotQuiz
+# RaceGame
 
-Welcome to the **CopilotQuiz** repository!
-CopilotQuiz is a real-time web application that allows users from all over the world to test their knowledge through interactive quizzes.
+A real-time, top-down multiplayer racing game for **up to 10 players** on the same track, playable in the browser. Built in three weeks (Oct–Nov 2024) by a team of 4 at [Alpha EdTech](https://www.alphaedtech.org.br/), a non-profit code academy in São José dos Campos, Brazil.
 
-## Technologies Used
+![A race in progress: cars on a top-down track with walls, checkpoints and the lap counter](docs/gameplay.jpg)
 
--   **Docker** - Containerization
--   **Node.js + Express** - Backend server
--   **Cookie + JWT** - Session management
--   **PostgreSQL** - Database
--   **React** - Frontend
--   **WebSocket** - Real-time communication
+A clip of a 10-player test match is in [`edi.mp4`](edi.mp4). The full write-up, with an architecture diagram, is in the [case study](https://portfolio-carlomorais.vercel.app/en/projects/racegame).
 
-## Getting Started (Production)
+## How it works
 
-### Prerequisites
+- **The server is the source of truth.** The browser only sends which keys are pressed. The server runs the game loop at **30 ticks per second**, applies speed and steering physics, collisions with track walls, checkpoints, laps and pickups (nitro), and decides where every car is. No one can "teleport" a car from the console.
+- **Client-side prediction with reconciliation.** Your own car runs the same physics locally, so it answers the arrow keys without waiting for the network. Every move is numbered; when the server state arrives, the client compares by move number and only corrects the position if the two disagree.
+- **Interpolation for opponents.** Other cars aren't predicted: each frame they cover part of the distance to their last known position, which removes the jitter between updates.
+- **Only send what changed.** The server compares position, speed and rotation with the previous tick, so a car that isn't moving produces no message.
+- **WebSocket without Socket.IO.** The [`ws`](https://github.com/websockets/ws) library on the server and the browser's native WebSocket API, with a typed TypeScript message contract on both sides.
 
-Ensure you have the following installed:
-- **Docker** (with Docker Compose)
+```
+Browser (React + Canvas)                 Server (Node.js + Express)
+  client game loop  ── keys ──────────▶   WebSocket (ws)
+  prediction        ◀── state ─────────   game loop · 30 ticks/s
+  screens & lobby   ◀── HTTP ──────────▶  REST API · sign-in (JWT cookie, Google OAuth)
+                                            ├── PostgreSQL (users, cars)
+                                            └── Redis (live rooms)
+```
 
-### Steps to Run
+## Stack
 
-1. **Build the Docker containers**
-   Open a terminal in the project directory and run the following command:
-   - Linux:
-     ```bash
-     docker-compose -f docker-compose.prod.yml build
-     ```
-   - Windows:
-     ```bash
-     docker compose -f docker-compose.prod.yml build
-     ```
+TypeScript · React · HTML5 Canvas · Node.js · Express · ws · PostgreSQL (Knex) · Redis · Passport (Google OAuth) · JWT · Docker Compose · Nginx · Certbot
 
-2. **Start the services**
-   Once the build completes, start the services with:
-   ```bash
-   docker-compose -f docker-compose.prod.yml up -d
-   ```
+## Running it
 
-3. **Generate SSL certificates**
-   Run the following command to configure SSL with Certbot (replace `alpha06.alphaedtech.org.br` with your domain):
-   ```bash
-   docker-compose -f docker-compose.prod.yml run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d alpha06.alphaedtech.org.br
-   ```
+Requires **Docker** with Docker Compose. Copy `backend/.env.example` to `backend/.env` and `frontend/.env.example` to `frontend/.env`, then fill in your values (Google OAuth credentials are needed for Google sign-in).
 
-After setup, the following services will be available:
-- Frontend (React): [http://localhost](http://localhost) (or your domain with HTTPS)
-- Backend (API): [http://localhost:5000](http://localhost:5000)
+### Development
 
-### Note:
-Make sure your domain is correctly pointed to your server's IP for Certbot to work.
+```bash
+docker compose -f docker-compose.dev.yml build
+docker compose -f docker-compose.dev.yml up
+```
 
-## Getting Started (Development)
+- Frontend (React): http://localhost:80
+- Backend (API): http://localhost:5000
 
-### Prerequisites
+Docker Compose can be flaky during the build; if it fails, restart Docker and try again. To run the backend or the frontend on their own, see [`docs/backend.md`](docs/backend.md) and [`docs/frontend.md`](docs/frontend.md).
 
-Ensure you have the following installed:
-- **Docker** (with Docker Compose)
+### Production
 
-### Steps to Run
+```bash
+docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml up -d
+```
 
-1. **Build the Docker containers**
-   Open a terminal in the project directory and run the following command:
-   - Linux:
-     ```bash
-     docker-compose -f docker-compose.dev.yml build
-     ```
-   - Windows:
-     ```bash
-     docker compose -f docker-compose.dev.yml build
-     ```
+Then issue the SSL certificate with Certbot (replace the domain with yours, already pointed at the server's IP):
 
-   **Note:** _Docker Compose can sometimes be unstable during the build process. If you encounter issues, try restarting Docker._
+```bash
+docker compose -f docker-compose.prod.yml run --rm certbot certonly --webroot --webroot-path=/var/www/certbot -d your.domain.com
+```
 
-2. **Start the services**
-   Once the build completes, run:
-   ```bash
-   docker-compose -f docker-compose.dev.yml up
-   ```
+The frontend is served by Nginx at your domain over HTTPS; the API listens on port 5000.
 
-After setup, the following services will be available:
-- Frontend (React): [http://localhost:80](http://localhost:80)
-- Backend (API): [http://localhost:5000](http://localhost:5000)
+## Team
 
-## Documentation
+| Who | What |
+| --- | --- |
+| Carlos Eduardo Araujo Morais | Project lead; game engine (server and client game loops, prediction, interpolation), most of the WebSocket server, production Docker Compose and Nginx |
+| Pedrosavioo | Lobby and WebSocket server |
+| Murilo Russo Netto | Authentication, repositories and rooms in Redis |
+| Lígia Abreu | Screens and UI components |
 
-Visit `/docs` for detailed API documentation, usage instructions, and other resources.
+More docs (Git conventions, links) are in [`docs/`](docs).
