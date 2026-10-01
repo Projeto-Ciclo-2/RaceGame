@@ -62,7 +62,7 @@ The frontend is served by Nginx at your domain over HTTPS; the API listens on po
 
 | Who | What |
 | --- | --- |
-| Carlos Eduardo Araujo Morais | Project lead; game engine (server and client game loops, prediction, interpolation), most of the WebSocket server, production Docker Compose and Nginx |
+| Carlos Eduardo Araujo Morais | Project lead; game engine (server and client game loops, prediction, interpolation), a large share of the WebSocket server, production Docker Compose and Nginx |
 | Pedrosavioo | Lobby and WebSocket server |
 | Murilo Russo Netto | Authentication, repositories and rooms in Redis |
 | Lígia Abreu | Screens and UI components |
